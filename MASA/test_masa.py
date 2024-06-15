@@ -15,7 +15,7 @@ data = {
 response  = requests.post(
     'https://localhost:8888/request-voucher', 
     data=json.dumps(data), 
-    verify=False, 
+    verify=False, # set to True in production
     cert=('../Registrar/certs/registrar.crt', '../Registrar/certs/registrar_priv.key')
 )
 voucher_json = response.content

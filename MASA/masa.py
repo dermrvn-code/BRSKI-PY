@@ -14,10 +14,7 @@ import http.server
 class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == "/request-voucher":
-            # Validate client certificate here
-            # Add your validation logic here
-            # For example, you can check the client"s certificate against a known list of trusted certificates
-            
+                        
             # Extract the POST request payload
             content_length = int(self.headers["Content-Length"])
             post_data = self.rfile.read(content_length)
@@ -26,12 +23,15 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             # Extract the client"s certificate
             client_cert_bytes = self.request.getpeercert(True)
             client_cert_json = self.request.getpeercert()
-
-            registrar_domain = post_data_dict["domain"]
-            serial_number = post_data_dict["serialnumber"]
             
             print("Client certificate: ", json.dumps(client_cert_json))
             print("POST request payload: ", json.dumps(post_data_dict))
+
+            
+            # Validate client certificate here
+
+            registrar_domain = post_data_dict["domain"]
+            serial_number = post_data_dict["serialnumber"]
 
             private_key = load_private_key("certs/MASA_priv.key")
             voucher = create_voucher(private_key, client_cert_bytes, registrar_domain, "verified", serial_number)
@@ -55,7 +55,7 @@ httpd = http.server.HTTPServer(server_address, MyHTTPRequestHandler)
 # Enable HTTPS by providing the path to your SSL certificate and key files
 context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 context.verify_mode = ssl.CERT_REQUIRED
-context.load_cert_chain(certfile="./certs/MASA.crt", keyfile="./certs/MASA_priv.key")
+context.load_cert_chain(certfile="certs/MASA.crt", keyfile="certs/MASA_priv.key")
 context.load_verify_locations(cafile="../Registrar/ca/registrar_CA.pem")
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 

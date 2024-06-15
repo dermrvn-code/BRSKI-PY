@@ -1,14 +1,14 @@
 PRIVATE KEY:
 	> openssl genrsa -out MASA_priv.key 2048
 
-CSR:
-	> openssl req -new -key MASA_priv.key -out MASA.csr
-	DE,NRW,Hamm,HSHL,Trustpoint,MASA,marvin,grunwald@stud.hshl.de
-	Password: 38tw6#*Zu&9ffrg^j78d
-
-CRT:
-	> openssl x509 -req -in MASA.csr -CA ../../ca/MASA/MASA_CA.pem -CAkey ../../ca/MASA/MASA_CA.key -CAcreateserial -out MASA.crt -days 825 -sha256
-
 PUBLIC KEY:
 	> openssl pkey -in MASA_priv.key -pubout -out MASA_pub.key
+
+CSR:
+	> openssl req -new -key MASA_priv.key -out MASA.csr -subj "/C=DE/CN=MASA"
+
+
+CRT:
+	> openssl x509 -req -in MASA.csr -CA ../ca/MASA_CA.pem -CAkey ../ca/MASA_CA_priv.key -CAcreateserial -out MASA.crt -days 825 -sha256
+
 
