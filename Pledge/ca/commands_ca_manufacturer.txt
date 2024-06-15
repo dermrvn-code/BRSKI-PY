@@ -1,0 +1,7 @@
+PRIVATE KEY:
+	> openssl genrsa -des3 -out manufacturer_CA.key 2048
+	passphrase: 5c#Y&!%nNHaLfW36n2V5SdNdfb48eD
+
+ROOT CERT:
+	> openssl req -x509 -new -nodes -key manufacturer_CA.key -sha256 -days 1825 -out manufacturer_CA.pem
+	DE,NRW,Hamm,HSHL,Trustpoint,Manufacturer,marvin.grunwald@stud.hshl.de

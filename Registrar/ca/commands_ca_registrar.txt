@@ -1,0 +1,7 @@
+PRIVATE KEY:
+	> openssl genrsa -des3 -out registrar_CA.key 2048
+	passphrase: $6!X*A2Y3Jk22g9!jHs7jHtZ8NA9*N
+
+ROOT CERT:
+	> openssl req -x509 -new -nodes -key registrar_CA.key -sha256 -days 1825 -out registrar_CA.pem
+	DE,NRW,Hamm,HSHL,Trustpoint,Registrar,marvin.grunwald@stud.hshl.de
