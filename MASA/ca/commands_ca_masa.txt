@@ -1,0 +1,7 @@
+PRIVATE KEY:
+	> openssl genrsa -des3 -out MASA_CA.key 2048
+	passphrase: UMW$9kYCuJ5kL3xY%7fx$Jt%2gZz&%
+
+ROOT CERT:
+	> openssl req -x509 -new -nodes -key MASA_CA.key -sha256 -days 1825 -out MASA_CA.pem
+	DE,NRW,Hamm,HSHL,Trustpoint,MASA,marvin.grunwald@stud.hshl.de
