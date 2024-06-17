@@ -124,17 +124,17 @@ def parse_voucher(voucher_json):
     voucher.masa_signature = voucher_dict["masa_signature"]
     return voucher
 
-def load_private_key(path):
+def load_private_keyfile(path):
     with open(path, "rb") as f:
         private_key_data = f.read()
     return load_pem_private_key(private_key_data, password=None, backend=default_backend())
 
-def load_public_key(path):
+def load_public_keyfile(path):
     with open(path, "rb") as f:
         public_key_data = f.read()
     return load_pem_public_key(public_key_data, backend=default_backend())
 
-def load_certificate(path):
+def load_certificatefile(path):
     with open(path, "rb") as f:
         cert_data = f.read()
     return load_pem_x509_certificate(cert_data, backend=default_backend())

@@ -5,9 +5,10 @@ import base64
 
 import sys
 sys.path.append("../") 
-from Voucher.voucher import Voucher, create_voucher, load_private_key
+from Voucher.voucher import Voucher, create_voucher, load_private_keyfile, load_public_keyfile
 
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives import serialization
+
 
 import http.server
 
@@ -33,7 +34,7 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             registrar_domain = post_data_dict["domain"]
             serial_number = post_data_dict["serialnumber"]
 
-            private_key = load_private_key("certs/MASA_priv.key")
+            private_key = load_private_keyfile("certs/MASA_priv.key")
             voucher = create_voucher(private_key, client_cert_bytes, registrar_domain, "verified", serial_number)
             voucher_json = json.dumps(voucher.to_dict());
 
@@ -42,6 +43,33 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/json")
             self.end_headers()
             self.wfile.write(str.encode(voucher_json))
+
+        elif self.path == "/publickey":
+                        
+            # Extract the POST request payload
+            content_length = int(self.headers["Content-Length"])
+            # post_data = self.rfile.read(content_length)
+            # post_data_dict = json.loads(post_data)
+            
+            # Extract the client"s certificate
+            client_cert_bytes = self.request.getpeercert(True)
+            client_cert_json = self.request.getpeercert()
+            
+            print("Client certificate: ", json.dumps(client_cert_json))
+            # print("POST request payload: ", json.dumps(post_data_dict))
+
+            
+            # Validate client certificate here
+
+            public_key = load_public_keyfile("certs/MASA_pub.key")
+            public_key_bytes = public_key.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
+
+            # Send response
+            self.send_response(200)
+            self.send_header("Content-type", "text/json")
+            self.end_headers()
+            self.wfile.write(public_key_bytes)
+        
         else:
             self.send_response(404)
             self.send_header("Content-type", "text/html")
