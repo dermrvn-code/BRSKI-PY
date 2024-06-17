@@ -138,23 +138,3 @@ def load_certificate(path):
     with open(path, "rb") as f:
         cert_data = f.read()
     return load_pem_x509_certificate(cert_data, backend=default_backend())
-
-# if __name__ == "__main__":
-#     # Load the MASA private key from a .key file (PEM format)
-#     masa_private_key = load_private_key("../MASA/certs/MASA_priv.key")
-
-#     # Load the MASA public key from a .key file (PEM format)
-#     masa_public_key = load_public_key("../MASA/certs/MASA_pub.key")
-    
-#     # Load the Registrar certificate from a .crt file (PEM format)
-#     registrar_cert = load_certificate("../Registrar/certs/registrar.crt")
-    
-#     # Create and sign a voucher
-#     voucher = create_voucher(masa_private_key, registrar_cert, "example.com", "verified")
-    
-#     # Verify the voucher using the MASA public key
-#     is_valid = voucher.verify(masa_public_key, "example.com")
-#     if is_valid:
-#         print("Voucher is valid")
-#     else:
-#         print("Voucher is invalid")
