@@ -167,4 +167,7 @@ cython_debug/
 
 
 # Project specific
-/certs
+*.crt
+*.key
+*.pem
+passphrase*.txt
