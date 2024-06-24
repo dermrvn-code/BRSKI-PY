@@ -1,6 +1,0 @@
-PRIVATE KEY:
-	> openssl genrsa -des3 -out manufacturer_CA_priv.key 2048
-	passphrase: 5c#Y&!%nNHaLfW36n2V5SdNdfb48eD
-
-ROOT CERT:
-	> openssl req -x509 -new -nodes -key manufacturer_CA_priv.key -sha256 -days 1825 -out manufacturer_CA.pem -subj "/C=DE/CN=manufacturer_ca"
