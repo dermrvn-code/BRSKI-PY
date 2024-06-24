@@ -11,9 +11,21 @@ from Keys import generate_rsa_keys
 
 # Generate a random passphrase
 def generate_passphrase(dest_folder, common_name, length=30):
+    """
+    Generate a random passphrase and save it to a file.
+
+    Parameters:
+    - dest_folder (str): The destination folder where the passphrase file will be saved.
+    - common_name (str): The common name associated with the passphrase.
+    - length (int): The length of the passphrase (default is 30).
+
+    Returns:
+    - passphrase (str): The generated passphrase.
+    """
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="
     passphrase = "".join(secrets.choice(alphabet) for i in range(length))
 
+    # Write the passphrase to a .txt file
     with open(path.join(dest_folder,"passphrase_" + common_name.lower() + ".txt"), "w") as f:
         f.write(passphrase)
 
@@ -22,11 +34,26 @@ def generate_passphrase(dest_folder, common_name, length=30):
 
 # Generate self-signed root certificate
 def generate_certificate_authority(country, common_name, dest_folder, days_valid=1825, passphrase_length=30):
+    """
+    Generate a self-signed root certificate and save it to a file.
 
+    Parameters:
+    - country (str): The country name associated with the certificate.
+    - common_name (str): The common name associated with the certificate.
+    - dest_folder (str): The destination folder where the certificate file will be saved.
+    - days_valid (int): The number of days the certificate will be valid (default is 1825).
+    - passphrase_length (int): The length of the passphrase used to encrypt the private key (default is 30).
+
+    Returns:
+    - certificate_path (str): The path to the generated certificate file.
+    - private_key_path (str): The path to the generated private key file.
+    - public_key_path (str): The path to the generated public key file.
+    - passphrase (str): The passphrase used to encrypt the private key.
+    """
     passphrase = generate_passphrase(dest_folder, common_name, passphrase_length)
     key, _ = generate_rsa_keys(passphrase,dest_folder,common_name)
 
-    subject = issuer = x509.Name([
+    subject, issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, country),
         x509.NameAttribute(NameOID.COMMON_NAME, common_name),
     ])
@@ -55,4 +82,3 @@ def generate_certificate_authority(country, common_name, dest_folder, days_valid
         path.join(dest_folder,"CA_public_" + common_name.lower() + ".key"),
         passphrase
     )
-
