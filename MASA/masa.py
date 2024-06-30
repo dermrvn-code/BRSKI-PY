@@ -5,7 +5,8 @@ import base64
 
 import sys
 sys.path.append("../") 
-from Voucher.voucher import Voucher, create_voucher, load_private_keyfile, load_public_keyfile
+from Voucher.voucher import Voucher, create_voucher
+from Certificates.Certificates import load_private_keyfile, load_public_keyfile, load_passphrase
 
 from cryptography.hazmat.primitives import serialization
 
@@ -34,7 +35,8 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             registrar_domain = post_data_dict["domain"]
             serial_number = post_data_dict["serialnumber"]
 
-            private_key = load_private_keyfile("certs/MASA_priv.key")
+            masa_passphrase = load_passphrase("certs/passphrase_masa.txt")
+            private_key = load_private_keyfile("certs/CA_private_masa.key", masa_passphrase)
             voucher = create_voucher(private_key, client_cert_bytes, registrar_domain, "verified", serial_number)
             voucher_json = json.dumps(voucher.to_dict());
 
@@ -61,12 +63,12 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             
             # Validate client certificate here
 
-            public_key = load_public_keyfile("certs/MASA_pub.key")
+            public_key = load_public_keyfile("certs/CA_public_masa.key")
             public_key_bytes = public_key.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
             # Send response
             self.send_response(200)
-            self.send_header("Content-type", "text/json")
+            self.send_header("Content-type", "application/voucher-cms+json")
             self.end_headers()
             self.wfile.write(public_key_bytes)
         
@@ -80,11 +82,13 @@ class MyHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 server_address = ("localhost", 8888)  # Change the port number if needed
 httpd = http.server.HTTPServer(server_address, MyHTTPRequestHandler)
 
+password = load_passphrase("certs/passphrase_masa.txt")
+
 # Enable HTTPS by providing the path to your SSL certificate and key files
 context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 context.verify_mode = ssl.CERT_REQUIRED
-context.load_cert_chain(certfile="certs/MASA.crt", keyfile="certs/MASA_priv.key")
-context.load_verify_locations(cafile="../Registrar/ca/registrar_CA.pem")
+context.load_cert_chain(certfile="certs/cert_masa.crt", keyfile="certs/CA_private_masa.key",password=password)
+context.load_verify_locations(cafile="../Registrar/ca/CA_registrar_ca.pem")
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
 print("Server running on port https://localhost:8888 ...")

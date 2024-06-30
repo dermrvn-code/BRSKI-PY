@@ -3,9 +3,6 @@ import base64
 from datetime import datetime, timedelta, timezone
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.backends import default_backend
 
 class Voucher:
     def __init__(self, version, created_on, expires_on, serial_number, nonce, pinned_domain_cert, domain_id, assertion):
@@ -37,6 +34,9 @@ class Voucher:
 
         return dict
 
+    '''
+    TODO: Implement the sign and verify method using PKCS#4
+    '''
     def sign(self, masa_private_key):
         # Create a copy of the voucher data dictionary without masa_signature
         data_to_sign = self.to_dict(True)
@@ -123,18 +123,3 @@ def parse_voucher(voucher_json):
     )
     voucher.masa_signature = voucher_dict["masa_signature"]
     return voucher
-
-def load_private_keyfile(path):
-    with open(path, "rb") as f:
-        private_key_data = f.read()
-    return load_pem_private_key(private_key_data, password=None, backend=default_backend())
-
-def load_public_keyfile(path):
-    with open(path, "rb") as f:
-        public_key_data = f.read()
-    return load_pem_public_key(public_key_data, backend=default_backend())
-
-def load_certificatefile(path):
-    with open(path, "rb") as f:
-        cert_data = f.read()
-    return load_pem_x509_certificate(cert_data, backend=default_backend())

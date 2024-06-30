@@ -3,6 +3,29 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat
 from os import path
+import secrets
+
+# Generate a random passphrase
+def generate_passphrase(dest_folder, common_name, length=30):
+    """
+    Generate a random passphrase and save it to a file.
+
+    Parameters:
+    - dest_folder (str): The destination folder where the passphrase file will be saved.
+    - common_name (str): The common name associated with the passphrase.
+    - length (int): The length of the passphrase (default is 30).
+
+    Returns:
+    - passphrase (str): The generated passphrase.
+    """
+    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="
+    passphrase = "".join(secrets.choice(alphabet) for i in range(length))
+
+    # Write the passphrase to a .txt file
+    with open(path.join(dest_folder,"passphrase_" + common_name.lower() + ".txt"), "w") as f:
+        f.write(passphrase)
+
+    return passphrase
 
 def generate_rsa_keys(passphrase, dest_folder, common_name):
     """
@@ -39,11 +62,11 @@ def generate_rsa_keys(passphrase, dest_folder, common_name):
 
     
     # Write the private key to a file
-    with open(path.join(dest_folder, "CA_private_" + common_name.lower() + ".key"), "wb") as key_file:
+    with open(path.join(dest_folder, "ca_private_" + common_name.lower() + ".key"), "wb") as key_file:
         key_file.write(encrypted_key)
     
     # Write the public key to a file
-    with open(path.join(dest_folder, "CA_public_" + common_name.lower() + ".key"), "wb") as key_file:
+    with open(path.join(dest_folder, "ca_public_" + common_name.lower() + ".key"), "wb") as key_file:
         key_file.write(public_key_bytes)
     
     return private_key, public_key
