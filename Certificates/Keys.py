@@ -27,7 +27,7 @@ def generate_passphrase(dest_folder, common_name, length=30):
 
     return passphrase
 
-def generate_rsa_keys(passphrase, dest_folder, common_name):
+def generate_rsa_keys(passphrase, dest_folder, common_name, prefix="cert"):
     """
     Generates RSA private and public keys and saves them to files.
 
@@ -62,11 +62,11 @@ def generate_rsa_keys(passphrase, dest_folder, common_name):
 
     
     # Write the private key to a file
-    with open(path.join(dest_folder, "ca_private_" + common_name.lower() + ".key"), "wb") as key_file:
+    with open(path.join(dest_folder, prefix+"_private_" + common_name.lower() + ".key"), "wb") as key_file:
         key_file.write(encrypted_key)
     
     # Write the public key to a file
-    with open(path.join(dest_folder, "ca_public_" + common_name.lower() + ".key"), "wb") as key_file:
+    with open(path.join(dest_folder, prefix+"_public_" + common_name.lower() + ".key"), "wb") as key_file:
         key_file.write(public_key_bytes)
     
     return private_key, public_key

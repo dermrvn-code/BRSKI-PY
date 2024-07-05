@@ -39,7 +39,7 @@ dest_folder = "../Registrar/ca/"
 (ca_cert_path, ca_key_path, ca_public_key_path, passphrase) = generate_certificate_authority("DE", "Registrar_ca", dest_folder)
 print("Generated Registrar ca certificate")
 
-dest_folder = "../Registrar/certs/"
+dest_folder = "../Registrar/certs/server"
 generate_ra_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
@@ -47,6 +47,7 @@ generate_ra_cert(
     "localhost")
 print("Generated Registrar RA certificate")
 
+dest_folder = "../Registrar/certs/client"
 generate_basic_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,

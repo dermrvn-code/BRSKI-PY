@@ -28,7 +28,7 @@ def generate_certificate_authority(country, common_name, dest_folder, days_valid
     - passphrase (str): The passphrase used to encrypt the private key.
     """
     passphrase = generate_passphrase(dest_folder, common_name, passphrase_length)
-    key, _ = generate_rsa_keys(passphrase,dest_folder,common_name)
+    key, _ = generate_rsa_keys(passphrase,dest_folder,common_name,"ca")
 
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, country),
