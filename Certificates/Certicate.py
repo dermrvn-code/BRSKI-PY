@@ -1,7 +1,6 @@
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from pyasn1.type import univ, namedtype
 from pyasn1.codec.der import encoder
@@ -46,11 +45,74 @@ def save_cert(cert, dest_folder, common_name, cert_type="cert"):
     with open(path.join(dest_folder, cert_type + "_" + common_name.lower() + ".crt"), "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
-def generate_simple_server_cert(
+def generate_certificate_request(
+        country_code, common_name, 
+        hostname=None, 
+        organization_name=None, organizational_unit_name=None):
+    """
+    Generate a certificate signing request (CSR).
+
+    Parameters:
+    - country_code (str): Country code for the certificate.
+    - common_name (str): Common name for the certificate.
+    - hostname (str): Hostname for the certificate. Optional.
+    - organization_name (str): Organization name for the certificate. Optional.
+    - organizational_unit_name (str): Organizational unit name for the certificate. Optional.
+
+    Returns:
+    - csr (CertificateSigningRequestBuilder): Generated CSR.
+    """
+    nameAttributes = [
+        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
+        x509.NameAttribute(NameOID.COMMON_NAME, common_name)
+    ]
+
+    if(organization_name):
+        nameAttributes.append(
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization_name))
+        
+    if(organizational_unit_name):
+        nameAttributes.append(
+            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit_name))
+        
+    if(hostname):
+        nameAttributes.append(
+            x509.NameAttribute(NameOID.COMMON_NAME, hostname)
+        )
+
+    return x509.CertificateSigningRequestBuilder().subject_name(x509.Name(nameAttributes))
+
+def generate_certificate(csr, ca_cert, expiration_days=365):
+    """
+    Generate a certificate based on the given CSR and CA certificate.
+
+    Parameters:
+    - device_csr (CertificateSigningRequestBuilder): Certificate signing request.
+    - ca_cert (Certificate): CA certificate used for signing.
+    - expiration_days (int): Number of days until the certificate expires. Default is 365.
+
+    Returns:
+    - cert (CertificateBuilder): Generated certificate.
+    """
+    return x509.CertificateBuilder().subject_name(
+        csr.subject
+    ).issuer_name(
+        ca_cert.subject
+    ).public_key(
+        csr.public_key()
+    ).serial_number(
+        x509.random_serial_number()
+    ).not_valid_before(
+        datetime.datetime.now(datetime.UTC)
+    ).not_valid_after(
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=expiration_days)
+    )
+
+def generate_basic_cert(
     ca_cert_path, ca_key_path, ca_passphrase,
     dest_folder,
     country_code, common_name, 
-    hostname,
+    hostname=None,
     expiration_days=365):
     """
     Generate a simple device certificate.
@@ -62,6 +124,7 @@ def generate_simple_server_cert(
     - dest_folder (str): Destination folder to save the device certificate.
     - country_code (str): Country code for the device certificate.
     - common_name (str): Common name for the device certificate.
+    - hostname (str): Hostname for the device certificate. Optional.
     - expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
@@ -71,45 +134,93 @@ def generate_simple_server_cert(
     cert_passphrase = generate_passphrase(dest_folder, common_name)
     device_key, _ = generate_rsa_keys(cert_passphrase, dest_folder, common_name)
     
-    alternative_name = x509.SubjectAlternativeName([
-            x509.DNSName(hostname )
-        ])
+    if(hostname):
+        alternative_name = x509.SubjectAlternativeName([
+                x509.DNSName(hostname )
+            ])
 
     # Generate CSR
-    device_csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
-        x509.NameAttribute(NameOID.COMMON_NAME, common_name),
-        x509.NameAttribute(NameOID.COMMON_NAME, hostname),
-    ])).add_extension(
-        alternative_name,
-        critical=False
-    ).sign(device_key, hashes.SHA256())
+    device_csr = generate_certificate_request(country_code, common_name, hostname)
+    
+    if(hostname):
+        device_csr = device_csr.add_extension(
+            alternative_name,
+            critical=False
+        )
+    
+    device_csr = device_csr.sign(device_key, hashes.SHA256())
     
     # Sign CSR with ca certificate
-    device_cert = x509.CertificateBuilder().subject_name(
-        device_csr.subject
-    ).issuer_name(
-        ca_cert.subject
-    ).public_key(
-        device_csr.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.datetime.now(datetime.UTC)
-    ).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=expiration_days)
-    ).add_extension(
+    device_cert = generate_certificate(device_csr, ca_cert, expiration_days)
+
+    
+    if(hostname):
+        device_cert = device_cert.add_extension(
+            alternative_name,
+            critical=False
+        )
+    
+    device_cert = device_cert.sign(ca_key, hashes.SHA256())
+
+    save_cert(device_cert, dest_folder, common_name)
+
+def generate_ra_cert(
+    ca_cert_path, ca_key_path, ca_passphrase,
+    dest_folder,
+    country_code, common_name, 
+    hostname,
+    expiration_days=365):
+    """
+    Generate a RA (Registration Authority) certificate.
+
+    Parameters:
+    - ca_cert_path (str): Path to the CA certificate file.
+    - ca_key_path (str): Path to the CA private key file.
+    - ca_passphrase (str): Passphrase for the CA private key.
+    - dest_folder (str): Destination folder to save the RA certificate.
+    - country_code (str): Country code for the RA certificate.
+    - common_name (str): Common name for the RA certificate.
+    - hostname (str): Hostname for the RA certificate.
+    - expiration_days (int): Number of days until the certificate expires. Default is 365.
+
+    Returns:
+    None
+    """
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
+    cert_passphrase = generate_passphrase(dest_folder, common_name)
+    ra_key, _ = generate_rsa_keys(cert_passphrase, dest_folder, common_name)
+    
+    alternative_name = x509.SubjectAlternativeName([
+        x509.DNSName(hostname)
+    ])
+
+    # Generate CSR
+    ra_csr = generate_certificate_request(country_code, common_name, hostname)
+    
+    ra_csr = ra_csr.add_extension(
         alternative_name,
+        critical=False
+    ).sign(ra_key, hashes.SHA256())
+    
+
+    # Add RA specific extensions
+    ra_cert = generate_certificate(ra_csr, ca_cert, expiration_days)
+    
+    ra_cert = ra_cert.add_extension(
+        alternative_name,
+        critical=False
+    ).add_extension(
+        x509.ExtendedKeyUsage([x509.ObjectIdentifier("1.3.6.1.5.5.7.3.28")]),  # id-kp-cmcRA OID        
         critical=False
     ).sign(ca_key, hashes.SHA256())
 
-    save_cert(device_cert, dest_folder, common_name)
+    save_cert(ra_cert, dest_folder, common_name)
 
 def generate_idevid_device_cert(
     ca_cert_path, ca_key_path, ca_passphrase,
     dest_folder,
     country_code, organization_name, organizational_unit_name, common_name,
-    expiration_days=365, OtherName=False,
+    expiration_days=365,
     othername_model=None, othername_serialnumber=None, othername_manufacturer=None,
     ):
     """
@@ -125,17 +236,20 @@ def generate_idevid_device_cert(
     - organizational_unit_name (str): Organizational unit name for the device certificate.
     - common_name (str): Common name for the device certificate.
     - expiration_days (int): Number of days until the certificate expires. Default is 365.
-    - OtherName (bool): Whether to include OtherName extension in the certificate. Default is False.
-    - othername_model (str): Model information for OtherName extension. Required if OtherName is True.
-    - othername_serialnumber (str): Serial number information for OtherName extension. Required if OtherName is True.
-    - othername_manufacturer (str): Manufacturer information for OtherName extension. Required if OtherName is True.
+    - othername_model (str): Model information for OtherName extension. Default is None.
+    - othername_serialnumber (str): Serial number information for OtherName extension. Default is None.
+    - othername_manufacturer (str): Manufacturer information for OtherName extension. Default is None.
 
     Returns:
     None
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
-    device_key, _ = generate_rsa_keys(ca_passphrase, dest_folder, common_name)
+    device_key, _ = generate_rsa_keys(cert_passphrase, dest_folder, common_name)
+
+    OtherName = othername_model == None or \
+                othername_serialnumber == None or \
+                othername_manufacturer == None
 
     if(OtherName):
         class OtherName(univ.Sequence):
@@ -153,42 +267,30 @@ def generate_idevid_device_cert(
 
         der_data = encoder.encode(data)
 
-    alternative_name = x509.SubjectAlternativeName([
-                x509.OtherName(x509.ObjectIdentifier("1.3.6.1.4.1.311.20.2.3"), der_data)
+        alternative_name = x509.SubjectAlternativeName([
+                x509.OtherName(x509.ObjectIdentifier("1.3.6.1.5.5.7.8.4"), der_data) # id-on-hardwareModuleName OID
             ])
 
     # Generate CSR
-    device_csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
-        x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization_name),
-        x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit_name),
-        x509.NameAttribute(NameOID.COMMON_NAME, common_name),
-    ]))
+    idevid_csr = generate_certificate_request(
+        country_code, common_name, 
+        organization_name, organizational_unit_name
+    )
 
     # Add optional OtherName extension
     if(OtherName):
-        device_csr = device_csr.add_extension(
+        idevid_csr = idevid_csr.add_extension(
             alternative_name,
             critical=False,
         )
 
-    device_csr = device_csr.sign(device_key, hashes.SHA256())
+    idevid_csr = idevid_csr.sign(device_key, hashes.SHA256())
 
     # Sign CSR with ca certificate
-    device_cert = x509.CertificateBuilder().subject_name(
-        device_csr.subject
-    ).issuer_name(
-        ca_cert.subject
-    ).public_key(
-        device_csr.public_key()
-    ).serial_number(
-        x509.random_serial_number()
-    ).not_valid_before(
-        datetime.datetime.now(datetime.UTC)
-    ).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=expiration_days)
-    ).add_extension(
-        x509.SubjectKeyIdentifier.from_public_key(device_csr.public_key()),
+    idevid_cert = generate_certificate(idevid_csr, ca_cert, expiration_days)
+    
+    idevid_cert = idevid_cert.add_extension(
+        x509.SubjectKeyIdentifier.from_public_key(idevid_csr.public_key()),
         critical=False
     ).add_extension(
         x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_cert.public_key()),
@@ -201,12 +303,11 @@ def generate_idevid_device_cert(
     
     # Add optional OtherName extension
     if(OtherName):
-        device_cert = device_cert.add_extension(
+        idevid_cert = idevid_cert.add_extension(
             alternative_name,
             critical=False
         )
 
-    device_cert = device_cert.sign(ca_key, hashes.SHA256())
+    idevid_cert = idevid_cert.sign(ca_key, hashes.SHA256())
 
-    save_cert(device_cert, dest_folder, common_name, "idevid_cert")
-
+    save_cert(idevid_cert, dest_folder, common_name, "idevid_cert")

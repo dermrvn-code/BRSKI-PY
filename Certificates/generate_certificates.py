@@ -1,4 +1,4 @@
-from Certicate import generate_idevid_device_cert, generate_simple_server_cert
+from Certicate import generate_idevid_device_cert, generate_basic_cert, generate_ra_cert
 from CA import generate_certificate_authority
 
 
@@ -13,7 +13,7 @@ generate_idevid_device_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
     "DE", "HSHL", "Trustpoint", "Pledge",
-    expiration_days=365, OtherName=True,
+    expiration_days=365,
     othername_model="ESP32", othername_serialnumber="123456", othername_manufacturer="Espressif")
 print("Generated Pledge IDevID certificate")
 
@@ -25,7 +25,7 @@ dest_folder = "../MASA/ca/"
 print("Generated MASA ca certificate")
 
 dest_folder = "../MASA/certs/"
-generate_simple_server_cert(
+generate_basic_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
     "DE", "MASA", 
@@ -40,9 +40,16 @@ dest_folder = "../Registrar/ca/"
 print("Generated Registrar ca certificate")
 
 dest_folder = "../Registrar/certs/"
-generate_simple_server_cert(
+generate_ra_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
-    "DE", "Registar", 
+    "DE", "registrar_server", 
     "localhost")
-print("Generated Registrar certificate")
+print("Generated Registrar RA certificate")
+
+generate_basic_cert(
+    ca_cert_path, ca_key_path, passphrase, 
+    dest_folder,
+    "DE", "registrar_client"
+)
+print("Generated Registrar Client certificate")
