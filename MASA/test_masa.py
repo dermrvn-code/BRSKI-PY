@@ -4,8 +4,8 @@ import ssl
 
 import sys
 sys.path.append("../") 
-from Voucher.voucher import Voucher, parse_voucher
-from Certificates.Certificates import load_certificatefile, load_passphrase
+from Voucher.Voucher import Voucher, parse_voucher
+from Certificates.CertificateTools import load_certificatefile, load_passphrase
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
@@ -35,7 +35,7 @@ def request_voucher(cert,private_key,passphrase,domain,serialnumber):
         "domain" : domain,
         "serialnumber" : serialnumber
     }
-    response_data = ssl_post_request("localhost", 8888, "/request-voucher", json.dumps(data), cert, private_key, passphrase)
+    response_data = ssl_post_request("localhost", 8888, "/requestvoucher", json.dumps(data), cert, private_key, passphrase)
     return parse_voucher(response_data)
 
 
@@ -44,9 +44,9 @@ def get_masa_public_key(cert,private_key,passphrase):
     return load_pem_public_key(response_data)
 
 
-cert = "../Registrar/certs/cert_registar.crt"
-private_key = "../Registrar/certs/CA_private_registar.key"    
-passphrase = load_passphrase("../Registrar/certs/passphrase_registar.txt")
+cert = "../Registrar/certs/client/cert_registrar_client.crt"
+private_key = "../Registrar/certs/client/cert_private_registrar_client.key"    
+passphrase = load_passphrase("../Registrar/certs/client/passphrase_registrar_client.txt")
 
 voucher = request_voucher(cert,private_key,passphrase,"example.com","123456")
 masa_public_key = get_masa_public_key(cert,private_key,passphrase)
