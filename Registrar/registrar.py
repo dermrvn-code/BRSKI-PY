@@ -5,8 +5,8 @@ import json
 import sys
 sys.path.append("../") 
 from Voucher.Voucher import Voucher
-from Certificates.CertificateTools import load_passphrase
-from Utils.HTTPSServer import SimpleHTTPSServer
+from Certificates.CertificateTools import load_passphrase_from_path
+from Utils.HTTPS import HTTPSServer
 
 
 def handle_request_voucher(self):
@@ -43,7 +43,7 @@ keyfile = "certs/server/cert_private_registrar_server.key"
 passphrasefile = "certs/server/passphrase_registrar_server.txt"
 cafile = "../Pledge/ca/ca_manufacturer.pem"
 
-server = SimpleHTTPSServer(address="localhost", port=8000, routes=routes,
+server = HTTPSServer(address="localhost", port=8000, routes=routes,
                            certfile=certfile, keyfile=keyfile,
                            passphrasefile=passphrasefile, cafile=cafile)
 server.start()

@@ -5,8 +5,8 @@ import json
 import sys
 sys.path.append("../") 
 from Voucher.Voucher import Voucher, create_voucher, Assertion
-from Certificates.CertificateTools import load_private_keyfile, load_public_keyfile, load_passphrase, load_certificatefile
-from Utils.HTTPSServer import SimpleHTTPSServer
+from Certificates.CertificateTools import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path, load_certificate_from_path
+from Utils.HTTPS import HTTPSServer
 
 
 def handle_request_voucher(self):
@@ -24,8 +24,8 @@ def handle_request_voucher(self):
 
     serial_number = post_data_dict["serialnumber"]
 
-    masa_passphrase = load_passphrase("certs/passphrase_masa.txt")
-    private_key = load_private_keyfile("certs/cert_private_masa.key", masa_passphrase)
+    masa_passphrase = load_passphrase_from_path("certs/passphrase_masa.txt")
+    private_key = load_private_key_from_path("certs/cert_private_masa.key", masa_passphrase)
     voucher = create_voucher(private_key, client_cert_bytes, Assertion.VERIFIED, serial_number, idevid_issuer=client_cert_bytes)
     voucher_json = json.dumps(voucher.to_dict());
 
@@ -40,7 +40,7 @@ def handle_public_key(self):
 
     print("Client certificate: ", json.dumps(client_cert_json))
 
-    public_key = load_public_keyfile("certs/cert_public_masa.key")
+    public_key = load_public_key_from_path("certs/cert_public_masa.key")
     public_key_bytes = public_key.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
     self.send_response(200)
@@ -58,7 +58,7 @@ keyfile = "certs/cert_private_masa.key"
 passphrasefile = "certs/passphrase_masa.txt"
 cafile = "../Registrar/ca/CA_registrar_ca.pem"
 
-server = SimpleHTTPSServer(address="localhost", port=8888, routes=routes,
+server = HTTPSServer(address="localhost", port=8888, routes=routes,
                            certfile=certfile, keyfile=keyfile,
                            passphrasefile=passphrasefile, cafile=cafile)
 server.start()
