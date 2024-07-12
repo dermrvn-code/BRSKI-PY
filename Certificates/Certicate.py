@@ -2,13 +2,19 @@ from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from pyasn1.type import univ, namedtype
 from pyasn1.codec.der import encoder
 import datetime
 from os import path
 from Keys import generate_rsa_keys, generate_passphrase
 
-def load_ca(ca_cert_path, ca_key_path, passphrase):
+
+def load_ca(
+        ca_cert_path : str, 
+        ca_key_path : str, 
+        passphrase : str
+    ) -> tuple[x509.Certificate, PrivateKeyTypes]:
     """
     Load the ca certificate and private key from files.
 
@@ -19,7 +25,7 @@ def load_ca(ca_cert_path, ca_key_path, passphrase):
 
     Returns:
     - ca_cert (Certificate): Loaded ca certificate.
-    - ca_key (RSAPrivateKey): Loaded ca private key.
+    - ca_key (PrivateKeyTypes): Loaded ca private key.
     """
     with open(ca_cert_path, "rb") as ca_cert_file:
         ca_cert = x509.load_pem_x509_certificate(ca_cert_file.read())
@@ -29,7 +35,12 @@ def load_ca(ca_cert_path, ca_key_path, passphrase):
     
     return ca_cert, ca_key
 
-def save_cert(cert, dest_folder, common_name, cert_type="cert"):
+def save_cert(
+        cert : x509.Certificate, 
+        dest_folder : str, 
+        common_name : str, 
+        cert_type : str = "cert"
+    ):
     """
     Save the certificate to a file.
 
@@ -46,9 +57,12 @@ def save_cert(cert, dest_folder, common_name, cert_type="cert"):
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
 def generate_certificate_request(
-        country_code, common_name, 
-        hostname=None, 
-        organization_name=None, organizational_unit_name=None):
+        country_code : str, 
+        common_name : str, 
+        hostname : str = None, 
+        organization_name : str = None, 
+        organizational_unit_name : str = None
+    ) -> x509.CertificateSigningRequestBuilder:
     """
     Generate a certificate signing request (CSR).
 
@@ -82,7 +96,11 @@ def generate_certificate_request(
 
     return x509.CertificateSigningRequestBuilder().subject_name(x509.Name(nameAttributes))
 
-def generate_certificate(csr, ca_cert, expiration_days=365):
+def generate_certificate(
+        csr : x509.CertificateSigningRequestBuilder, 
+        ca_cert : x509.Certificate, 
+        expiration_days : int = 365
+    ) -> x509.Certificate:
     """
     Generate a certificate based on the given CSR and CA certificate.
 
@@ -92,7 +110,7 @@ def generate_certificate(csr, ca_cert, expiration_days=365):
     - expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
-    - cert (CertificateBuilder): Generated certificate.
+    - cert (Certificate): Generated certificate.
     """
     return x509.CertificateBuilder().subject_name(
         csr.subject
@@ -109,11 +127,15 @@ def generate_certificate(csr, ca_cert, expiration_days=365):
     )
 
 def generate_basic_cert(
-    ca_cert_path, ca_key_path, ca_passphrase,
-    dest_folder,
-    country_code, common_name, 
-    hostname=None,
-    expiration_days=365):
+        ca_cert_path : str, 
+        ca_key_path : str, 
+        ca_passphrase : str,
+        dest_folder : str,
+        country_code : str, 
+        common_name : str, 
+        hostname : str = None,
+        expiration_days : int = 365
+    ) -> x509.Certificate:
     """
     Generate a simple device certificate.
 
@@ -128,7 +150,7 @@ def generate_basic_cert(
     - expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
-    None
+    - cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
@@ -161,15 +183,17 @@ def generate_basic_cert(
         )
     
     device_cert = device_cert.sign(ca_key, hashes.SHA256())
-
     save_cert(device_cert, dest_folder, common_name)
 
+    return device_cert
+
 def generate_ra_cert(
-    ca_cert_path, ca_key_path, ca_passphrase,
-    dest_folder,
-    country_code, common_name, 
-    hostname,
-    expiration_days=365):
+        ca_cert_path : str, ca_key_path : str, ca_passphrase : str,
+        dest_folder : str,
+        country_code : str, common_name : str, 
+        hostname : str,
+        expiration_days : int = 365
+    ) -> x509.Certificate:
     """
     Generate a RA (Registration Authority) certificate.
 
@@ -184,7 +208,7 @@ def generate_ra_cert(
     - expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
-    None
+    - cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
@@ -215,14 +239,22 @@ def generate_ra_cert(
     ).sign(ca_key, hashes.SHA256())
 
     save_cert(ra_cert, dest_folder, common_name)
+    return ra_cert
 
 def generate_idevid_device_cert(
-    ca_cert_path, ca_key_path, ca_passphrase,
-    dest_folder,
-    country_code, organization_name, organizational_unit_name, common_name,
-    expiration_days=365,
-    othername_model=None, othername_serialnumber=None, othername_manufacturer=None,
-    ):
+        ca_cert_path: str, 
+        ca_key_path: str, 
+        ca_passphrase: str,
+        dest_folder: str,
+        country_code: str, 
+        organization_name: str, 
+        organizational_unit_name: str, 
+        common_name: str,
+        expiration_days: int = 365,
+        othername_model: str = None, 
+        othername_serialnumber: str = None, 
+        othername_manufacturer: str = None,
+    ) -> x509.Certificate:
     """
     Generate an idevid device certificate.
 
@@ -240,9 +272,11 @@ def generate_idevid_device_cert(
     - othername_serialnumber (str): Serial number information for OtherName extension. Default is None.
     - othername_manufacturer (str): Manufacturer information for OtherName extension. Default is None.
 
+    
     Returns:
-    None
+    - cert (Certificate): Generated certificate.
     """
+
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
     device_key, _ = generate_rsa_keys(cert_passphrase, dest_folder, common_name)
@@ -311,3 +345,4 @@ def generate_idevid_device_cert(
     idevid_cert = idevid_cert.sign(ca_key, hashes.SHA256())
 
     save_cert(idevid_cert, dest_folder, common_name, "idevid_cert")
+    return idevid_cert

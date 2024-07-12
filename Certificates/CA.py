@@ -1,7 +1,6 @@
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, NoEncryption
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 import datetime
@@ -10,7 +9,13 @@ from Keys import generate_rsa_keys, generate_passphrase
 
 
 # Generate self-signed root certificate
-def generate_certificate_authority(country, common_name, dest_folder, days_valid=1825, passphrase_length=30):
+def generate_certificate_authority(
+        country: str, 
+        common_name: str, 
+        dest_folder: str, 
+        days_valid: int = 1825, 
+        passphrase_length: int = 30
+    ) -> tuple[str, str, str, str]:
     """
     Generate a self-signed root certificate and save it to a file.
 

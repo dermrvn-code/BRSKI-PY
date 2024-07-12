@@ -6,7 +6,7 @@ from os import path
 import secrets
 
 # Generate a random passphrase
-def generate_passphrase(dest_folder, common_name, length=30):
+def generate_passphrase(dest_folder : str, common_name : str, length : int = 30) -> str:
     """
     Generate a random passphrase and save it to a file.
 
@@ -27,7 +27,7 @@ def generate_passphrase(dest_folder, common_name, length=30):
 
     return passphrase
 
-def generate_rsa_keys(passphrase, dest_folder, common_name, prefix="cert"):
+def generate_rsa_keys(passphrase : str, dest_folder : str, common_name : str, prefix : str = "cert") -> tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]: 
     """
     Generates RSA private and public keys and saves them to files.
 
