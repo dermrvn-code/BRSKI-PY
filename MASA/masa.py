@@ -4,7 +4,7 @@ import json
 
 import sys
 sys.path.append("../") 
-from Voucher.Voucher import Voucher, create_voucher
+from Voucher.Voucher import Voucher, create_voucher, Assertion
 from Certificates.CertificateTools import load_private_keyfile, load_public_keyfile, load_passphrase, load_certificatefile
 from Utils.HTTPSServer import SimpleHTTPSServer
 
@@ -22,12 +22,11 @@ def handle_request_voucher(self):
 
     # Validate client certificate here
 
-    registrar_domain = post_data_dict["domain"]
     serial_number = post_data_dict["serialnumber"]
 
     masa_passphrase = load_passphrase("certs/passphrase_masa.txt")
     private_key = load_private_keyfile("certs/cert_private_masa.key", masa_passphrase)
-    voucher = create_voucher(private_key, client_cert_bytes, registrar_domain, "verified", serial_number)
+    voucher = create_voucher(private_key, client_cert_bytes, Assertion.VERIFIED, serial_number, idevid_issuer=client_cert_bytes)
     voucher_json = json.dumps(voucher.to_dict());
 
     # Send response

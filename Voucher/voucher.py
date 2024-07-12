@@ -1,62 +1,45 @@
 import json
 import base64
 from datetime import datetime, timedelta, timezone
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, PublicKeyTypes
+from cryptography.x509 import  Certificate
+
+
+import sys
+sys.path.append("../") 
+from Voucher.Assertion import Assertion
+from Certificates.Signature import sign, verify
 
 class Voucher:
-    def __init__(self, version, created_on, expires_on, serial_number, nonce, pinned_domain_cert, domain_id, assertion):
-        self.version = version
-        self.created_on = created_on
-        self.expires_on = expires_on
-        self.serial_number = serial_number
-        self.nonce = nonce
-        self.pinned_domain_cert = pinned_domain_cert
-        self.domain_id = domain_id
-        self.assertion = assertion
-        self.masa_signature = None
+    def __init__(self, created_on : datetime,
+                 assertion : Assertion, serial_number : str, 
+                 pinned_domain_cert : bytes, expires_on : datetime = None,
+                 idevid_issuer : bytes = None, 
+                 domain_cert_revocation_checks : bool = None, nonce : bytes = None,
+                 last_renewal_date : datetime = None):
+        self.created_on : datetime = created_on
+        self.expires_on : datetime = expires_on
+        self.assertion : Assertion= assertion
+        self.serial_number : str = serial_number
+        self.idevid_issuer : bytes = idevid_issuer
+        self.pinned_domain_cert : bytes = pinned_domain_cert
+        self.domain_cert_revocation_checks : bool = domain_cert_revocation_checks
+        self.nonce : bytes = nonce
+        self.last_renewal_date : datetime = last_renewal_date
+        self.signature : bytes = None
 
-    def to_dict(self, exclude_masa_signature=False):
-        dict = {
-            "version": self.version,
-            "created_on": self.created_on,
-            "expires_on": self.expires_on,
-            "serial_number": self.serial_number,
-            "nonce": self.nonce,
-            "pinned_domain_cert": self.pinned_domain_cert,
-            "domain_id": self.domain_id,
-            "assertion": self.assertion,
-            # Exclude masa_signature here
-        }
-
-        if not exclude_masa_signature:
-            dict["masa_signature"] = self.masa_signature
-
-        return dict
-
-    '''
-    TODO: Implement the sign and verify method using PKCS#4
-    '''
-    def sign(self, masa_private_key):
+    def sign(self, signer_private_key : PrivateKeyTypes) -> bytes:
         # Create a copy of the voucher data dictionary without masa_signature
         data_to_sign = self.to_dict(True)
         
         # Convert to JSON and encode
         voucher_data = json.dumps(data_to_sign, sort_keys=True).encode('utf-8')
         
-        # Sign the voucher data
-        signature = masa_private_key.sign(
-            voucher_data,
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
-        )
-        self.masa_signature = base64.b64encode(signature).decode('utf-8')
+        self.signature = sign(voucher_data, signer_private_key)
 
-    def verify(self, masa_public_key, registrar_domain, registrar_cert):
-        if self.masa_signature is None:
+    def verify(self, signer_public_key : PublicKeyTypes) -> bool:
+        if self.signature is None:
             raise ValueError("Voucher is not signed")
         
         # Create a copy of the voucher data dictionary without masa_signature
@@ -65,61 +48,66 @@ class Voucher:
         # Convert to JSON and encode
         voucher_data = json.dumps(data_to_verify, sort_keys=True).encode('utf-8')
         
-        signature = base64.b64decode(self.masa_signature)
-        
-        try:
-            masa_public_key.verify(
-                signature,
-                voucher_data,
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.MAX_LENGTH
-                ),
-                hashes.SHA256()
-            )
-            if self.domain_id != registrar_domain:
-                raise ValueError("Domain ID mismatch")
-            
-            registrar_cert_bytes = registrar_cert.public_bytes(serialization.Encoding.DER)
-            if self.pinned_domain_cert != base64.b64encode(registrar_cert_bytes).decode('utf-8'):
-                raise ValueError("Registrar certificate mismatch")
-            
-            return True
-        except Exception as e:
-            print(f"Verification failed: {e}")
-            return False
+        return verify(self.signature, voucher_data, signer_public_key)
 
-def create_voucher(masa_private_key, registrar_cert_bytes, domain_id, assertion, serial_number="1234567890", validity_days=7):
-    nonce = base64.b64encode(b'some_random_nonce').decode('utf-8')
-    current_time = datetime.now(timezone.utc).isoformat()
-    expiration_time = (datetime.now(timezone.utc) + timedelta(days=validity_days)).isoformat()
-    pinned_domain_cert = base64.b64encode(
-        registrar_cert_bytes
-    ).decode('utf-8')
+    def to_dict(self, exclude_signature : bool = False) -> dict:
+        dict = {
+            "created-on": self.created_on.isoformat(),
+            "expire-on": self.expires_on.isoformat() if self.expires_on is not None else None,
+            "assertion": self.assertion.value,
+            "serial-number": self.serial_number,
+            "idevid-issuer": base64.b64encode(self.idevid_issuer).decode('utf-8') if self.idevid_issuer is not None else None,
+            "pinned-domain-cert": base64.b64encode(self.pinned_domain_cert).decode('utf-8'),
+            "domain-cert-revocation-checks": self.domain_cert_revocation_checks,
+            "nonce": base64.b64encode(self.nonce).decode('utf-8') if self.nonce is not None else None,
+            "last-renewal-date": self.last_renewal_date.isoformat() if self.last_renewal_date is not None else None,
+        }
+
+        if not exclude_signature and self.signature is not None:
+            dict["signature"] = base64.b64encode(self.signature).decode('utf-8')
+
+        dict = {key: value for key, value in dict.items() if value is not None}
+
+        return dict
+
+def create_voucher(
+        masa_private_key : PrivateKeyTypes, 
+        registrar_cert : bytes, 
+        assertion : Assertion, 
+        serial_number : str, 
+        idevid_issuer : bytes,
+        validity_days : int = 7) -> Voucher:
+    nonce = base64.b64encode(b'some_random_nonce')
+    current_time = datetime.now(timezone.utc)
+    expiration_time = (datetime.now(timezone.utc) + timedelta(days=validity_days))
+    pinned_domain_cert = base64.b64encode(registrar_cert)
     voucher = Voucher(
-        version="1",
         created_on=current_time,
         expires_on=expiration_time,
+        assertion=assertion,
         serial_number=serial_number,
-        nonce=nonce,
+        idevid_issuer=idevid_issuer,
         pinned_domain_cert=pinned_domain_cert,
-        domain_id=domain_id,
-        assertion=assertion
+        domain_cert_revocation_checks=False,
+        nonce=nonce,
+        last_renewal_date=current_time
     )
     voucher.sign(masa_private_key)
     return voucher
 
-def parse_voucher(voucher_json):
+def parse_voucher(voucher_json : str) -> Voucher:
     voucher_dict = json.loads(voucher_json)
     voucher = Voucher(
-        version=voucher_dict["version"],
-        created_on=voucher_dict["created_on"],
-        expires_on=voucher_dict["expires_on"],
-        serial_number=voucher_dict["serial_number"],
-        nonce=voucher_dict["nonce"],
-        pinned_domain_cert=voucher_dict["pinned_domain_cert"],
-        domain_id=voucher_dict["domain_id"],
-        assertion=voucher_dict["assertion"]
+        created_on=datetime.fromisoformat(voucher_dict.get("created-on")),
+        expires_on=datetime.fromisoformat(voucher_dict.get("expire-on")),
+        assertion=Assertion(voucher_dict.get("assertion")),
+        serial_number=voucher_dict.get("serial-number"),
+        idevid_issuer=base64.b64decode(voucher_dict.get("idevid-issuer").encode('utf-8')),
+        pinned_domain_cert=base64.b64decode(voucher_dict.get("pinned-domain-cert").encode('utf-8')),
+        domain_cert_revocation_checks=voucher_dict.get("domain-cert-revocation-checks"),
+        nonce=base64.b64decode(voucher_dict.get("nonce").encode('utf-8')),
+        last_renewal_date=datetime.fromisoformat(voucher_dict.get("last-renewal-date"))
     )
-    voucher.masa_signature = voucher_dict["masa_signature"]
+
+    voucher.signature = base64.b64decode(voucher_dict["signature"].encode('utf-8'))
     return voucher

@@ -30,7 +30,7 @@ class SimpleHTTPSServer:
         context.load_verify_locations(cafile=self.cafile)
         httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
-        print("Server running on port https://" + self.address + ":" + str(self.port) + "...")
+        print(f"Server running on port https://{self.address}:{str(self.port)}...")
         httpd.serve_forever()
 
     def create_handler(self, routes):
