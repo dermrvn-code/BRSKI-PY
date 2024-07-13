@@ -11,9 +11,9 @@ def generate_passphrase(dest_folder : str, common_name : str, length : int = 30)
     Generate a random passphrase and save it to a file.
 
     Parameters:
-    - dest_folder (str): The destination folder where the passphrase file will be saved.
-    - common_name (str): The common name associated with the passphrase.
-    - length (int): The length of the passphrase (default is 30).
+        dest_folder (str): The destination folder where the passphrase file will be saved.
+        common_name (str): The common name associated with the passphrase.
+        length (int): The length of the passphrase (default is 30).
 
     Returns:
     - passphrase (str): The generated passphrase.
@@ -31,7 +31,7 @@ def generate_rsa_keys(passphrase : str, dest_folder : str, common_name : str, pr
     """
     Generates RSA private and public keys and saves them to files.
 
-    Args:
+    Parameters:
         passphrase (str): The passphrase used to encrypt the private key.
         dest_folder (str): The destination folder where the keys will be saved.
         common_name (str): The common name used in the key filenames.

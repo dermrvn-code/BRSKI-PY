@@ -10,7 +10,17 @@ from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, Pub
 TODO: Implement the sign and verify method using CMS
 '''
 def sign(data, signer_private_key : PrivateKeyTypes) -> bytes:
+    """
+    Signs the given data using the private key.
 
+    Parameters:
+        data: The data to be signed.
+        signer_private_key: The private key used for signing.
+
+    Returns:
+        The signature as bytes.
+
+    """
     signature = signer_private_key.sign(
         data,
         padding.PSS(
@@ -23,6 +33,18 @@ def sign(data, signer_private_key : PrivateKeyTypes) -> bytes:
     return signature
 
 def verify(signature : bytes, verification_data, signer_public_key : PublicKeyTypes) -> bool:
+    """
+    Verifies the given signature against the verification data using the public key.
+
+    Parameters:
+        signature: The signature to be verified.
+        verification_data: The data used for verification.
+        signer_public_key: The public key used for verification.
+
+    Returns:
+        True if the verification is successful, False otherwise.
+
+    """
     try:
         signer_public_key.verify(
             signature,

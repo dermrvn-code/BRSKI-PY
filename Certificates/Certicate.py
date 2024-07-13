@@ -19,13 +19,13 @@ def load_ca(
     Load the ca certificate and private key from files.
 
     Parameters:
-    - ca_cert_path (str): Path to the ca certificate file.
-    - ca_key_path (str): Path to the ca private key file.
-    - passphrase (str): Passphrase to decrypt the private key.
+        ca_cert_path (str): Path to the ca certificate file.
+        ca_key_path (str): Path to the ca private key file.
+        passphrase (str): Passphrase to decrypt the private key.
 
     Returns:
-    - ca_cert (Certificate): Loaded ca certificate.
-    - ca_key (PrivateKeyTypes): Loaded ca private key.
+        ca_cert (Certificate): Loaded ca certificate.
+        ca_key (PrivateKeyTypes): Loaded ca private key.
     """
     with open(ca_cert_path, "rb") as ca_cert_file:
         ca_cert = x509.load_pem_x509_certificate(ca_cert_file.read())
@@ -45,10 +45,10 @@ def save_cert(
     Save the certificate to a file.
 
     Parameters:
-    - cert (Certificate): Certificate to be saved.
-    - dest_folder (str): Destination folder to save the certificate file.
-    - common_name (str): Common name used in the certificate.
-    - cert_type (str): Type of the certificate. Default is "cert".
+        cert (Certificate): Certificate to be saved.
+        dest_folder (str): Destination folder to save the certificate file.
+        common_name (str): Common name used in the certificate.
+        cert_type (str): Type of the certificate. Default is "cert".
 
     Returns:
     None
@@ -67,14 +67,14 @@ def generate_certificate_request(
     Generate a certificate signing request (CSR).
 
     Parameters:
-    - country_code (str): Country code for the certificate.
-    - common_name (str): Common name for the certificate.
-    - hostname (str): Hostname for the certificate. Optional.
-    - organization_name (str): Organization name for the certificate. Optional.
-    - organizational_unit_name (str): Organizational unit name for the certificate. Optional.
+        country_code (str): Country code for the certificate.
+        common_name (str): Common name for the certificate.
+        hostname (str): Hostname for the certificate. Optional.
+        organization_name (str): Organization name for the certificate. Optional.
+        organizational_unit_name (str): Organizational unit name for the certificate. Optional.
 
     Returns:
-    - csr (CertificateSigningRequestBuilder): Generated CSR.
+        csr (CertificateSigningRequestBuilder): Generated CSR.
     """
     nameAttributes = [
         x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
@@ -105,12 +105,12 @@ def generate_certificate(
     Generate a certificate based on the given CSR and CA certificate.
 
     Parameters:
-    - device_csr (CertificateSigningRequestBuilder): Certificate signing request.
-    - ca_cert (Certificate): CA certificate used for signing.
-    - expiration_days (int): Number of days until the certificate expires. Default is 365.
-
+        device_csr (CertificateSigningRequestBuilder): Certificate signing request.
+        ca_cert (Certificate): CA certificate used for signing.
+        expiration_days (int): Number of days until the certificate expires. Default is 365.
+        
     Returns:
-    - cert (Certificate): Generated certificate.
+        cert (Certificate): Generated certificate.
     """
     return x509.CertificateBuilder().subject_name(
         csr.subject
@@ -140,17 +140,17 @@ def generate_basic_cert(
     Generate a simple device certificate.
 
     Parameters:
-    - ca_cert_path (str): Path to the ca certificate file.
-    - ca_key_path (str): Path to the ca private key file.
-    - ca_passphrase (str): Passphrase for the ca private key.
-    - dest_folder (str): Destination folder to save the device certificate.
-    - country_code (str): Country code for the device certificate.
-    - common_name (str): Common name for the device certificate.
-    - hostname (str): Hostname for the device certificate. Optional.
-    - expiration_days (int): Number of days until the certificate expires. Default is 365.
+        ca_cert_path (str): Path to the ca certificate file.
+        ca_key_path (str): Path to the ca private key file.
+        ca_passphrase (str): Passphrase for the ca private key.
+        dest_folder (str): Destination folder to save the device certificate.
+        country_code (str): Country code for the device certificate.
+        common_name (str): Common name for the device certificate.
+        hostname (str): Hostname for the device certificate. Optional.
+        expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
-    - cert (Certificate): Generated certificate.
+        cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
@@ -180,6 +180,11 @@ def generate_basic_cert(
         device_cert = device_cert.add_extension(
             alternative_name,
             critical=False
+        ).add_extension(
+            x509.ExtendedKeyUsage([
+                x509.ObjectIdentifier("1.3.6.1.5.5.7.3.1")  # id-kp-serverAuth OID
+            ]),
+            critical=False
         )
     
     device_cert = device_cert.sign(ca_key, hashes.SHA256())
@@ -198,17 +203,17 @@ def generate_ra_cert(
     Generate a RA (Registration Authority) certificate.
 
     Parameters:
-    - ca_cert_path (str): Path to the CA certificate file.
-    - ca_key_path (str): Path to the CA private key file.
-    - ca_passphrase (str): Passphrase for the CA private key.
-    - dest_folder (str): Destination folder to save the RA certificate.
-    - country_code (str): Country code for the RA certificate.
-    - common_name (str): Common name for the RA certificate.
-    - hostname (str): Hostname for the RA certificate.
-    - expiration_days (int): Number of days until the certificate expires. Default is 365.
+        ca_cert_path (str): Path to the CA certificate file.
+        ca_key_path (str): Path to the CA private key file.
+        ca_passphrase (str): Passphrase for the CA private key.
+        dest_folder (str): Destination folder to save the RA certificate.
+        country_code (str): Country code for the RA certificate.
+        common_name (str): Common name for the RA certificate.
+        hostname (str): Hostname for the RA certificate.
+        expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
-    - cert (Certificate): Generated certificate.
+        cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
     cert_passphrase = generate_passphrase(dest_folder, common_name)
@@ -227,14 +232,17 @@ def generate_ra_cert(
     ).sign(ra_key, hashes.SHA256())
     
 
-    # Add RA specific extensions
     ra_cert = generate_certificate(ra_csr, ca_cert, expiration_days)
     
+    # Add RA specific extensions
     ra_cert = ra_cert.add_extension(
         alternative_name,
         critical=False
     ).add_extension(
-        x509.ExtendedKeyUsage([x509.ObjectIdentifier("1.3.6.1.5.5.7.3.28")]),  # id-kp-cmcRA OID        
+        x509.ExtendedKeyUsage([
+            x509.ObjectIdentifier("1.3.6.1.5.5.7.3.28"),  # id-kp-cmcRA OID
+            x509.ObjectIdentifier("1.3.6.1.5.5.7.3.1")  # id-kp-serverAuth OID
+        ]),
         critical=False
     ).sign(ca_key, hashes.SHA256())
 
@@ -259,22 +267,22 @@ def generate_idevid_device_cert(
     Generate an idevid device certificate.
 
     Parameters:
-    - ca_cert_path (str): Path to the ca certificate file.
-    - ca_key_path (str): Path to the ca private key file.
-    - ca_passphrase (str): Passphrase for the ca private key.
-    - dest_folder (str): Destination folder to save the device certificate.
-    - country_code (str): Country code for the device certificate.
-    - organization_name (str): Organization name for the device certificate.
-    - organizational_unit_name (str): Organizational unit name for the device certificate.
-    - common_name (str): Common name for the device certificate.
-    - expiration_days (int): Number of days until the certificate expires. Default is 365.
-    - othername_model (str): Model information for OtherName extension. Default is None.
-    - othername_serialnumber (str): Serial number information for OtherName extension. Default is None.
-    - othername_manufacturer (str): Manufacturer information for OtherName extension. Default is None.
+        ca_cert_path (str): Path to the ca certificate file.
+        ca_key_path (str): Path to the ca private key file.
+        ca_passphrase (str): Passphrase for the ca private key.
+        dest_folder (str): Destination folder to save the device certificate.
+        country_code (str): Country code for the device certificate.
+        organization_name (str): Organization name for the device certificate.
+        organizational_unit_name (str): Organizational unit name for the device certificate.
+        common_name (str): Common name for the device certificate.
+        expiration_days (int): Number of days until the certificate expires. Default is 365.
+        othername_model (str): Model information for OtherName extension. Default is None.
+        othername_serialnumber (str): Serial number information for OtherName extension. Default is None.
+        othername_manufacturer (str): Manufacturer information for OtherName extension. Default is None.
 
     
     Returns:
-    - cert (Certificate): Generated certificate.
+        cert (Certificate): Generated certificate.
     """
 
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
