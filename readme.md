@@ -1,7 +1,7 @@
 <!-- @format -->
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/1503239f-b992-4e11-a61c-d19294b00af4" />
+  <img src="https://github.com/user-attachments/assets/1503239f-b992-4e11-a61c-d19294b00af4" /><br/><br/>
   <strong>Bootstrapping Remote Secure Key Infrastructure in Python</strong><br/><br/>
   
   <a href="https://trustpoint.campus-schwarzwald.de/">
