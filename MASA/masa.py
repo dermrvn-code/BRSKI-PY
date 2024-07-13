@@ -4,7 +4,8 @@ import json
 
 import sys
 sys.path.append("../") 
-from Voucher.Voucher import Voucher, create_voucher, Assertion
+from Voucher.Voucher import create_voucher_from_request
+from Voucher.VoucherRequest import parse_voucher_request
 from Certificates.CertificateTools import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path, load_certificate_from_path
 from Utils.HTTPS import HTTPSServer
 
@@ -12,22 +13,22 @@ from Utils.HTTPS import HTTPSServer
 def handle_request_voucher(self):
     content_length = int(self.headers["Content-Length"])
     post_data = self.rfile.read(content_length)
-    post_data_dict = json.loads(post_data)
+    voucher_request_dict = json.loads(post_data)
 
     client_cert_bytes = self.request.getpeercert(True)
     client_cert_json = self.request.getpeercert()
 
-    print("Client certificate: ", json.dumps(client_cert_json))
-    print("POST request payload: ", json.dumps(post_data_dict))
+    voucher_request = parse_voucher_request(voucher_request_dict)
 
     # Validate client certificate here
 
-    serial_number = post_data_dict["serialnumber"]
-
     masa_passphrase = load_passphrase_from_path("certs/passphrase_masa.txt")
     private_key = load_private_key_from_path("certs/cert_private_masa.key", masa_passphrase)
-    voucher = create_voucher(private_key, client_cert_bytes, Assertion.VERIFIED, serial_number, idevid_issuer=client_cert_bytes)
+    voucher = create_voucher_from_request(voucher_request, client_cert_bytes, private_key)
     voucher_json = json.dumps(voucher.to_dict());
+
+    print("Voucher:")
+    voucher.print()
 
     # Send response
     self.send_response(200)
@@ -56,9 +57,8 @@ routes = {
 certfile = "certs/cert_masa.crt"
 keyfile = "certs/cert_private_masa.key"
 passphrasefile = "certs/passphrase_masa.txt"
-cafile = "../Registrar/ca/CA_registrar_ca.pem"
 
 server = HTTPSServer(address="localhost", port=8888, routes=routes,
                            certfile=certfile, keyfile=keyfile,
-                           passphrasefile=passphrasefile, cafile=cafile)
+                           passphrasefile=passphrasefile)
 server.start()
