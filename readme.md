@@ -4,7 +4,7 @@
   <img src="https://github.com/user-attachments/assets/1503239f-b992-4e11-a61c-d19294b00af4" /><br/><br/>
   <strong>Bootstrapping Remote Secure Key Infrastructure in Python</strong><br/><br/>
   
-  <a href="https://trustpoint.campus-schwarzwald.de/">
+  <a href="www.python.org/downloads/release/python-3123/">
     <img src="https://img.shields.io/badge/-Python_3.12.3-3776AB?style=for-the-badge&logo=python&logoColor=white">
   </a>
   
