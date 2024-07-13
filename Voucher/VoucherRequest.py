@@ -1,15 +1,13 @@
 import json
 import base64
 from datetime import datetime, timedelta, timezone
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, PublicKeyTypes
-
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 import sys
+from Voucher.VoucherBase import VoucherBase, Assertion
+
 sys.path.append("../") 
-from Voucher.Assertion import Assertion
-from Certificates.Signature import sign, verify
 
-
-class VoucherRequest:
+class VoucherRequest(VoucherBase):
     def __init__(self, serial_number : str, 
                  created_on : datetime = None, expires_on : datetime = None, 
                  assertion : Assertion = None, 
@@ -17,7 +15,26 @@ class VoucherRequest:
                  domain_cert_revocation_checks : bool = None, nonce : bytes = None,
                  last_renewal_date : datetime = None, prior_signed_voucher_request: bytes = None,
                  proximity_registrar_cert: bytes = None):
-        
+        """
+        Initialize a voucher request.
+
+        Parameters:
+            serial_number (str): The serial number of the voucher request.
+            created_on (datetime, optional): The creation date of the voucher request. Defaults to None.
+            expires_on (datetime, optional): The expiration date of the voucher request. Defaults to None.
+            assertion (Assertion, optional): The assertion type of the voucher request. Defaults to None.
+            idevid_issuer (bytes, optional): The issuer identifier of the voucher request. Defaults to None.
+            pinned_domain_cert (bytes, optional): The pinned domain certificate of the voucher request. Defaults to None.
+            domain_cert_revocation_checks (bool, optional): Whether to perform domain certificate revocation checks. Defaults to None.
+            nonce (bytes, optional): The nonce of the voucher request. Defaults to None.
+            last_renewal_date (datetime, optional): The last renewal date of the voucher request. Defaults to None.
+            prior_signed_voucher_request (bytes, optional): The prior signed voucher request. Defaults to None.
+            proximity_registrar_cert (bytes, optional): The proximity registrar certificate. Defaults to None.
+
+        Raises:
+            ValueError: If the assertion is set to PROXIMITY without providing a proximity registrar certificate.
+        """
+        super().__init__()
         
         if(assertion == Assertion.PROXIMITY and proximity_registrar_cert == None):
             raise ValueError("Proximity assertion requires proximity registrar certificate")
@@ -35,27 +52,6 @@ class VoucherRequest:
         self.proximity_registrar_cert : bytes = proximity_registrar_cert
 
         self.signature : bytes = None
-
-    def sign(self, signer_private_key : PrivateKeyTypes) -> bytes:
-        # Create a copy of the voucher data dictionary without masa_signature
-        data_to_sign = self.to_dict(True)
-        
-        # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_sign, sort_keys=True).encode('utf-8')
-        
-        self.signature = sign(voucher_data, signer_private_key)
-
-    def verify(self, signer_public_key : PublicKeyTypes) -> bool:
-        if self.signature is None:
-            raise ValueError("Voucher Request is not signed")
-        
-        # Create a copy of the voucher data dictionary without masa_signature
-        data_to_verify = self.to_dict(True)
-        
-        # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode('utf-8')
-        
-        return verify(self.signature, voucher_data, signer_public_key)
 
     def to_dict(self, exclude_signature : bool = False) -> dict:
         dict = {
@@ -78,7 +74,6 @@ class VoucherRequest:
         dict = {key: value for key, value in dict.items() if value is not None}
 
         return dict
-
     
 
 def create_pledge_voucher_request(
@@ -89,7 +84,21 @@ def create_pledge_voucher_request(
         idevid_issuer : bytes = None,
         proximity_registrar_cert : bytes = None, 
         validity_days : int = 7) -> VoucherRequest:
+    """
+    Creates a pledge voucher request.
 
+    Parameters:
+        pledge_private_key (PrivateKeyTypes): The private key of the pledge.
+        serial_number (str): The serial number of the voucher request.
+        assertion (Assertion, optional): The assertion type of the voucher request. Defaults to None.
+        nonce (bytes, optional): The nonce of the voucher request. Defaults to None.
+        idevid_issuer (bytes, optional): The issuer identifier of the voucher request. Defaults to None.
+        proximity_registrar_cert (bytes, optional): The proximity registrar certificate. Defaults to None.
+        validity_days (int, optional): The number of days the voucher request is valid for. Defaults to 7.
+
+    Returns:
+        VoucherRequest: The created pledge voucher request.
+    """
     current_time = datetime.now(timezone.utc)
     expiration_time = (datetime.now(timezone.utc) + timedelta(days=validity_days))
     
@@ -110,7 +119,16 @@ def create_pledge_voucher_request(
     return request
 
 def create_registrar_voucher_request(registrar_private_key : PrivateKeyTypes, request : VoucherRequest) -> VoucherRequest:
+    """
+    Creates a registrar voucher request.
 
+    Parameters:
+        registrar_private_key (PrivateKeyTypes): The private key of the registrar.
+        request (VoucherRequest): The original voucher request.
+
+    Returns:
+        VoucherRequest: The created registrar voucher request.
+    """
     current_time = datetime.now(timezone.utc)
     prior_signed_voucher_request = request.signature
 
@@ -131,20 +149,34 @@ def create_registrar_voucher_request(registrar_private_key : PrivateKeyTypes, re
     return new_request
 
 
-def parse_voucher_request(voucher_json : str) -> VoucherRequest:
-    request_dict = json.loads(voucher_json)
+def parse_voucher_request(request) -> VoucherRequest:
+    """
+    Parses a voucher request from a JSON string or dictionary.
+
+    Parameters:
+        request (str or dict): The voucher request in JSON string or dictionary format.
+
+    Returns:
+        VoucherRequest: The parsed voucher request.
+    """
+    if(type(request) is str):
+        request_dict = json.loads(request)
+    elif(type(request) is dict):
+        request_dict = request
+    else:
+        raise ValueError("Invalid request format")
+
     request = VoucherRequest(
-        created_on=datetime.fromisoformat(request_dict.get("created-on")),
-        expires_on=datetime.fromisoformat(request_dict.get("expire-on")),
-        assertion=Assertion(request_dict.get("assertion")),
+        created_on=datetime.fromisoformat(request_dict.get("created-on")) if request_dict.get("created-on") is not None else None,
+        expires_on=datetime.fromisoformat(request_dict.get("expire-on")) if request_dict.get("expire-on") is not None else None,
+        assertion=Assertion(request_dict.get("assertion")) if request_dict.get("assertion") is not None else None,
         serial_number=request_dict.get("serial-number"),
-        idevid_issuer=base64.b64decode(request_dict.get("idevid-issuer").encode('utf-8')),
-        pinned_domain_cert=base64.b64decode(request_dict.get("pinned-domain-cert").encode('utf-8')),
-        domain_cert_revocation_checks=request_dict.get("domain-cert-revocation-checks"),
-        nonce=base64.b64decode(request_dict.get("nonce").encode('utf-8')),
-        last_renewal_date=datetime.fromisoformat(request_dict.get("last-renewal-date")),
-        prior_signed_voucher_request=base64.b64decode(request_dict.get("prior-signed-voucher-request").encode('utf-8')),
-        proximity_registrar_cert=base64.b64decode(request_dict.get("proximity-registrar-cert").encode('utf-8'))
+        idevid_issuer=base64.b64decode(request_dict.get("idevid-issuer").encode('utf-8')) if request_dict.get("idevid-issuer") is not None else None,
+        pinned_domain_cert=base64.b64decode(request_dict.get("pinned-domain-cert").encode('utf-8')) if request_dict.get("pinned-domain-cert") is not None else None,
+        domain_cert_revocation_checks=request_dict.get("domain-cert-revocation-checks") if request_dict.get("domain-cert-revocation-checks") is not None else None,
+        nonce=base64.b64decode(request_dict.get("nonce").encode('utf-8')) if request_dict.get("nonce") is not None else None,
+        last_renewal_date=datetime.fromisoformat(request_dict.get("last-renewal-date")) if request_dict.get("last-renewal-date") is not None else None,
+        prior_signed_voucher_request=base64.b64decode(request_dict.get("prior-signed-voucher-request").encode('utf-8')) if request_dict.get("prior-signed-voucher-request") is not None else None,
+        proximity_registrar_cert=base64.b64decode(request_dict.get("proximity-registrar-cert").encode('utf-8')) if request_dict.get("proximity-registrar-cert") is not None else None
     )
     return request
-
