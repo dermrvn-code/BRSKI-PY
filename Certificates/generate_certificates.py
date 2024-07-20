@@ -1,4 +1,4 @@
-from Certicate import generate_idevid_device_cert, generate_basic_cert, generate_ra_cert
+from Certicate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert
 from CA import generate_certificate_authority
 
 
@@ -9,7 +9,7 @@ print("Generated Manufacturer ca certificate")
 
 # Pledge IDevID certificate
 dest_folder = "../Pledge/certs/"
-generate_idevid_device_cert(
+generate_idevid_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
     "DE", "HSHL", "Trustpoint", "Pledge",
@@ -25,7 +25,7 @@ dest_folder = "../MASA/ca/"
 print("Generated MASA ca certificate")
 
 dest_folder = "../MASA/certs/"
-generate_basic_cert(
+generate_tls_client_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
     "DE", "MASA", 
@@ -48,9 +48,10 @@ generate_ra_cert(
 print("Generated Registrar RA certificate")
 
 dest_folder = "../Registrar/certs/client"
-generate_basic_cert(
+generate_tls_client_cert(
     ca_cert_path, ca_key_path, passphrase, 
     dest_folder,
-    "DE", "registrar_client"
+    "DE", "registrar_client",
+    "localhost"
 )
 print("Generated Registrar Client certificate")

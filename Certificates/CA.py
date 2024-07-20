@@ -54,6 +54,18 @@ def generate_certificate_authority(
         datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=days_valid)
     ).add_extension(
         x509.BasicConstraints(ca=True, path_length=None), critical=True
+    ).add_extension(
+        x509.KeyUsage(
+            digital_signature=False,
+            content_commitment=False,
+            key_encipherment=False,
+            data_encipherment=False,
+            key_agreement=False,
+            key_cert_sign=True, 
+            crl_sign=True,
+            encipher_only=False,
+            decipher_only=False
+            ), critical=True
     ).sign(key, hashes.SHA256(), default_backend())
 
     # Write the certificate to a file

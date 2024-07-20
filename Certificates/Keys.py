@@ -70,3 +70,20 @@ def generate_rsa_keys(passphrase : str, dest_folder : str, common_name : str, pr
         key_file.write(public_key_bytes)
     
     return private_key, public_key
+
+
+def setup_private_key(dest_folder : str, common_name : str):
+    """
+    Generates a passphrase and RSA keys for a device certificate.
+
+    Parameters:
+        dest_folder (str): The destination folder where the keys will be saved.
+        common_name (str): The common name for the certificate.
+
+    Returns:
+        private_key (RSAPrivateKey): The generated RSA private key.
+    """
+    cert_passphrase = generate_passphrase(dest_folder, common_name)
+    private_key, public_key = generate_rsa_keys(cert_passphrase, dest_folder, common_name)
+
+    return private_key
