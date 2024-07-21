@@ -1,6 +1,8 @@
-from Certificate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert
-from CA import generate_certificate_authority
-from CertificateRevocationList import generate_certificate_revocation_list, update_certificate_revocation_list
+import sys
+sys.path.append("../") 
+from Certificates.Certificate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert, generate_tls_server_cert
+from Certificates.CA import generate_certificate_authority
+from Certificates.CertificateRevocationList import generate_certificate_revocation_list
 
 
 # Manufacturer ca
@@ -71,3 +73,22 @@ generate_tls_client_cert(
     "localhost"
 )
 print("Generated Registrar Client certificate")
+
+# CA Server ca
+dest_folder = "../CAServer/ca/"
+common_name = "CAServer_ca"
+(ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = generate_certificate_authority("DE", common_name, dest_folder)
+print("Generated CAServer ca certificate")
+
+# CA Server CRL
+generate_certificate_revocation_list(ca_cert_path, ca_key_path, passphrase_path, dest_folder, common_name)
+print("Generated CAServer CRL")
+
+dest_folder = "../CAServer/certs/"
+generate_tls_server_cert(
+    ca_cert_path, ca_key_path, passphrase_path, 
+    dest_folder,
+    "DE", "CAServer", 
+    "localhost"
+)
+

@@ -6,7 +6,11 @@ from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.x509.oid import NameOID
 import datetime
 from os import path
-from Keys import generate_rsa_keys, generate_passphrase, load_private_key_from_path, load_passphrase_from_path
+
+
+import sys
+sys.path.append("../") 
+from Certificates.Keys import generate_rsa_keys, generate_passphrase, load_private_key_from_path, load_passphrase_from_path
 
 # Generate self-signed root certificate
 def generate_certificate_authority(

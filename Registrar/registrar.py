@@ -60,7 +60,7 @@ certfile = "certs/server/cert_registrar_server.crt"
 keyfile = "certs/server/cert_private_registrar_server.key"
 passphrasefile = "certs/server/passphrase_registrar_server.txt"
 
-server = HTTPSServer(address="localhost", port=8000, routes=routes,
+server = HTTPSServer(address="localhost", port=8000, routes_post=routes,
                            certfile=certfile, keyfile=keyfile,
                            passphrasefile=passphrasefile)
 server.start()

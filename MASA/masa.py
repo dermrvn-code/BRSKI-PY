@@ -59,7 +59,7 @@ certfile = "certs/cert_masa.crt"
 keyfile = "certs/cert_private_masa.key"
 passphrasefile = "certs/passphrase_masa.txt"
 
-server = HTTPSServer(address="localhost", port=8888, routes=routes,
+server = HTTPSServer(address="localhost", port=8888, routes_post=routes,
                            certfile=certfile, keyfile=keyfile,
                            passphrasefile=passphrasefile)
 server.start()

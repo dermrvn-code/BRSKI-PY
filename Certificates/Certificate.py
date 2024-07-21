@@ -7,8 +7,12 @@ from pyasn1.type import univ, namedtype
 from pyasn1.codec.der import encoder
 import datetime
 from os import path
-from Keys import setup_private_key
-from CA import load_ca
+
+
+import sys
+sys.path.append("../") 
+from Certificates.Keys import setup_private_key
+from Certificates.CA import load_ca
  
 
 
@@ -88,7 +92,7 @@ def save_cert_to_file(
         cert_type (str): Type of the certificate. Default is "cert".
 
     Returns:
-    None
+        None
     """
     with open(path.join(dest_folder, cert_type + "_" + common_name.lower() + ".crt"), "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))

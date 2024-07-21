@@ -19,7 +19,7 @@ def generate_passphrase(dest_folder : str, common_name : str, length : int = 30)
         length (int): The length of the passphrase (default is 30).
 
     Returns:
-    - passphrase (str): The generated passphrase.
+        passphrase (str): The generated passphrase.
     """
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="
     passphrase = "".join(secrets.choice(alphabet) for i in range(length))

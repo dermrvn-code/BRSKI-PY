@@ -75,5 +75,8 @@ class VoucherBase(ABC):
     def print(self):
         """
         Print the voucher object as a pretty-printed JSON string.
+
+        Returns:
+            None
         """
         prettyprint_json(self.to_dict(), True)
