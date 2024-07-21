@@ -72,7 +72,7 @@ def load_certificate_bytes_from_path(path) -> bytes:
     return load_certificate_bytes_from_certificate(load_certificate_from_path(path))
 
 
-def save_cert(
+def save_cert_to_file(
         cert : x509.Certificate, 
         dest_folder : str, 
         common_name : str, 
@@ -246,7 +246,7 @@ def generate_tls_server_cert(
     cert = generate_certificate(request, ca_cert, expiration_days)
     cert = cert.sign(ca_key, hashes.SHA256())
         
-    save_cert(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name)
     return cert
 
 def generate_tls_client_cert(
@@ -292,7 +292,7 @@ def generate_tls_client_cert(
     cert = generate_certificate(request, ca_cert, expiration_days)
     cert = cert.sign(ca_key, hashes.SHA256())
         
-    save_cert(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name)
     return cert
 
 def generate_ra_cert(
@@ -337,7 +337,7 @@ def generate_ra_cert(
     cert = generate_certificate(request, ca_cert, expiration_days)
     cert = cert.sign(ca_key, hashes.SHA256())
 
-    save_cert(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name)
     return cert
 
 def generate_idevid_cert(
@@ -427,5 +427,5 @@ def generate_idevid_cert(
         critical=True
     ).sign(ca_key, hashes.SHA256())
 
-    save_cert(cert, dest_folder, common_name, "cert")
+    save_cert_to_file(cert, dest_folder, common_name, "cert")
     return cert

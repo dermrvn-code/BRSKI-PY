@@ -17,4 +17,5 @@ __pycache__/
 *.crt
 *.key
 *.pem
+*.crl
 passphrase*.txt
