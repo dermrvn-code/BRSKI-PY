@@ -12,7 +12,7 @@ from os import path
 import sys
 sys.path.append("../") 
 from Certificates.Keys import setup_private_key
-from Certificates.CA import load_ca
+from Certificates.CA import load_ca, sign_certificate
  
 
 
@@ -248,7 +248,7 @@ def generate_tls_server_cert(
     
     # Sign CSR with ca certificate
     cert = generate_certificate(request, ca_cert, expiration_days)
-    cert = cert.sign(ca_key, hashes.SHA256())
+    cert = sign_certificate(ca_cert, ca_key, cert)
         
     save_cert_to_file(cert, dest_folder, common_name)
     return cert
@@ -294,7 +294,7 @@ def generate_tls_client_cert(
     
     # Sign CSR with ca certificate
     cert = generate_certificate(request, ca_cert, expiration_days)
-    cert = cert.sign(ca_key, hashes.SHA256())
+    cert = sign_certificate(ca_cert, ca_key, cert)
         
     save_cert_to_file(cert, dest_folder, common_name)
     return cert
@@ -339,7 +339,7 @@ def generate_ra_cert(
     
 
     cert = generate_certificate(request, ca_cert, expiration_days)
-    cert = cert.sign(ca_key, hashes.SHA256())
+    cert = sign_certificate(ca_cert, ca_key, cert)
 
     save_cert_to_file(cert, dest_folder, common_name)
     return cert
@@ -429,7 +429,9 @@ def generate_idevid_cert(
                       data_encipherment=False, key_agreement=False, encipher_only=False, 
                       decipher_only=False, key_cert_sign=False, crl_sign=False),
         critical=True
-    ).sign(ca_key, hashes.SHA256())
+    )
+
+    cert = sign_certificate(ca_cert, ca_key, cert)
 
     save_cert_to_file(cert, dest_folder, common_name, "cert")
     return cert

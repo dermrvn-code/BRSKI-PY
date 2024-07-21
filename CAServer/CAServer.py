@@ -7,10 +7,10 @@ from Utils.HTTPS import HTTPSServer
 
 
 valid_crls = {
-    "masa" : "../MASA/ca/crl_masa_ca.crl",
-    "registrar" : "../Registrar/ca/crl_registrar_ca.crl",
+    "masa_ca" : "../MASA/ca/crl_masa_ca.crl",
+    "registrar_ca" : "../Registrar/ca/crl_registrar_ca.crl",
     "manufacturer" : "../Pledge/ca/crl_manufacturer.crl",
-    "caserver" : "../CAServer/ca/crl_caserver_ca.crl"
+    "caserver_ca" : "../CAServer/ca/crl_caserver_ca.crl"
 }
 
 
