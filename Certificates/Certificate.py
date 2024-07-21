@@ -1,39 +1,76 @@
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
+from cryptography.x509 import load_pem_x509_certificate, load_der_x509_certificate, Certificate
+from cryptography.hazmat.backends import default_backend
 from pyasn1.type import univ, namedtype
 from pyasn1.codec.der import encoder
 import datetime
 from os import path
 from Keys import setup_private_key
+from CA import load_ca
+ 
 
 
-def load_ca(
-        ca_cert_path : str, 
-        ca_key_path : str, 
-        passphrase : str
-    ) -> tuple[x509.Certificate, PrivateKeyTypes]:
+def load_certificate_from_path(path : str) -> Certificate:
     """
-    Load the ca certificate and private key from files.
+    Load a certificate from a file.
 
     Parameters:
-        ca_cert_path (str): Path to the ca certificate file.
-        ca_key_path (str): Path to the ca private key file.
-        passphrase (str): Passphrase to decrypt the private key.
+        path (str): The path to the file containing the certificate.
 
     Returns:
-        ca_cert (Certificate): Loaded ca certificate.
-        ca_key (PrivateKeyTypes): Loaded ca private key.
+        Certificate: The loaded certificate.
     """
-    with open(ca_cert_path, "rb") as ca_cert_file:
-        ca_cert = x509.load_pem_x509_certificate(ca_cert_file.read())
-    
-    with open(ca_key_path, "rb") as ca_key_file:
-        ca_key = load_pem_private_key(ca_key_file.read(), password=passphrase.encode())
-    
-    return ca_cert, ca_key
+    with open(path, "rb") as f:
+        cert_data = f.read()
+    return load_pem_x509_certificate(cert_data, backend=default_backend())
+
+def load_certificate_from_bytes(data : bytes) -> Certificate:
+    """
+    Load a certificate from bytes.
+
+    Parameters:
+        data (bytes): The bytes representing the certificate.
+
+    Returns:
+        Certificate: The loaded certificate.
+
+    Raises:
+        ValueError: If the bytes are neither PEM nor DER encoded.
+    """
+    try:
+        return load_pem_x509_certificate(data, backend=default_backend())
+    except:
+        try:
+            return load_der_x509_certificate(data, backend=default_backend())
+        except:
+            raise ValueError("Could not load certificate from bytes. Bytes are neither PEM nor DER encoded.")
+
+def load_certificate_bytes_from_certificate(certfile : Certificate) -> bytes:
+    """
+    Get the bytes representation of a certificate.
+
+    Parameters:
+        certfile (Certificate): The certificate object.
+
+    Returns:
+        bytes: The bytes representation of the certificate.
+    """
+    return certfile.public_bytes(serialization.Encoding.DER)
+
+def load_certificate_bytes_from_path(path) -> bytes:
+    """
+    Get the bytes representation of a certificate from a file.
+
+    Parameters:
+        path (str): The path to the file containing the certificate.
+
+    Returns:
+        bytes: The bytes representation of the certificate.
+    """
+    return load_certificate_bytes_from_certificate(load_certificate_from_path(path))
+
 
 def save_cert(
         cert : x509.Certificate, 
@@ -169,7 +206,7 @@ def generate_certificate(
 def generate_tls_server_cert(
         ca_cert_path : str, 
         ca_key_path : str, 
-        ca_passphrase : str,
+        ca_passphrase_path : str,
         dest_folder : str,
         country_code : str, 
         common_name : str, 
@@ -182,7 +219,7 @@ def generate_tls_server_cert(
     Parameters:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
-        ca_passphrase (str): Passphrase for the ca private key.
+        ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
         common_name (str): Common name for the device certificate.
@@ -192,7 +229,7 @@ def generate_tls_server_cert(
     Returns:
         cert (Certificate): Generated certificate.
     """
-    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
     private_key = setup_private_key(dest_folder, common_name)
     
     # Generate CSR
@@ -215,7 +252,7 @@ def generate_tls_server_cert(
 def generate_tls_client_cert(
         ca_cert_path : str, 
         ca_key_path : str, 
-        ca_passphrase : str,
+        ca_passphrase_path : str,
         dest_folder : str,
         country_code : str, 
         common_name : str, 
@@ -228,7 +265,7 @@ def generate_tls_client_cert(
     Parameters:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
-        ca_passphrase (str): Passphrase for the ca private key.
+        ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
         common_name (str): Common name for the device certificate.
@@ -238,7 +275,7 @@ def generate_tls_client_cert(
     Returns:
         cert (Certificate): Generated certificate.
     """
-    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
     private_key = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
@@ -259,7 +296,7 @@ def generate_tls_client_cert(
     return cert
 
 def generate_ra_cert(
-        ca_cert_path : str, ca_key_path : str, ca_passphrase : str,
+        ca_cert_path : str, ca_key_path : str, ca_passphrase_path : str,
         dest_folder : str,
         country_code : str, common_name : str, 
         hostname : str,
@@ -271,7 +308,7 @@ def generate_ra_cert(
     Parameters:
         ca_cert_path (str): Path to the CA certificate file.
         ca_key_path (str): Path to the CA private key file.
-        ca_passphrase (str): Passphrase for the CA private key.
+        ca_passphrase_path (str): Passphrase for the CA private key.
         dest_folder (str): Destination folder to save the RA certificate.
         country_code (str): Country code for the RA certificate.
         common_name (str): Common name for the RA certificate.
@@ -281,7 +318,7 @@ def generate_ra_cert(
     Returns:
         cert (Certificate): Generated certificate.
     """
-    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
     private_key = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
@@ -306,7 +343,7 @@ def generate_ra_cert(
 def generate_idevid_cert(
         ca_cert_path: str, 
         ca_key_path: str, 
-        ca_passphrase: str,
+        ca_passphrase_path: str,
         dest_folder: str,
         country_code: str, 
         organization_name: str, 
@@ -323,7 +360,7 @@ def generate_idevid_cert(
     Parameters:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
-        ca_passphrase (str): Passphrase for the ca private key.
+        ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
         organization_name (str): Organization name for the device certificate.
@@ -339,7 +376,7 @@ def generate_idevid_cert(
         cert (Certificate): Generated certificate.
     """
 
-    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase)
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
     private_key = setup_private_key(dest_folder, common_name)
 
     OtherName = othername_model == None or \

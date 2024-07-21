@@ -4,7 +4,7 @@ import json
 import sys
 sys.path.append("../") 
 from Voucher.VoucherRequest import VoucherRequest, create_registrar_voucher_request, parse_voucher_request
-from Certificates.CertificateTools import load_passphrase_from_path, load_private_key_from_path
+from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from Utils.HTTPS import HTTPSServer, SSLConnection
 
 

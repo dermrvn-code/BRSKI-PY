@@ -6,7 +6,8 @@ from pprint import pprint
 import sys
 sys.path.append("../") 
 from Voucher.Voucher import parse_voucher
-from Certificates.CertificateTools import load_certificate_from_path, load_passphrase_from_path
+from Certificates.Certificate import load_certificate_from_path
+from Certificates.Keys import load_passphrase_from_path
 from Utils.HTTPS import ssl_connect, ssl_post_request
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key

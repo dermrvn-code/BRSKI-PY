@@ -1,4 +1,4 @@
-from Certicate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert
+from Certificate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert
 from CA import generate_certificate_authority
 
 

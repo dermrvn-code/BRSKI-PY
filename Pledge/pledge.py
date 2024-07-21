@@ -3,7 +3,8 @@ import json
 
 import sys
 sys.path.append("../") 
-from Certificates.CertificateTools import load_passphrase_from_path, load_private_key_from_path, load_certificate_bytes_from_path
+from Certificates.Certificate import load_certificate_bytes_from_path
+from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from Voucher.VoucherRequest import create_pledge_voucher_request
 from Voucher.Voucher import parse_voucher
 from Voucher.VoucherBase import Assertion

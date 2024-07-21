@@ -2,7 +2,8 @@ import ssl
 import socket
 import tempfile
 import sys
-from Certificates.CertificateTools import load_passphrase_from_path, load_certificate_from_bytes
+from Certificates.Certificate import load_certificate_from_bytes
+from Certificates.Keys import load_passphrase_from_path
 from cryptography.x509 import Certificate
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 

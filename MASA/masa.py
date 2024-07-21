@@ -6,7 +6,8 @@ import sys
 sys.path.append("../") 
 from Voucher.Voucher import create_voucher_from_request
 from Voucher.VoucherRequest import parse_voucher_request
-from Certificates.CertificateTools import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path, load_certificate_from_path
+from Certificates.Certificate import load_certificate_from_path
+from Certificates.Keys import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path
 from Utils.HTTPS import HTTPSServer
 
 

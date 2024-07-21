@@ -2,11 +2,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.x509.oid import NameOID
 import datetime
 from os import path
-from Keys import generate_rsa_keys, generate_passphrase
-
+from Keys import generate_rsa_keys, generate_passphrase, load_private_key_from_path, load_passphrase_from_path
 
 # Generate self-signed root certificate
 def generate_certificate_authority(
@@ -76,5 +76,31 @@ def generate_certificate_authority(
         path.join(dest_folder,"ca_" + common_name.lower() + ".crt"), 
         path.join(dest_folder,"ca_private_" + common_name.lower() + ".key"),
         path.join(dest_folder,"ca_public_" + common_name.lower() + ".key"),
-        passphrase
+        path.join(dest_folder,"passphrase_" + common_name.lower() + ".txt"),
     )
+
+def load_ca(
+        ca_cert_path : str, 
+        ca_key_path : str, 
+        passphrase_path : str
+    ) -> tuple[x509.Certificate, PrivateKeyTypes]:
+    """
+    Load the ca certificate and private key from files.
+
+    Parameters:
+        ca_cert_path (str): Path to the ca certificate file.
+        ca_key_path (str): Path to the ca private key file.
+        passphrase (str): Passphrase to decrypt the private key.
+
+    Returns:
+        ca_cert (Certificate): Loaded ca certificate.
+        ca_key (PrivateKeyTypes): Loaded ca private key.
+    """
+
+    ca_passphrase = load_passphrase_from_path(passphrase_path)
+    ca_key = load_private_key_from_path(ca_key_path, ca_passphrase)
+
+    with open(ca_cert_path, "rb") as f:
+        ca_cert = x509.load_pem_x509_certificate(f.read())
+    
+    return ca_cert, ca_key
