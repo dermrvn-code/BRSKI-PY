@@ -13,6 +13,8 @@ folder = [
 
 for path in folder:
     for file in os.listdir(path):
-        if file.endswith(".key") or file.endswith(".txt") or file.endswith(".crt") or file.endswith(".pem"):
+        file_endings = [".key", ".txt", ".crt", ".pem", ".crl"]  # Add the desired file endings here
+        
+        if any(file.endswith(ending) for ending in file_endings):
             print(f"Removing {file}")
             os.remove(os.path.join(path, file))

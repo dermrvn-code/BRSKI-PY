@@ -4,7 +4,7 @@ import json
 import sys
 sys.path.append("../") 
 from Voucher.VoucherRequest import VoucherRequest, create_registrar_voucher_request, parse_voucher_request
-from Certificates.CertificateTools import load_passphrase_from_path, load_private_key_from_path
+from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from Utils.HTTPS import HTTPSServer, SSLConnection
 
 
@@ -60,7 +60,7 @@ certfile = "certs/server/cert_registrar_server.crt"
 keyfile = "certs/server/cert_private_registrar_server.key"
 passphrasefile = "certs/server/passphrase_registrar_server.txt"
 
-server = HTTPSServer(address="localhost", port=8000, routes=routes,
+server = HTTPSServer(address="localhost", port=8000, routes_post=routes,
                            certfile=certfile, keyfile=keyfile,
                            passphrasefile=passphrasefile)
 server.start()

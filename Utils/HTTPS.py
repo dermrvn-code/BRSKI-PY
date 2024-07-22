@@ -2,7 +2,8 @@ import ssl
 import socket
 import tempfile
 import sys
-from Certificates.CertificateTools import load_passphrase_from_path, load_certificate_from_bytes
+from Certificates.Certificate import load_certificate_from_bytes
+from Certificates.Keys import load_passphrase_from_path
 from cryptography.x509 import Certificate
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 
@@ -25,7 +26,8 @@ def load_local_cas(context) -> ssl.SSLContext:
     ca_files = [
         "../MASA/ca/ca_masa_ca.crt",
         "../Registrar/ca/ca_registrar_ca.crt",
-        "../Pledge/ca/ca_manufacturer.crt"
+        "../Pledge/ca/ca_manufacturer.crt",
+        "../CAServer/ca/ca_caserver_ca.crt"
     ]
 
     combined_cas = ""
@@ -42,10 +44,11 @@ class HTTPSServer:
     def __init__(self, 
                  address : str, 
                  port : int, 
-                 routes : dict, 
                  certfile : str, 
                  keyfile : str, 
-                 passphrasefile : str
+                 passphrasefile : str,
+                 routes_post : dict = {}, 
+                 routes_get : dict = {}
         ):
         """
         Initialize an HTTPS server.
@@ -53,14 +56,23 @@ class HTTPSServer:
         Parameters:
             address (str): The server address.
             port (int): The server port.
-            routes (dict): A dictionary of routes and their corresponding handlers.
             certfile (str): The path to the server certificate file.
             keyfile (str): The path to the server private key file.
             passphrasefile (str): The path to the file containing the passphrase for the private key.
+            routes_post (dict): A dictionary of POST routes and their corresponding handlers.
+            routes_get (dict): A dictionary of GET routes and their corresponding handlers.
+            
+        Raises:
+            ValueError: If no routes are provided.
         """
+        if routes_post is {} and routes_get is {}:
+            raise ValueError("No routes provided")
+            
+
         self.address = address
         self.port = port
-        self.routes = routes
+        self.routes_post = routes_post
+        self.routes_get = routes_get
         self.certfile = certfile
         self.keyfile = keyfile
 
@@ -71,7 +83,7 @@ class HTTPSServer:
         """
         Start the HTTPS server.
         """
-        handler = self.create_handler(self.routes)
+        handler = self.create_handler(self.routes_post, self.routes_get)
         server_address = (self.address, self.port) 
         httpd = http.server.HTTPServer(server_address, handler)
 
@@ -84,7 +96,7 @@ class HTTPSServer:
         print(f"Server running on port https://{self.address}:{str(self.port)}...")
         httpd.serve_forever()
 
-    def create_handler(self, routes : dict):
+    def create_handler(self, routes_post : dict, routes_get : dict):
         """
         Create a custom HTTP request handler.
 
@@ -96,8 +108,13 @@ class HTTPSServer:
         """
         class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
-                handler = routes.get(self.path, self.handle_404)
+                handler = routes_post.get(self.path, self.handle_404)
                 handler(self)
+
+            def do_GET(self):
+                data = self.path.split("?")
+                handler = routes_get.get(data[0], self.handle_404)
+                handler(self, data[1] if len(data) > 1 else None)
 
             def handle_404(self, optionalself=None):
                 self.send_response(404)
@@ -175,6 +192,22 @@ class SSLConnection:
             bytes: The response body.
         """
         self.connection.request(method="POST", url=url, body=data)
+
+        response = self.connection.getresponse()
+        return response.read()
+
+    def get_request(self, url : str):
+        """
+        Send a POST request to the server.
+
+        Parameters:
+            url (str): The URL to send the request to.
+            data (str): The data to include in the request body.
+
+        Returns:
+            bytes: The response body.
+        """
+        self.connection.request(method="GET", url=url)
 
         response = self.connection.getresponse()
         return response.read()
