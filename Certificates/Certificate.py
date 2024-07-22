@@ -152,7 +152,8 @@ def generate_certificate(
         ca_cert : x509.Certificate, 
         authority_key_identifier_set : bool = True,
         subject_key_identifier_set : bool = True,
-        expiration_days : int = 365
+        expiration_days : int = 365,
+        expiration_date : datetime.datetime = None
     ) -> x509.Certificate:
     """
     Generate a certificate based on the given CSR and CA certificate.
@@ -165,6 +166,10 @@ def generate_certificate(
     Returns:
         cert (Certificate): Generated certificate.
     """
+
+    if(expiration_date == None):
+        expiration_date = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=expiration_days)
+
     cert = x509.CertificateBuilder().subject_name(
         request.subject
     ).issuer_name(
@@ -176,7 +181,7 @@ def generate_certificate(
     ).not_valid_before(
         datetime.datetime.now(datetime.UTC)
     ).not_valid_after(
-        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=expiration_days)
+        expiration_date
     )
     
     if(subject_key_identifier_set):
@@ -187,7 +192,8 @@ def generate_certificate(
 
     if(authority_key_identifier_set):
         cert = cert.add_extension(
-            x509.AuthorityKeyIdentifier.from_issuer_public_key(ca_cert.public_key()),
+            x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
+                ca_cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value),
             critical=False
         )
 
@@ -240,11 +246,11 @@ def generate_tls_server_cert(
     request = generate_certificate_request(country_code, common_name, hostname)
     
     request = request.add_extension(
-        x509.ExtendedKeyUsage([
-            x509.ObjectIdentifier("1.3.6.1.5.5.7.3.1")  # id-kp-serverAuth OID
-        ]),
-        critical=False
-    ).sign(private_key, hashes.SHA256())
+                x509.ExtendedKeyUsage([
+                    x509.ObjectIdentifier("1.3.6.1.5.5.7.3.1")  # id-kp-serverAuth OID
+                ]),
+                critical=False
+            ).sign(private_key, hashes.SHA256())
     
     # Sign CSR with ca certificate
     cert = generate_certificate(request, ca_cert, expiration_days)
@@ -353,10 +359,8 @@ def generate_idevid_cert(
         organization_name: str, 
         organizational_unit_name: str, 
         common_name: str,
-        expiration_days: int = 365,
-        othername_model: str = None, 
-        othername_serialnumber: str = None, 
-        othername_manufacturer: str = None,
+        hwtype: univ.ObjectIdentifier = None, 
+        hwSerialNum: str = None, 
     ) -> x509.Certificate:
     """
     Generate an idevid device certificate.
@@ -371,9 +375,8 @@ def generate_idevid_cert(
         organizational_unit_name (str): Organizational unit name for the device certificate.
         common_name (str): Common name for the device certificate.
         expiration_days (int): Number of days until the certificate expires. Default is 365.
-        othername_model (str): Model information for OtherName extension. Default is None.
-        othername_serialnumber (str): Serial number information for OtherName extension. Default is None.
-        othername_manufacturer (str): Manufacturer information for OtherName extension. Default is None.
+        hwtype (str): OID of Hardware Modules Type. Default is None.
+        hwSerialNum (str): Serial Number of the hardware Module. Default is None.
 
     
     Returns:
@@ -383,23 +386,19 @@ def generate_idevid_cert(
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
     private_key = setup_private_key(dest_folder, common_name)
 
-    OtherName = othername_model == None or \
-                othername_serialnumber == None or \
-                othername_manufacturer == None
+    OtherName = hwtype != None and hwSerialNum != None
 
     if(OtherName):
         class OtherName(univ.Sequence):
             componentType = namedtype.NamedTypes(
-                namedtype.NamedType('model', univ.OctetString()),
-                namedtype.NamedType('serialNumber', univ.OctetString()),
-                namedtype.NamedType('manufacturer', univ.OctetString())
+                namedtype.NamedType('hwType', univ.ObjectIdentifier()),
+                namedtype.NamedType('hwSerialNum', univ.OctetString())
             )
 
         # Create an instance of your data
         data = OtherName()
-        data['model'] = othername_model
-        data['serialNumber'] = othername_serialnumber
-        data['manufacturer'] = othername_manufacturer
+        data['hwType'] = univ.ObjectIdentifier(hwtype)
+        data['hwSerialNum'] = hwSerialNum
 
         der_data = encoder.encode(data)
 
@@ -410,7 +409,7 @@ def generate_idevid_cert(
     # Generate CSR
     request = generate_certificate_request(
         country_code, common_name, 
-        organization_name, organizational_unit_name
+        organization_name=organization_name, organizational_unit_name=organizational_unit_name
     )
         
     
@@ -423,7 +422,8 @@ def generate_idevid_cert(
     # Add idevid specific extensions
     request = request.sign(private_key, hashes.SHA256())
 
-    cert = generate_certificate(request, ca_cert, expiration_days, subject_key_identifier_set=False)
+    # Create certificate with an "infinite" far away expiration date
+    cert = generate_certificate(request, ca_cert, subject_key_identifier_set=False, expiration_date=datetime.datetime(9999, 12, 31))
     cert = cert.add_extension(
         x509.KeyUsage(digital_signature=True, key_encipherment=True, content_commitment=False, 
                       data_encipherment=False, key_agreement=False, encipher_only=False, 

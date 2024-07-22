@@ -71,7 +71,10 @@ def generate_certificate_authority(
             decipher_only=False
             ), critical=True
     ).add_extension(
-        x509.CRLDistributionPoints(
+            x509.SubjectKeyIdentifier.from_public_key(key.public_key()),
+            critical=False
+    ).add_extension(
+            x509.CRLDistributionPoints(
                 [x509.DistributionPoint(
                     full_name=[x509.UniformResourceIdentifier(u"https://localhost:8008/crl?from=" + common_name.lower())],
                     relative_name=None,
@@ -82,7 +85,6 @@ def generate_certificate_authority(
             critical=False
     ).sign(key, hashes.SHA256(), default_backend())
 
-    # Write the certificate to a file
     with open(path.join(dest_folder,"ca_" + common_name.lower() + ".crt"), "wb") as cert_file:
         cert_file.write(cert.public_bytes(Encoding.PEM))
 
@@ -98,9 +100,18 @@ def sign_certificate(
         ca_key : PrivateKeyTypes,
         cert : x509.Certificate
     ) -> x509.Certificate:
+    """
+    Signs a certificate and adds CRL Distribution points using the provided CA certificate 
+    and private key.
 
-    
+    Parameters:
+        ca_cert (x509.Certificate): The CA certificate used for signing.
+        ca_key (PrivateKeyTypes): The private key of the CA certificate.
+        cert (x509.Certificate): The certificate to be signed.
 
+    Returns:
+        x509.Certificate: The signed certificate.
+    """
     cert = cert.add_extension(
         ca_cert.extensions.get_extension_for_class(x509.CRLDistributionPoints).value,
         critical=False

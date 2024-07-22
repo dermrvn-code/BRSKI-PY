@@ -1,4 +1,5 @@
 import sys
+from cryptography import x509
 sys.path.append("../") 
 from Certificates.Certificate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert, generate_tls_server_cert
 from Certificates.CA import generate_certificate_authority
@@ -21,8 +22,7 @@ generate_idevid_cert(
     ca_cert_path, ca_key_path, passphrase_path, 
     dest_folder,
     "DE", "HSHL", "Trustpoint", "Pledge",
-    expiration_days=365,
-    othername_model="ESP32", othername_serialnumber="123456", othername_manufacturer="Espressif")
+    hwtype="1.3.6.1.4.1.343.2.17.1", hwSerialNum="123456")
 print("Generated Pledge IDevID certificate")
 
 
