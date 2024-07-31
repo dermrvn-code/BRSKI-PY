@@ -21,7 +21,7 @@ dest_folder = "../Pledge/certs/"
 generate_idevid_cert(
     ca_cert_path, ca_key_path, passphrase_path, 
     dest_folder,
-    "DE", "HSHL", "Trustpoint", "Pledge",
+    "DE", "02481632", "HSHL", "Trustpoint", "Pledge", "https://localhost:8888/.well-known/brski",
     hwtype="1.3.6.1.4.1.343.2.17.1", hwSerialNum="123456")
 print("Generated Pledge IDevID certificate")
 

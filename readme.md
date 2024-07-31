@@ -14,7 +14,7 @@
     <img src="https://img.shields.io/github/last-commit/dermrvn-code/BRSKI-PY?style=for-the-badge">
   </a>
 
-  <a href="">
+  <a href="https://github.com/dermrvn-code/BRSKI-PY?tab=MIT-1-ov-file#readme">
     <img src="https://img.shields.io/github/license/dermrvn-code/BRSKI-PY?style=for-the-badge">
   </a>
 

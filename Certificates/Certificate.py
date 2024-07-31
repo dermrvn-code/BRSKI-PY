@@ -3,8 +3,10 @@ from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.x509 import load_pem_x509_certificate, load_der_x509_certificate, Certificate
 from cryptography.hazmat.backends import default_backend
-from pyasn1.type import univ, namedtype
-from pyasn1.codec.der import encoder
+from pyasn1.type import univ, namedtype, char
+from pyasn1.codec.der import encoder, decoder
+from pyasn1_modules import rfc5280
+
 import datetime
 from os import path
 
@@ -100,6 +102,7 @@ def save_cert_to_file(
 def generate_certificate_request(
         country_code : str, 
         common_name : str, 
+        serialnumber : str = None,
         hostname : str = None, 
         organization_name : str = None, 
         organizational_unit_name : str = None
@@ -110,6 +113,7 @@ def generate_certificate_request(
     Parameters:
         country_code (str): Country code for the certificate.
         common_name (str): Common name for the certificate.
+        serialnumber (str): Serial number for the device. Optional.
         hostname (str): Hostname for the certificate. Optional.
         organization_name (str): Organization name for the certificate. Optional.
         organizational_unit_name (str): Organizational unit name for the certificate. Optional.
@@ -118,8 +122,7 @@ def generate_certificate_request(
         csr (CertificateSigningRequestBuilder): Generated CSR.
     """
     nameAttributes = [
-        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
-        x509.NameAttribute(NameOID.COMMON_NAME, common_name)
+        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code)
     ]
 
     if(organization_name):
@@ -133,6 +136,15 @@ def generate_certificate_request(
     if(hostname):
         nameAttributes.append(
             x509.NameAttribute(NameOID.COMMON_NAME, hostname)
+        )
+    else:
+        nameAttributes.append(
+            x509.NameAttribute(NameOID.COMMON_NAME, common_name)
+        )
+        
+    if(serialnumber):
+        nameAttributes.append(
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, serialnumber)
         )
 
     request = x509.CertificateSigningRequestBuilder().subject_name(x509.Name(nameAttributes))
@@ -356,9 +368,11 @@ def generate_idevid_cert(
         ca_passphrase_path: str,
         dest_folder: str,
         country_code: str, 
+        serialnumber: str,
         organization_name: str, 
         organizational_unit_name: str, 
         common_name: str,
+        masa_url: str,
         hwtype: univ.ObjectIdentifier = None, 
         hwSerialNum: str = None, 
     ) -> x509.Certificate:
@@ -371,9 +385,11 @@ def generate_idevid_cert(
         ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
+        serialnumber (str): Serial number for the device.
         organization_name (str): Organization name for the device certificate.
         organizational_unit_name (str): Organizational unit name for the device certificate.
         common_name (str): Common name for the device certificate.
+        masa_url (str): URL of the MASA server.
         expiration_days (int): Number of days until the certificate expires. Default is 365.
         hwtype (str): OID of Hardware Modules Type. Default is None.
         hwSerialNum (str): Serial Number of the hardware Module. Default is None.
@@ -391,14 +407,14 @@ def generate_idevid_cert(
     if(OtherName):
         class OtherName(univ.Sequence):
             componentType = namedtype.NamedTypes(
-                namedtype.NamedType('hwType', univ.ObjectIdentifier()),
-                namedtype.NamedType('hwSerialNum', univ.OctetString())
+                namedtype.NamedType("hwType", univ.ObjectIdentifier()),
+                namedtype.NamedType("hwSerialNum", univ.OctetString())
             )
 
         # Create an instance of your data
         data = OtherName()
-        data['hwType'] = univ.ObjectIdentifier(hwtype)
-        data['hwSerialNum'] = hwSerialNum
+        data["hwType"] = univ.ObjectIdentifier(hwtype)
+        data["hwSerialNum"] = hwSerialNum
 
         der_data = encoder.encode(data)
 
@@ -408,7 +424,7 @@ def generate_idevid_cert(
 
     # Generate CSR
     request = generate_certificate_request(
-        country_code, common_name, 
+        country_code, common_name, serialnumber,
         organization_name=organization_name, organizational_unit_name=organizational_unit_name
     )
         
@@ -429,9 +445,37 @@ def generate_idevid_cert(
                       data_encipherment=False, key_agreement=False, encipher_only=False, 
                       decipher_only=False, key_cert_sign=False, crl_sign=False),
         critical=True
+    ).add_extension(
+        MASAURLExt(masa_url),
+        critical=False
     )
 
     cert = sign_certificate(ca_cert, ca_key, cert)
 
     save_cert_to_file(cert, dest_folder, common_name, "cert")
     return cert
+
+
+def MASAURLExt(uri: str) -> x509.Extension:
+    """
+    Creates a MASA URL extension for a certificate.
+
+    Parameters:
+        uri (str): The MASA URL to be encoded in the extension.
+
+    Returns:
+        x509.Extension: The MASA URL extension.
+
+    """
+    class MASAURLSyntax(char.IA5String):
+        pass
+    
+    # Create an instance of MASAURLSyntax
+    masa_url = MASAURLSyntax(uri)
+
+    encoded_masa_url = encoder.encode(masa_url)
+
+    return x509.UnrecognizedExtension(
+        oid=x509.ObjectIdentifier("1.3.6.1.5.5.7.1.32"),
+        value=encoded_masa_url
+    )
