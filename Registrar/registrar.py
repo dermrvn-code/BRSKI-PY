@@ -49,11 +49,11 @@ def request_voucher(voucher_request : VoucherRequest):
     print("registrar request:")
     registrar_request.print()
 
-    response = conn.post_request("/requestvoucher", json.dumps(registrar_request.to_dict()))
+    response = conn.post_request("/.wellknown/brski", json.dumps(registrar_request.to_dict()))
     return response
 
 routes = {
-    "/requestvoucher": handle_request_voucher
+    "/.wellknown/brski": handle_request_voucher
 }
 
 certfile = "certs/server/cert_registrar_server.crt"

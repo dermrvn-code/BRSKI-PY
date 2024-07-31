@@ -35,7 +35,7 @@ request = create_pledge_voucher_request(
 print ("pledge request:")
 request.print()
 
-response = conn.post_request("/requestvoucher", json.dumps(request.to_dict()))
+response = conn.post_request("/.wellknown/brski", json.dumps(request.to_dict()))
 
 try:
     voucher = parse_voucher(response.decode())

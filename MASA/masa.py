@@ -52,7 +52,7 @@ def handle_public_key(self):
 
 
 routes = {
-    "/requestvoucher": handle_request_voucher,
+    "/.wellknown/brski": handle_request_voucher,
     "/publickey": handle_public_key,
 }
 certfile = "certs/cert_masa.crt"
