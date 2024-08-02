@@ -80,9 +80,10 @@ def load_certificate_bytes_from_path(path) -> bytes:
 
 def save_cert_to_file(
         cert : x509.Certificate, 
-        dest_folder : str, 
+        dest_folder : str,
+        *, 
         common_name : str, 
-        cert_type : str = "cert"
+        file_prefix : str = "cert"
     ):
     """
     Save the certificate to a file.
@@ -96,10 +97,10 @@ def save_cert_to_file(
     Returns:
         None
     """
-    with open(path.join(dest_folder, cert_type + "_" + common_name.lower() + ".crt"), "wb") as device_cert_file:
+    with open(path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".crt"), "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
-def generate_certificate_request(
+def generate_certificate_request(*,
         country_code : str, 
         common_name : str, 
         serialnumber : str = None,
@@ -160,7 +161,8 @@ def generate_certificate_request(
     return request
 
 def generate_certificate(
-        request : x509.CertificateSigningRequestBuilder, 
+        request : x509.CertificateSigningRequestBuilder,
+        *, 
         ca_cert : x509.Certificate, 
         authority_key_identifier_set : bool = True,
         subject_key_identifier_set : bool = True,
@@ -230,6 +232,7 @@ def generate_tls_server_cert(
         ca_key_path : str, 
         ca_passphrase_path : str,
         dest_folder : str,
+        *,
         country_code : str, 
         common_name : str, 
         hostname : str,
@@ -255,7 +258,7 @@ def generate_tls_server_cert(
     private_key = setup_private_key(dest_folder, common_name)
     
     # Generate CSR
-    request = generate_certificate_request(country_code, common_name, hostname)
+    request = generate_certificate_request(country_code=country_code, common_name=common_name, hostname=hostname)
     
     request = request.add_extension(
                 x509.ExtendedKeyUsage([
@@ -265,10 +268,10 @@ def generate_tls_server_cert(
             ).sign(private_key, hashes.SHA256())
     
     # Sign CSR with ca certificate
-    cert = generate_certificate(request, ca_cert, expiration_days)
+    cert = generate_certificate(request, ca_cert=ca_cert, expiration_days=expiration_days)
     cert = sign_certificate(ca_cert, ca_key, cert)
         
-    save_cert_to_file(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name=common_name)
     return cert
 
 def generate_tls_client_cert(
@@ -276,6 +279,7 @@ def generate_tls_client_cert(
         ca_key_path : str, 
         ca_passphrase_path : str,
         dest_folder : str,
+        *,
         country_code : str, 
         common_name : str, 
         hostname : str = None,
@@ -301,7 +305,7 @@ def generate_tls_client_cert(
     private_key = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
-    request = generate_certificate_request(country_code, common_name, hostname)
+    request = generate_certificate_request(country_code=country_code, common_name=common_name, hostname=hostname)
     
     request = request.add_extension(
                 x509.ExtendedKeyUsage([
@@ -311,15 +315,18 @@ def generate_tls_client_cert(
             ).sign(private_key, hashes.SHA256())
     
     # Sign CSR with ca certificate
-    cert = generate_certificate(request, ca_cert, expiration_days)
+    cert = generate_certificate(request, ca_cert=ca_cert, expiration_days=expiration_days)
     cert = sign_certificate(ca_cert, ca_key, cert)
         
-    save_cert_to_file(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name=common_name)
     return cert
 
 def generate_ra_cert(
-        ca_cert_path : str, ca_key_path : str, ca_passphrase_path : str,
+        ca_cert_path : str, 
+        ca_key_path : str, 
+        ca_passphrase_path : str,
         dest_folder : str,
+        *,
         country_code : str, common_name : str, 
         hostname : str,
         expiration_days : int = 365
@@ -344,7 +351,7 @@ def generate_ra_cert(
     private_key = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
-    request = generate_certificate_request(country_code, common_name, hostname)
+    request = generate_certificate_request(country_code=country_code, common_name=common_name, hostname=hostname)
     
     # Add RA specific extensions
     request = request.add_extension(
@@ -356,10 +363,10 @@ def generate_ra_cert(
     ).sign(private_key, hashes.SHA256())
     
 
-    cert = generate_certificate(request, ca_cert, expiration_days)
+    cert = generate_certificate(request, ca_cert=ca_cert, expiration_days=expiration_days)
     cert = sign_certificate(ca_cert, ca_key, cert)
 
-    save_cert_to_file(cert, dest_folder, common_name)
+    save_cert_to_file(cert, dest_folder, common_name=common_name)
     return cert
 
 def generate_idevid_cert(
@@ -367,6 +374,7 @@ def generate_idevid_cert(
         ca_key_path: str, 
         ca_passphrase_path: str,
         dest_folder: str,
+        *,
         country_code: str, 
         serialnumber: str,
         organization_name: str, 
@@ -424,7 +432,7 @@ def generate_idevid_cert(
 
     # Generate CSR
     request = generate_certificate_request(
-        country_code, common_name, serialnumber,
+        country_code=country_code, common_name=common_name, serialnumber=serialnumber,
         organization_name=organization_name, organizational_unit_name=organizational_unit_name
     )
         
@@ -439,7 +447,7 @@ def generate_idevid_cert(
     request = request.sign(private_key, hashes.SHA256())
 
     # Create certificate with an "infinite" far away expiration date
-    cert = generate_certificate(request, ca_cert, subject_key_identifier_set=False, expiration_date=datetime.datetime(9999, 12, 31))
+    cert = generate_certificate(request, ca_cert=ca_cert, subject_key_identifier_set=False, expiration_date=datetime.datetime(9999, 12, 31))
     cert = cert.add_extension(
         x509.KeyUsage(digital_signature=True, key_encipherment=True, content_commitment=False, 
                       data_encipherment=False, key_agreement=False, encipher_only=False, 
@@ -452,7 +460,7 @@ def generate_idevid_cert(
 
     cert = sign_certificate(ca_cert, ca_key, cert)
 
-    save_cert_to_file(cert, dest_folder, common_name, "cert")
+    save_cert_to_file(cert, dest_folder, common_name=common_name, file_prefix="cert")
     return cert
 
 

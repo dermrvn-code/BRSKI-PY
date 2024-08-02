@@ -14,9 +14,10 @@ from Certificates.Keys import generate_rsa_keys, generate_passphrase, load_priva
 
 # Generate self-signed root certificate
 def generate_certificate_authority(
-        country: str, 
-        common_name: str, 
         dest_folder: str, 
+        *,
+        country_code: str, 
+        common_name: str, 
         days_valid: int = 1825, 
         passphrase_length: int = 30
     ) -> tuple[str, str, str, str]:
@@ -24,7 +25,7 @@ def generate_certificate_authority(
     Generate a self-signed root certificate and save it to a file.
 
     Parameters:
-        country (str): The country name associated with the certificate.
+        country_code (str): The country_code name associated with the certificate.
         common_name (str): The common name associated with the certificate.
         dest_folder (str): The destination folder where the certificate file will be saved.
         days_valid (int): The number of days the certificate will be valid (default is 1825).
@@ -40,7 +41,7 @@ def generate_certificate_authority(
     key, _ = generate_rsa_keys(passphrase,dest_folder,common_name,"ca")
 
     subject = issuer = x509.Name([
-        x509.NameAttribute(NameOID.COUNTRY_NAME, country),
+        x509.NameAttribute(NameOID.COUNTRY_NAME, country_code),
         x509.NameAttribute(NameOID.COMMON_NAME, common_name),
     ])
 

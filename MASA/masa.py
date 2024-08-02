@@ -50,16 +50,19 @@ def handle_public_key(self):
     self.end_headers()
     self.wfile.write(public_key_bytes)
 
+def main() -> None:
+    routes = {
+        "/.wellknown/brski": handle_request_voucher,
+        "/publickey": handle_public_key,
+    }
+    certfile = "certs/cert_masa.crt"
+    keyfile = "certs/cert_private_masa.key"
+    passphrasefile = "certs/passphrase_masa.txt"
 
-routes = {
-    "/.wellknown/brski": handle_request_voucher,
-    "/publickey": handle_public_key,
-}
-certfile = "certs/cert_masa.crt"
-keyfile = "certs/cert_private_masa.key"
-passphrasefile = "certs/passphrase_masa.txt"
+    server = HTTPSServer(address="localhost", port=8888, routes_post=routes,
+                            certfile=certfile, keyfile=keyfile,
+                            passphrasefile=passphrasefile)
+    server.start()
 
-server = HTTPSServer(address="localhost", port=8888, routes_post=routes,
-                           certfile=certfile, keyfile=keyfile,
-                           passphrasefile=passphrasefile)
-server.start()
+if __name__ == "__main__":
+    main()

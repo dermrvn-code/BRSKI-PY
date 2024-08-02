@@ -16,6 +16,7 @@ def generate_certificate_revocation_list(
     ca_key_path: str, 
     ca_passphrase_path: str,
     dest_folder: str,
+    *,
     common_name: str
     ) -> str:
     """

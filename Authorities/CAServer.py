@@ -10,7 +10,7 @@ valid_crls = {
     "masa_ca" : "../MASA/ca/crl_masa_ca.crl",
     "registrar_ca" : "../Registrar/ca/crl_registrar_ca.crl",
     "manufacturer" : "../Pledge/ca/crl_manufacturer.crl",
-    "caserver_ca" : "../CAServer/ca/crl_caserver_ca.crl"
+    "caserver_ca" : "../Authorities/ca/crl_caserver_ca.crl"
 }
 
 
@@ -52,14 +52,18 @@ def handle_crl(self, query_string):
 
 
 
-routes = {
-    "/crl": handle_crl
-}
-certfile = "certs/cert_caserver.crt"
-keyfile = "certs/cert_private_caserver.key"
-passphrasefile = "certs/passphrase_caserver.txt"
+def main() -> None:
+    routes = {
+        "/crl": handle_crl
+    }
+    certfile = "certs/cert_caserver.crt"
+    keyfile = "certs/cert_private_caserver.key"
+    passphrasefile = "certs/passphrase_caserver.txt"
 
-server = HTTPSServer(address="localhost", port=8008, routes_get=routes,
-                           certfile=certfile, keyfile=keyfile,
-                           passphrasefile=passphrasefile)
-server.start()
+    server = HTTPSServer(address="localhost", port=8008, routes_get=routes,
+                            certfile=certfile, keyfile=keyfile,
+                            passphrasefile=passphrasefile)
+    server.start()
+
+if __name__ == "__main__":
+    main()

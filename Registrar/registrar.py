@@ -52,15 +52,20 @@ def request_voucher(voucher_request : VoucherRequest):
     response = conn.post_request("/.wellknown/brski", json.dumps(registrar_request.to_dict()))
     return response
 
-routes = {
-    "/.wellknown/brski": handle_request_voucher
-}
 
-certfile = "certs/server/cert_registrar_server.crt"
-keyfile = "certs/server/cert_private_registrar_server.key"
-passphrasefile = "certs/server/passphrase_registrar_server.txt"
+def main() -> None:
+    routes = {
+        "/.wellknown/brski": handle_request_voucher
+    }
 
-server = HTTPSServer(address="localhost", port=8000, routes_post=routes,
-                           certfile=certfile, keyfile=keyfile,
-                           passphrasefile=passphrasefile)
-server.start()
+    certfile = "certs/server/cert_registrar_server.crt"
+    keyfile = "certs/server/cert_private_registrar_server.key"
+    passphrasefile = "certs/server/passphrase_registrar_server.txt"
+
+    server = HTTPSServer(address="localhost", port=8000, routes_post=routes,
+                            certfile=certfile, keyfile=keyfile,
+                            passphrasefile=passphrasefile)
+    server.start()
+
+if __name__ == "__main__":
+    main()

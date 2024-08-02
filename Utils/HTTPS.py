@@ -27,7 +27,7 @@ def load_local_cas(context) -> ssl.SSLContext:
         "../MASA/ca/ca_masa_ca.crt",
         "../Registrar/ca/ca_registrar_ca.crt",
         "../Pledge/ca/ca_manufacturer.crt",
-        "../CAServer/ca/ca_caserver_ca.crt"
+        "../Authorities/ca/ca_caserver_ca.crt"
     ]
 
     combined_cas = ""
