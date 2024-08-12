@@ -65,6 +65,20 @@ Now you have successfully installed and can use the BRSKI Python Implementation.
    start_env.bat
    ```
 
+##### To start the Authorithies server
+
+1. Tab into the 'Authorities' directory:
+
+   ```shell
+   cd Authorities
+   ```
+
+2. Run the Authorities server:
+
+   ```shell
+    py AuthoritiesServer.py
+   ```
+
 ##### To start the MASA server
 
 1. Tab into the 'MASA' directory:
@@ -110,7 +124,5 @@ Now you have successfully installed and can use the BRSKI Python Implementation.
    ```shell
     py pledge.py
    ```
-
-[(Back to top)](#table-of-contents)
 
 [(Back to top)](#table-of-contents)
