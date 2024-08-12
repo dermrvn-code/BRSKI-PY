@@ -1,6 +1,5 @@
 import json
 from pygments import highlight, lexers, formatters
-import colorama
 from colorama import Fore, Style
 from art import *
 

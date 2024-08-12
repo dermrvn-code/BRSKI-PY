@@ -1,7 +1,6 @@
 from cryptography.hazmat.primitives import serialization
 import json
 
-
 import sys
 sys.path.append("../") 
 from Voucher.Voucher import create_voucher_from_request

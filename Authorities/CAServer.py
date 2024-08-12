@@ -1,6 +1,3 @@
-from cryptography.hazmat.primitives import serialization
-import json
-
 import sys
 sys.path.append("../") 
 from Utils.HTTPS import HTTPSServer

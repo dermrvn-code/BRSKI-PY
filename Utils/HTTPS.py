@@ -1,16 +1,16 @@
 import ssl
 import socket
-import tempfile
-import sys
-from Certificates.Certificate import load_certificate_from_bytes
-from Certificates.Keys import load_passphrase_from_path
 from cryptography.x509 import Certificate
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 
 import http.server
 import http.client
 
+import sys
 sys.path.append("../") 
+from Certificates.Certificate import load_certificate_from_bytes
+from Certificates.Keys import load_passphrase_from_path
+
 
 
 def load_local_cas(context) -> ssl.SSLContext:

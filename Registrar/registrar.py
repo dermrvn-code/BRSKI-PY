@@ -1,6 +1,5 @@
 import json
 
-
 import sys
 sys.path.append("../") 
 from Voucher.VoucherRequest import VoucherRequest, create_registrar_voucher_request, parse_voucher_request
