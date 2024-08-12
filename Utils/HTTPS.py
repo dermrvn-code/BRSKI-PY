@@ -124,6 +124,12 @@ class HTTPSServer:
         
         return CustomHTTPRequestHandler
 
+def send_404(self, message : str = "Error 404"):
+    self.send_response(404)
+    self.send_header("Content-type", "text/plain")
+    self.end_headers()
+    self.wfile.write(b"Error 404")
+
 class SSLConnection:
     def __init__(
         self,
@@ -180,7 +186,7 @@ class SSLConnection:
                 server_cert_bytes = ssock.getpeercert(True)
         self.server_cert = load_certificate_from_bytes(server_cert_bytes)
 
-    def post_request(self, url : str, data : str = None):
+    def post_request(self, url : str, data : str = None) -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
@@ -189,14 +195,15 @@ class SSLConnection:
             data (str): The data to include in the request body.
 
         Returns:
-            bytes: The response body.
+            HTTPResponse: The response
         """
         self.connection.request(method="POST", url=url, body=data)
 
-        response = self.connection.getresponse()
-        return response.read()
 
-    def get_request(self, url : str):
+        response = self.connection.getresponse()
+        return response
+
+    def get_request(self, url : str) -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
@@ -205,9 +212,9 @@ class SSLConnection:
             data (str): The data to include in the request body.
 
         Returns:
-            bytes: The response body.
+            HTTPResponse: The response body.
         """
         self.connection.request(method="GET", url=url)
 
         response = self.connection.getresponse()
-        return response.read()
+        return response

@@ -8,7 +8,9 @@ from Voucher.Voucher import create_voucher_from_request
 from Voucher.VoucherRequest import parse_voucher_request
 from Certificates.Certificate import load_certificate_from_path
 from Certificates.Keys import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path
-from Utils.HTTPS import HTTPSServer
+from Utils.HTTPS import HTTPSServer, send_404
+from Utils.Printer import *
+from Utils.Interface import yes_or_no
 
 
 def handle_request_voucher(self):
@@ -17,19 +19,28 @@ def handle_request_voucher(self):
     voucher_request_dict = json.loads(post_data)
 
     client_cert_bytes = self.request.getpeercert(True)
-    client_cert_json = self.request.getpeercert()
+    client_cert_dict = self.request.getpeercert()
 
     voucher_request = parse_voucher_request(voucher_request_dict)
 
-    # Validate client certificate here
+    # Validate client and voucher here
 
-    masa_passphrase = load_passphrase_from_path("certs/passphrase_masa.txt")
-    private_key = load_private_key_from_path("certs/cert_private_masa.key", masa_passphrase)
-    voucher = create_voucher_from_request(voucher_request, client_cert_bytes, private_key)
+    request_valid = validate_voucher_request(voucher_request)
+
+    if(not request_valid):
+        send_404(self)
+        return
+    else:
+        print_success("Voucher is issued")
+
+    # GET Registrar RA Certificate ???
+    registrar_cert_bytes = client_cert_bytes
+
+    voucher = create_voucher(voucher_request, registrar_cert_bytes)
     voucher_json = json.dumps(voucher.to_dict());
 
-    print("Voucher:")
-    voucher.print()
+    print_descriptor("masa issued voucher:")
+    prettyprint_json(voucher_json, True)
 
     # Send response
     self.send_response(200)
@@ -38,9 +49,10 @@ def handle_request_voucher(self):
     self.wfile.write(str.encode(voucher_json))
 
 def handle_public_key(self):
-    client_cert_json = self.request.getpeercert()
+    client_cert_dict = self.request.getpeercert()
 
-    print("Client certificate: ", json.dumps(client_cert_json))
+    print_descriptor("Client certificate")
+    prettyprint_json(client_cert_dict, True)
 
     public_key = load_public_key_from_path("certs/cert_public_masa.key")
     public_key_bytes = public_key.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
@@ -50,7 +62,20 @@ def handle_public_key(self):
     self.end_headers()
     self.wfile.write(public_key_bytes)
 
+def validate_voucher_request(voucher_request : dict) -> bool:
+    voucher_request_dict = voucher_request.to_dict()
+    serial_number = voucher_request_dict.get("serial-number")
+
+    return yes_or_no("Can you validate the voucher request with serial number " + serial_number + "?")
+
+def create_voucher(voucher_request, registrar_cert_bytes):
+    masa_passphrase = load_passphrase_from_path("certs/passphrase_masa.txt")
+    private_key = load_private_key_from_path("certs/cert_private_masa.key", masa_passphrase)
+    voucher = create_voucher_from_request(voucher_request, registrar_cert_bytes, private_key)
+    return voucher
+
 def main() -> None:
+    print_title("MASA")
     routes = {
         "/.wellknown/brski": handle_request_voucher,
         "/publickey": handle_public_key,

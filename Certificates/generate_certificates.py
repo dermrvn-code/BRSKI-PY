@@ -40,7 +40,7 @@ def generate_certificates() -> None:
     print("Generated MASA CRL")
 
     dest_folder = "../MASA/certs/"
-    generate_tls_client_cert(
+    generate_tls_server_cert(
         ca_cert_path, ca_key_path, passphrase_path, 
         dest_folder,
         country_code="DE", common_name="MASA", 

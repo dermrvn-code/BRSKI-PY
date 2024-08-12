@@ -5,7 +5,9 @@ import sys
 sys.path.append("../") 
 from Voucher.VoucherRequest import VoucherRequest, create_registrar_voucher_request, parse_voucher_request
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
-from Utils.HTTPS import HTTPSServer, SSLConnection
+from Utils.HTTPS import HTTPSServer, SSLConnection, send_404
+from Utils.Printer import *
+from Utils.Dicts import array_to_dict
 
 
 def handle_request_voucher(self):
@@ -15,25 +17,37 @@ def handle_request_voucher(self):
     voucher_request_json = json.loads(post_data)
     voucher_request = parse_voucher_request(voucher_request_json)
 
-    client_cert_bytes = self.request.getpeercert(True)
-    client_cert_json = self.request.getpeercert()
-
-
-    voucher = request_voucher(voucher_request)
+    pledge_cert_bytes = self.request.getpeercert(True)
+    pledge_cert_dict = self.request.getpeercert()
     
+    request_valid = validate_voucher_request(voucher_request, pledge_cert_dict)
+    
+    # error 406 if request in wrong format, 404 if validation fails
+    if(not request_valid):
+        send_404(self, "Authentication failed")
+        return
+    else:
+        print_success("Voucher request is valid")
 
-    # masa_passphrase = load_passphrase("certs/passphrase_masa.txt")
-    # private_key = load_private_keyfile("certs/cert_private_masa.key", masa_passphrase)
-    # voucher = create_voucher(private_key, client_cert_bytes, registrar_domain, "verified", serial_number)
-    # voucher_json = json.dumps(voucher.to_dict())
 
+    voucher = request_voucher_from_masa(voucher_request)
+    
+    voucher_valid = validate_voucher(voucher)
+
+    if(not voucher_valid):
+        send_404(self, "Authentication failed")
+    else:
+        print_success("Voucher is valid")
+
+
+    # if voucher is valid, send it to the pledge
     self.send_response(200)
-    self.send_header("Content-type", "application/voucher-cms+json")
+    self.send_header("Content-type", "text/json")
     self.end_headers()
-    self.wfile.write(voucher)
+    self.wfile.write(str.encode(voucher))
 
 
-def request_voucher(voucher_request : VoucherRequest):
+def request_voucher_from_masa(voucher_request : VoucherRequest):
     conn = SSLConnection(
         "localhost", 8888, 
         "certs/client/cert_registrar_client.crt", 
@@ -46,14 +60,41 @@ def request_voucher(voucher_request : VoucherRequest):
     
     registrar_request = create_registrar_voucher_request(private_key, voucher_request)
 
-    print("registrar request:")
+    print_descriptor("registrar request")
     registrar_request.print()
 
     response = conn.post_request("/.wellknown/brski", json.dumps(registrar_request.to_dict()))
-    return response
 
+    if(response.status != 200):
+        print_error("MASA did not issue a voucher")
+        return None
+    else:
+        return response.read().decode()
+
+def validate_voucher_request(voucher_request : VoucherRequest, pledge_cert_dict : dict) -> bool:
+    voucher_request_dict = voucher_request.to_dict()
+
+    subject = array_to_dict(pledge_cert_dict.get("subject"))
+    subject_serial_number = subject.get("serialNumber")
+    voucher_serial_number = voucher_request_dict.get("serial-number")
+
+    print_info("Checking in with pledge with serial number", subject_serial_number)
+
+    if(subject_serial_number != voucher_serial_number):
+        print_error("Serial numbers do not match: " + subject_serial_number + " != " + voucher_serial_number)
+        return False
+    else:
+        print_success("Serial numbers match")
+    
+    return True
+
+def validate_voucher(voucher : dict) -> bool:
+    if(voucher is None):
+        return False
+    return True
 
 def main() -> None:
+    print_title("Registrar")
     routes = {
         "/.wellknown/brski": handle_request_voucher
     }

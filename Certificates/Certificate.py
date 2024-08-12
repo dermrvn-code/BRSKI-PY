@@ -4,8 +4,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.x509 import load_pem_x509_certificate, load_der_x509_certificate, Certificate
 from cryptography.hazmat.backends import default_backend
 from pyasn1.type import univ, namedtype, char
-from pyasn1.codec.der import encoder, decoder
-from pyasn1_modules import rfc5280
+from pyasn1.codec.der import encoder
 
 import datetime
 from os import path
