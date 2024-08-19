@@ -47,82 +47,48 @@ To install the BRSKI Python Implementation, follow these steps:
    py install.py
    ```
 
-4. Run the project:
-
-   ```shell
-   start_env.bat
-   ```
-
 Now you have successfully installed and can use the BRSKI Python Implementation.
 
 ## Usage
 
-#### To use the BRSKI Python Implementation, follow these steps:
+To use the BRSKI Python Implementation, follow these steps:
 
-1. Run the environment in all terminals starting the scripts:
+1. Start the environment:
+
+   In every new terminal session, you need to start the environment by running the following command:
 
    ```shell
    start_env.bat
    ```
 
-##### To start the Authorithies server
+2. Generate the necessary certificates:
 
-1. Tab into the 'Authorities' directory:
+   When starting the demonstrator for the first time, you need to generate all the necessary keys and certificates. To do so, follow these steps:
 
-   ```shell
-   cd Authorities
-   ```
+   - Tab into the 'Certificates' directory:
 
-2. Run the Authorities server:
+     ```shell
+     cd Certificates
+     ```
 
-   ```shell
-    py AuthoritiesServer.py
-   ```
+   - Run the script to generate all the necessary keys and certificates:
 
-##### To start the MASA server
+     ```shell
+     py generate_certificates.py
+     ```
 
-1. Tab into the 'MASA' directory:
+3. Start the demonstrator:
 
-   ```shell
-   cd MASA
-   ```
+   - Call the start_all.py script if already in environment:
 
-2. Run the MASA server:
+     ```shell
+     py start_all.py
+     ```
 
-   ```shell
-    py masa.py
-   ```
+   - Start the demonstrator by just opening the start.bat file:
 
-3. Keep the terminal open to keep the server running.
-
-##### To start the Registrar server
-
-1. Start another terminal and tab into the 'Registrar' directory:
-
-   ```shell
-   cd Registrar
-   ```
-
-2. Run the Registrar server:
-
-   ```shell
-    py registrar.py
-   ```
-
-3. Keep the terminal open to keep the server running.
-
-##### To start the pledge
-
-1. Start another terminal and tab into the 'Pledge' directory:
-
-   ```shell
-   cd Pledge
-   ```
-
-2. Run the pledge:
-
-   ```shell
-    py pledge.py
-   ```
+     ```shell
+     start.bat
+     ```
 
 [(Back to top)](#table-of-contents)
