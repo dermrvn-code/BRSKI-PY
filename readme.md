@@ -47,7 +47,7 @@ To install the BRSKI Python Implementation, follow these steps:
    py install.py
    ```
 
-Now you have successfully installed and can use the BRSKI Python Implementation.
+Now everything is successfully installed and the BRSKI Python Implementation can be used.
 
 ## Usage
 
