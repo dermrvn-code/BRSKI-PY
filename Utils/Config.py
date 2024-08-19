@@ -1,8 +1,10 @@
+
+
 from configparser import ConfigParser
 
 class Config:
     config = ConfigParser()
-    config.read('../config.ini')
+    config.read("config.ini")
 
     @staticmethod
     def get(section, key):

@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, Pub
 from cryptography.hazmat.backends import default_backend
 from os import makedirs, path
 import secrets
+import os
 
 
 # Generate a random passphrase

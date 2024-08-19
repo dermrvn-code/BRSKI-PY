@@ -7,7 +7,7 @@ import http.server
 import http.client
 
 import sys
-sys.path.append("../") 
+ 
 from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path
 
@@ -24,10 +24,10 @@ def load_local_cas(context) -> ssl.SSLContext:
         ssl.SSLContext: The SSL context with loaded CAs.
     """
     ca_files = [
-        "../MASA/ca/ca_masa_ca.crt",
-        "../Registrar/ca/ca_registrar_ca.crt",
-        "../Pledge/ca/ca_manufacturer.crt",
-        "../Authorities/ca/ca_caserver_ca.crt"
+        "MASA/ca/ca_masa_ca.crt",
+        "Registrar/ca/ca_registrar_ca.crt",
+        "Pledge/ca/ca_manufacturer.crt",
+        "Authorities/ca/ca_caserver_ca.crt"
     ]
 
     combined_cas = ""

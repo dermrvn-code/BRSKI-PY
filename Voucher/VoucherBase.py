@@ -1,3 +1,5 @@
+
+
 from abc import ABC, abstractmethod
 import json
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, PublicKeyTypes
@@ -6,7 +8,7 @@ from Certificates.Signature import sign, verify
 from Utils.Printer import prettyprint_json
 from enum import Enum
 
-sys.path.append("../") 
+ 
 
 class Assertion(Enum):
     VERIFIED = "verified"

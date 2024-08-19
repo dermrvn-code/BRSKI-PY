@@ -1,3 +1,5 @@
+
+
 from cryptography import x509
 from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import hashes, serialization
@@ -10,8 +12,6 @@ import datetime
 from os import path, makedirs
 
 
-import sys
-sys.path.append("../") 
 from Certificates.Keys import setup_private_key
 from Certificates.CA import load_ca, sign_certificate
  

@@ -1,10 +1,10 @@
+
+
 import json
 import base64
 from datetime import datetime, timezone
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
-from Utils.Printer import prettyprint_json
-import sys
-sys.path.append("../") 
+ 
 from Voucher.VoucherBase import VoucherBase, Assertion
 from Voucher.VoucherRequest import VoucherRequest
 

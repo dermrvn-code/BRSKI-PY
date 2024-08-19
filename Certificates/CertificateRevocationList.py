@@ -1,11 +1,10 @@
+
+
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization, hashes
 from datetime import datetime, timedelta, UTC
 from os import path
 
-
-import sys
-sys.path.append("../") 
 from Certificates.Certificate import load_certificate_from_path
 from Certificates.Keys import load_private_key_from_path, load_passphrase_from_path
 

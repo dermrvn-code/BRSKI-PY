@@ -1,8 +1,13 @@
+import os
+import sys
+# Add parent directory to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+sys.path.append(parent_dir)
+
 import secrets
 import json
 
-import sys
-sys.path.append("../") 
 from Certificates.Certificate import load_certificate_bytes_from_path
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from Voucher.VoucherRequest import create_pledge_voucher_request

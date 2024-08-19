@@ -1,3 +1,5 @@
+
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
@@ -8,8 +10,6 @@ import datetime
 from os import makedirs, path
 
 
-import sys
-sys.path.append("../") 
 from Certificates.Keys import generate_rsa_keys, generate_passphrase, load_private_key_from_path, load_passphrase_from_path
 
 # Generate self-signed root certificate

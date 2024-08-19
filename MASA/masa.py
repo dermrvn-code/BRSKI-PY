@@ -1,11 +1,15 @@
+import os
+import sys
+# Add parent directory to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from cryptography.hazmat.primitives import serialization
 import json
 
-import sys
-sys.path.append("../") 
 from Voucher.Voucher import create_voucher_from_request
 from Voucher.VoucherRequest import parse_voucher_request
-from Certificates.Certificate import load_certificate_from_path
 from Certificates.Keys import load_private_key_from_path, load_public_key_from_path, load_passphrase_from_path
 from Utils.HTTPS import HTTPSServer, send_404
 from Utils.Printer import *
@@ -54,7 +58,7 @@ def handle_public_key(self):
     print_descriptor("Client certificate")
     prettyprint_json(client_cert_dict, True)
 
-    public_key = load_public_key_from_path("certs/cert_public_masa.key")
+    public_key = load_public_key_from_path(os.path.join(script_dir,"certs/cert_public_masa.key"))
     public_key_bytes = public_key.public_bytes(encoding=serialization.Encoding.PEM, format=serialization.PublicFormat.SubjectPublicKeyInfo)
 
     self.send_response(200)
@@ -81,9 +85,9 @@ def main() -> None:
         "/.wellknown/brski": handle_request_voucher,
         "/publickey": handle_public_key,
     }
-    certfile = "certs/cert_masa.crt"
-    keyfile = "certs/cert_private_masa.key"
-    passphrasefile = "certs/passphrase_masa.txt"
+    certfile = os.path.join(script_dir, "certs/cert_masa.crt")
+    keyfile = os.path.join(script_dir, "certs/cert_private_masa.key")
+    passphrasefile = os.path.join(script_dir, "certs/passphrase_masa.txt")
 
     server = HTTPSServer(address="localhost", port=Config.get("MASA","port"), routes_post=routes,
                             certfile=certfile, keyfile=keyfile,
@@ -91,4 +95,5 @@ def main() -> None:
     server.start()
 
 if __name__ == "__main__":
+
     main()

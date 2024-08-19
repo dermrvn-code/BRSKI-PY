@@ -1,3 +1,5 @@
+
+
 import json
 import base64
 from datetime import datetime, timedelta, timezone
@@ -5,7 +7,7 @@ from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 import sys
 from Voucher.VoucherBase import VoucherBase, Assertion
 
-sys.path.append("../") 
+ 
 
 class VoucherRequest(VoucherBase):
     def __init__(self, serial_number : str, 

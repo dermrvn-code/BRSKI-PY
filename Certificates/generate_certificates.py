@@ -1,5 +1,5 @@
 import sys
-sys.path.append("../") 
+ 
 from Certificates.Certificate import generate_idevid_cert, generate_tls_client_cert, generate_ra_cert, generate_tls_server_cert
 from Certificates.CA import generate_certificate_authority
 from Certificates.clear_certificates import clear_certificates

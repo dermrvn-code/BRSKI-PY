@@ -1,7 +1,13 @@
+import os
 import sys
-sys.path.append("../") 
+# Add parent directory to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from Utils.HTTPS import HTTPSServer
 from Utils.Config import Config
+from Utils.Printer import print_title
 
 
 valid_crls = {
@@ -51,14 +57,17 @@ def handle_crl(self, query_string):
 
 
 def main() -> None:
+
+    print_title("Authorities Server")
+
     routes = {
         "/crl": handle_crl
     }
-    certfile = "certs/cert_caserver.crt"
-    keyfile = "certs/cert_private_caserver.key"
-    passphrasefile = "certs/passphrase_caserver.txt"
+    certfile = "certs/cert_authorities.crt"
+    keyfile = "certs/cert_private_authorities.key"
+    passphrasefile = "certs/passphrase_authorities.txt"
 
-    server = HTTPSServer(address="localhost", port=config.AUTHORITIES_PORT, routes_get=routes,
+    server = HTTPSServer(address="localhost", port=Config.get("AUTHORITIES","port"), routes_get=routes,
                             certfile=certfile, keyfile=keyfile,
                             passphrasefile=passphrasefile)
     server.start()
