@@ -77,7 +77,21 @@ To use the BRSKI Python Implementation, follow these steps:
      py generate_certificates.py
      ```
 
-3. Start the demonstrator:
+3. Adjust the configuation
+
+   It might be necessary to adjust some configurations in the config.ini file.
+
+   - Open the config.ini file
+
+   - Revise the configurations, especially the ports of the different servers
+
+   - Check if the preset ports are already in use on your machine
+
+   - Adjust the ports if necessary
+
+   - Save the file
+
+4. Start the demonstrator:
 
    - Call the start_all.py script if already in environment:
 
