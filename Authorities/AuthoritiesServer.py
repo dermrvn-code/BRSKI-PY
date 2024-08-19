@@ -1,6 +1,7 @@
 import sys
 sys.path.append("../") 
 from Utils.HTTPS import HTTPSServer
+from Utils.Config import Config
 
 
 valid_crls = {
@@ -57,7 +58,7 @@ def main() -> None:
     keyfile = "certs/cert_private_caserver.key"
     passphrasefile = "certs/passphrase_caserver.txt"
 
-    server = HTTPSServer(address="localhost", port=8008, routes_get=routes,
+    server = HTTPSServer(address="localhost", port=config.AUTHORITIES_PORT, routes_get=routes,
                             certfile=certfile, keyfile=keyfile,
                             passphrasefile=passphrasefile)
     server.start()

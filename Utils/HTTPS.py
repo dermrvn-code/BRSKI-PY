@@ -43,7 +43,7 @@ def load_local_cas(context) -> ssl.SSLContext:
 class HTTPSServer:
     def __init__(self, 
                  address : str, 
-                 port : int, 
+                 port : any, 
                  certfile : str, 
                  keyfile : str, 
                  passphrasefile : str,
@@ -55,7 +55,7 @@ class HTTPSServer:
 
         Parameters:
             address (str): The server address.
-            port (int): The server port.
+            port (str or int): The server port.
             certfile (str): The path to the server certificate file.
             keyfile (str): The path to the server private key file.
             passphrasefile (str): The path to the file containing the passphrase for the private key.
@@ -64,10 +64,17 @@ class HTTPSServer:
             
         Raises:
             ValueError: If no routes are provided.
+            ValueError: If the port is not a string or an integer.
         """
         if routes_post is {} and routes_get is {}:
             raise ValueError("No routes provided")
-            
+        
+        if not isinstance(port, (str,int)):
+            raise ValueError("Port must be a string or an integer")
+
+        # Parse port if entered as string
+        if isinstance(port, str):
+            port = int(port)
 
         self.address = address
         self.port = port
@@ -83,18 +90,29 @@ class HTTPSServer:
         """
         Start the HTTPS server.
         """
-        handler = self.create_handler(self.routes_post, self.routes_get)
-        server_address = (self.address, self.port) 
-        httpd = http.server.HTTPServer(server_address, handler)
+        try:
+            handler = self.create_handler(self.routes_post, self.routes_get)
+            server_address = (self.address, self.port) 
+            self.httpd = http.server.HTTPServer(server_address, handler)
 
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        context.verify_mode = ssl.CERT_REQUIRED
-        context.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase)
-        context = load_local_cas(context)
-        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            context.verify_mode = ssl.CERT_REQUIRED
+            context.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase)
+            context = load_local_cas(context)
+            self.httpd.socket = context.wrap_socket(self.httpd.socket, server_side=True)
 
-        print(f"Server running on port https://{self.address}:{str(self.port)}...")
-        httpd.serve_forever()
+            print(f"Server running on port https://{self.address}:{str(self.port)}...")
+            self.httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nStopping server...")
+            self.stop()
+            print("Server stopped.")
+
+    def stop(self):
+        """
+        Stop the HTTPS server.
+        """
+        self.httpd.shutdown()
 
     def create_handler(self, routes_post : dict, routes_get : dict):
         """

@@ -10,6 +10,7 @@ from Certificates.Keys import load_private_key_from_path, load_public_key_from_p
 from Utils.HTTPS import HTTPSServer, send_404
 from Utils.Printer import *
 from Utils.Interface import yes_or_no
+from Utils.Config import Config
 
 
 def handle_request_voucher(self):
@@ -74,6 +75,7 @@ def create_voucher(voucher_request, registrar_cert_bytes):
     return voucher
 
 def main() -> None:
+
     print_title("MASA")
     routes = {
         "/.wellknown/brski": handle_request_voucher,
@@ -83,7 +85,7 @@ def main() -> None:
     keyfile = "certs/cert_private_masa.key"
     passphrasefile = "certs/passphrase_masa.txt"
 
-    server = HTTPSServer(address="localhost", port=8888, routes_post=routes,
+    server = HTTPSServer(address="localhost", port=Config.get("MASA","port"), routes_post=routes,
                             certfile=certfile, keyfile=keyfile,
                             passphrasefile=passphrasefile)
     server.start()

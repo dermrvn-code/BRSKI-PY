@@ -7,6 +7,7 @@ from Certificates.Keys import load_passphrase_from_path, load_private_key_from_p
 from Utils.HTTPS import HTTPSServer, SSLConnection, send_404
 from Utils.Printer import *
 from Utils.Dicts import array_to_dict
+from Utils.Config import Config
 
 
 def handle_request_voucher(self):
@@ -102,7 +103,7 @@ def main() -> None:
     keyfile = "certs/server/cert_private_registrar_server.key"
     passphrasefile = "certs/server/passphrase_registrar_server.txt"
 
-    server = HTTPSServer(address="localhost", port=8000, routes_post=routes,
+    server = HTTPSServer(address="localhost", port=get_config_value, routes_post=routes,
                             certfile=certfile, keyfile=keyfile,
                             passphrasefile=passphrasefile)
     server.start()
