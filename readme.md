@@ -99,7 +99,7 @@ To use the BRSKI Python Implementation, follow these steps:
      py start_all.py
      ```
 
-   - Start the demonstrator by just opening the start.bat file:
+   - Or start the demonstrator by just opening the start.bat file:
 
      ```shell
      start.bat
