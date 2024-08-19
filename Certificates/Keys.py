@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key, Encoding, PrivateFormat
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, PublicKeyTypes
 from cryptography.hazmat.backends import default_backend
-from os import path
+from os import makedirs, path
 import secrets
 
 
@@ -25,6 +25,10 @@ def generate_passphrase(dest_folder : str, common_name : str, length : int = 30)
     passphrase = "".join(secrets.choice(alphabet) for i in range(length))
 
     # Write the passphrase to a .txt file
+    
+    if not path.exists(dest_folder):
+        makedirs(dest_folder)
+        
     with open(path.join(dest_folder,"passphrase_" + common_name.lower() + ".txt"), "w") as f:
         f.write(passphrase)
 
@@ -63,6 +67,9 @@ def generate_rsa_keys(passphrase : str, dest_folder : str, common_name : str, pr
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
 
+    
+    if not path.exists(dest_folder):
+        makedirs(dest_folder)
     
     # Write the private key to a file
     with open(path.join(dest_folder, prefix+"_private_" + common_name.lower() + ".key"), "wb") as key_file:

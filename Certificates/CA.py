@@ -5,7 +5,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.x509.oid import NameOID
 import datetime
-from os import path
+from os import makedirs, path
 
 
 import sys
@@ -85,6 +85,10 @@ def generate_certificate_authority(
             ), 
             critical=False
     ).sign(key, hashes.SHA256(), default_backend())
+
+    
+    if not path.exists(dest_folder):
+        makedirs(dest_folder)
 
     with open(path.join(dest_folder,"ca_" + common_name.lower() + ".crt"), "wb") as cert_file:
         cert_file.write(cert.public_bytes(Encoding.PEM))

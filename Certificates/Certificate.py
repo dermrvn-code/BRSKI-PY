@@ -7,7 +7,7 @@ from pyasn1.type import univ, namedtype, char
 from pyasn1.codec.der import encoder
 
 import datetime
-from os import path
+from os import path, makedirs
 
 
 import sys
@@ -96,6 +96,9 @@ def save_cert_to_file(
     Returns:
         None
     """
+    if not path.exists(dest_folder):
+        makedirs(dest_folder)
+        
     with open(path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".crt"), "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
