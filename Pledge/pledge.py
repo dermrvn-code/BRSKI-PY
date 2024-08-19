@@ -20,9 +20,12 @@ from Utils.Printer import *
 def main() -> None:
     print_title("Pledge")
 
-    idevid_cert_path = "certs/cert_pledge.crt"
-    pledge_private_key_path = "certs/cert_private_pledge.key"
-    pledge_passphrase_path = "certs/passphrase_pledge.txt"
+    # Wait for user to press something
+    input("Press any key to start the pledge...")
+
+    idevid_cert_path = os.path.join(script_dir,"certs/cert_pledge.crt")
+    pledge_private_key_path = os.path.join(script_dir,"certs/cert_private_pledge.key")
+    pledge_passphrase_path = os.path.join(script_dir,"certs/passphrase_pledge.txt")
     pledge_passphrase = load_passphrase_from_path(pledge_passphrase_path)
 
     conn = SSLConnection("localhost", 8000, idevid_cert_path, pledge_private_key_path, pledge_passphrase)

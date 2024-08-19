@@ -11,10 +11,10 @@ from Utils.Printer import print_title
 
 
 valid_crls = {
-    "masa_ca" : "../MASA/ca/crl_masa_ca.crl",
-    "registrar_ca" : "../Registrar/ca/crl_registrar_ca.crl",
-    "manufacturer" : "../Pledge/ca/crl_manufacturer.crl",
-    "caserver_ca" : "../Authorities/ca/crl_caserver_ca.crl"
+    "masa_ca" : "/MASA/ca/crl_masa_ca.crl",
+    "registrar_ca" : "/Registrar/ca/crl_registrar_ca.crl",
+    "manufacturer" : "/Pledge/ca/crl_manufacturer.crl",
+    "caserver_ca" : "/Authorities/ca/crl_caserver_ca.crl"
 }
 
 
@@ -58,14 +58,14 @@ def handle_crl(self, query_string):
 
 def main() -> None:
 
-    print_title("Authorities Server")
+    print_title("Authority")
 
     routes = {
         "/crl": handle_crl
     }
-    certfile = "certs/cert_authorities.crt"
-    keyfile = "certs/cert_private_authorities.key"
-    passphrasefile = "certs/passphrase_authorities.txt"
+    certfile = os.path.join(script_dir,"certs/cert_authorities.crt")
+    keyfile = os.path.join(script_dir,"certs/cert_private_authorities.key")
+    passphrasefile = os.path.join(script_dir,"certs/passphrase_authorities.txt")
 
     server = HTTPSServer(address="localhost", port=Config.get("AUTHORITIES","port"), routes_get=routes,
                             certfile=certfile, keyfile=keyfile,

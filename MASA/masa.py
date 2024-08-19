@@ -73,8 +73,11 @@ def validate_voucher_request(voucher_request : dict) -> bool:
     return yes_or_no("Can you validate the voucher request with serial number " + serial_number + "?")
 
 def create_voucher(voucher_request, registrar_cert_bytes):
-    masa_passphrase = load_passphrase_from_path("certs/passphrase_masa.txt")
-    private_key = load_private_key_from_path("certs/cert_private_masa.key", masa_passphrase)
+    masa_passphrase_path = os.path.join(script_dir, "certs/passphrase_masa.txt")
+    private_key_path = os.path.join(script_dir, "certs/cert_private_masa.key")
+
+    masa_passphrase = load_passphrase_from_path(masa_passphrase_path)
+    private_key = load_private_key_from_path(private_key_path, masa_passphrase)
     voucher = create_voucher_from_request(voucher_request, registrar_cert_bytes, private_key)
     return voucher
 

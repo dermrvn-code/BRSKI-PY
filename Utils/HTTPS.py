@@ -182,7 +182,6 @@ class SSLConnection:
         Create the SSL context for the connection.
         """
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-        self.context.load_verify_locations(cafile="../MASA/ca/CA_masa_ca.crt")
         self.context = load_local_cas(self.context)
         self.context.load_cert_chain(certfile=self.cert, keyfile=self.private_key, password=self.passphrase)
 

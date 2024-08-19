@@ -1,4 +1,9 @@
-
+import os
+import sys
+# Add parent directory to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+sys.path.append(parent_dir)
 
 import json
 
@@ -50,13 +55,13 @@ def handle_request_voucher(self):
 def request_voucher_from_masa(voucher_request : VoucherRequest):
     conn = SSLConnection(
         "localhost", 8888, 
-        "certs/client/cert_registrar_client.crt", 
-        "certs/client/cert_private_registrar_client.key", 
-        load_passphrase_from_path("certs/client/passphrase_registrar_client.txt")
+        os.path.join(script_dir,"certs/client/cert_registrar_client.crt"), 
+        os.path.join(script_dir,"certs/client/cert_private_registrar_client.key"), 
+        load_passphrase_from_path(os.path.join(script_dir,"certs/client/passphrase_registrar_client.txt"))
     )
     private_key = load_private_key_from_path(
-        "certs/server/cert_private_registrar_server.key", 
-        load_passphrase_from_path("certs/server/passphrase_registrar_server.txt"))
+        os.path.join(script_dir,"certs/server/cert_private_registrar_server.key"), 
+        load_passphrase_from_path(os.path.join(script_dir,"certs/server/passphrase_registrar_server.txt")))
     
     registrar_request = create_registrar_voucher_request(private_key, voucher_request)
 
@@ -99,11 +104,11 @@ def main() -> None:
         "/.wellknown/brski": handle_request_voucher
     }
 
-    certfile = "certs/server/cert_registrar_server.crt"
-    keyfile = "certs/server/cert_private_registrar_server.key"
-    passphrasefile = "certs/server/passphrase_registrar_server.txt"
+    certfile = os.path.join(script_dir,"certs/server/cert_registrar_server.crt")
+    keyfile = os.path.join(script_dir,"certs/server/cert_private_registrar_server.key")
+    passphrasefile = os.path.join(script_dir,"certs/server/passphrase_registrar_server.txt")
 
-    server = HTTPSServer(address="localhost", port=get_config_value, routes_post=routes,
+    server = HTTPSServer(address="localhost", port=Config.get("REGISTRAR","port"), routes_post=routes,
                             certfile=certfile, keyfile=keyfile,
                             passphrasefile=passphrasefile)
     server.start()
