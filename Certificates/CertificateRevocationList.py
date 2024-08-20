@@ -1,23 +1,21 @@
-
-
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization, hashes
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from os import path
 
-from Certificates.Certificate import load_certificate_from_path
-from Certificates.Keys import load_private_key_from_path, load_passphrase_from_path
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
 
+from Certificates.Certificate import load_certificate_from_path
+from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 
 
 def generate_certificate_revocation_list(
-    ca_cert_path: str, 
-    ca_key_path: str, 
+    ca_cert_path: str,
+    ca_key_path: str,
     ca_passphrase_path: str,
     dest_folder: str,
     *,
     common_name: str
-    ) -> str:
+) -> str:
     """
     Generate a Certificate Revocation List (CRL) for a given CA certificate.
 
@@ -32,7 +30,7 @@ def generate_certificate_revocation_list(
         dest (str): Path to the generated CRL file.
 
     """
-    
+
     ca_passphrase = load_passphrase_from_path(ca_passphrase_path)
     ca_cert = load_certificate_from_path(ca_cert_path)
     ca_private_key = load_private_key_from_path(ca_key_path, ca_passphrase)
@@ -42,7 +40,7 @@ def generate_certificate_revocation_list(
     crl_builder = crl_builder.last_update(datetime.now(UTC))
     crl_builder = crl_builder.next_update(datetime.now(UTC) + timedelta(days=30))
 
-    crl = crl_builder.sign(private_key=ca_private_key, algorithm=hashes.SHA256())
+    crl = crl_builder.sign(private_key=ca_private_key, algorithm=hashes.SHA256())  # type: ignore
 
     dest = path.join(dest_folder, "crl_" + common_name.lower() + ".crl")
     with open(dest, "wb") as f:
@@ -50,12 +48,13 @@ def generate_certificate_revocation_list(
 
     return dest
 
+
 def update_certificate_revocation_list(
-    crl_path : str,
-    ca_key_path: str, 
+    crl_path: str,
+    ca_key_path: str,
     ca_passphrase_path: str,
-    revoked_cert_serial_number: int
-    ):
+    revoked_cert_serial_number: int,
+):
     """
     Update an existing Certificate Revocation List (CRL) with a new revoked certificate.
 
@@ -69,7 +68,7 @@ def update_certificate_revocation_list(
         None
 
     """
-    
+
     with open(crl_path, "rb") as f:
         crl = x509.load_der_x509_crl(f.read())
 
@@ -86,12 +85,17 @@ def update_certificate_revocation_list(
 
     # Optionally, revoke new certificates
     revocation_date = datetime.now(UTC)
-    revoked_cert = x509.RevokedCertificateBuilder().serial_number(revoked_cert_serial_number).revocation_date(revocation_date).build()
+    revoked_cert = (
+        x509.RevokedCertificateBuilder()
+        .serial_number(revoked_cert_serial_number)
+        .revocation_date(revocation_date)
+        .build()
+    )
     crl_builder = crl_builder.add_revoked_certificate(revoked_cert)
 
-    updated_crl = crl_builder.sign(private_key=ca_private_key, algorithm=hashes.SHA256())
+    updated_crl = crl_builder.sign(
+        private_key=ca_private_key, algorithm=hashes.SHA256()  # type: ignore
+    )
 
     with open(crl_path, "wb") as f:
         f.write(updated_crl.public_bytes(serialization.Encoding.DER))
-    
-

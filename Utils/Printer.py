@@ -1,9 +1,8 @@
-
-
 import json
-from pygments import highlight, lexers, formatters
+
+from art import tprint
 from colorama import Fore, Style
-from art import *
+from pygments import formatters, highlight, lexers
 
 
 def prettyprint_json(data, shorten=False, shorten_longer_than=35):
@@ -22,9 +21,9 @@ def prettyprint_json(data, shorten=False, shorten_longer_than=35):
         ValueError: If the data is not a dictionary or a JSON string.
     """
 
-    if(type(data) is dict):
+    if type(data) is dict:
         dictionary = data
-    elif(type(data) is str):
+    elif type(data) is str:
         dictionary = json.loads(data)
     else:
         raise ValueError("Data must be a dictionary or a JSON string")
@@ -35,8 +34,11 @@ def prettyprint_json(data, shorten=False, shorten_longer_than=35):
                 dictionary[key] = value[:shorten_longer_than] + "..."
 
     formatted_json = json.dumps(dictionary, sort_keys=True, indent=4)
-    colorful_json = highlight(formatted_json, lexers.JsonLexer(), formatters.TerminalFormatter())
+    colorful_json = highlight(
+        formatted_json, lexers.JsonLexer(), formatters.TerminalFormatter()
+    )
     print(colorful_json)
+
 
 def print_title(title: str) -> None:
     """
@@ -51,7 +53,8 @@ def print_title(title: str) -> None:
 
     tprint(title, font="cybermedium")
 
-def print_colorful(str : str, color : str, sep : str = " ") -> None:
+
+def print_colorful(str: str | tuple[str, ...], color: str, sep: str = " ") -> None:
     """
     Prints a string in a specified color.
 
@@ -66,7 +69,8 @@ def print_colorful(str : str, color : str, sep : str = " ") -> None:
 
     print(f"{color}{sep.join(str)}{Style.RESET_ALL}")
 
-def print_error(*errors: str, sep: str = ' ') -> None:
+
+def print_error(*errors: str, sep: str = " ") -> None:
     """
     Prints error messages.
 
@@ -80,7 +84,8 @@ def print_error(*errors: str, sep: str = ' ') -> None:
 
     print_colorful(errors, color=Fore.RED, sep=sep)
 
-def print_success(*successes: str, sep: str = ' ') -> None:
+
+def print_success(*successes: str, sep: str = " ") -> None:
     """
     Prints success messages.
 
@@ -94,7 +99,8 @@ def print_success(*successes: str, sep: str = ' ') -> None:
 
     print_colorful(successes, color=Fore.GREEN, sep=sep)
 
-def print_warning(*warnings: str, sep: str = ' ') -> None:
+
+def print_warning(*warnings: str, sep: str = " ") -> None:
     """
     Prints warning messages.
 
@@ -108,7 +114,8 @@ def print_warning(*warnings: str, sep: str = ' ') -> None:
 
     print_colorful(warnings, color=Fore.YELLOW, sep=sep)
 
-def print_info(*infos: str, sep: str = ' ') -> None:
+
+def print_info(*infos: str, sep: str = " ") -> None:
     """
     Prints info messages.
 
@@ -122,7 +129,8 @@ def print_info(*infos: str, sep: str = ' ') -> None:
 
     print_colorful(infos, color=Fore.CYAN, sep=sep)
 
-def print_descriptor(*descriptors: str, sep: str = ' ') -> None:
+
+def print_descriptor(*descriptors: str, sep: str = " ") -> None:
     """
     Prints descriptors.
 
@@ -135,4 +143,3 @@ def print_descriptor(*descriptors: str, sep: str = ' ') -> None:
     """
 
     print_colorful(descriptors, color=Fore.LIGHTCYAN_EX, sep=sep)
-

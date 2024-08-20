@@ -1,2 +1,2 @@
-@echo off
+@echo off 
 .\.brski_env\Scripts\activate

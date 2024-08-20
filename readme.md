@@ -67,15 +67,15 @@ To use the BRSKI Python Implementation, follow these steps:
 
    1. Tab into the 'Certificates' directory:
 
-     ```shell
-     cd Certificates
-     ```
+   ```shell
+   cd Certificates
+   ```
 
    2. Run the script to generate all the necessary keys and certificates:
 
-     ```shell
-     py generate_certificates.py
-     ```
+   ```shell
+   py generate_certificates.py
+   ```
 
 3. Adjust the configuation
 

@@ -1,19 +1,21 @@
-
-
-from abc import ABC, abstractmethod
 import json
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes, PublicKeyTypes
-import sys
-from Certificates.Signature import sign, verify
-from Utils.Printer import prettyprint_json
+from abc import ABC, abstractmethod
 from enum import Enum
 
- 
+from cryptography.hazmat.primitives.asymmetric.types import (
+    PrivateKeyTypes,
+    PublicKeyTypes,
+)
+
+from Certificates.Signature import sign, verify
+from Utils.Printer import prettyprint_json
+
 
 class Assertion(Enum):
     VERIFIED = "verified"
     LOGGED = "logged"
     PROXIMITY = "proximity"
+
 
 class VoucherBase(ABC):
     def __init__(self):
@@ -32,7 +34,7 @@ class VoucherBase(ABC):
         """
         pass
 
-    def sign(self, signer_private_key: PrivateKeyTypes) -> bytes:
+    def sign(self, signer_private_key: PrivateKeyTypes):
         """
         Sign the voucher data using the provided private key.
 
@@ -44,10 +46,10 @@ class VoucherBase(ABC):
         """
         # Create a copy of the voucher data dictionary without masa_signature
         data_to_sign = self.to_dict(True)
-        
+
         # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_sign, sort_keys=True).encode('utf-8')
-        
+        voucher_data = json.dumps(data_to_sign, sort_keys=True).encode("utf-8")
+
         self.signature = sign(voucher_data, signer_private_key)
 
     def verify(self, signer_public_key: PublicKeyTypes) -> bool:
@@ -59,21 +61,21 @@ class VoucherBase(ABC):
 
         Returns:
             bool: True if the signature is valid, False otherwise.
-        
+
         Raises:
             ValueError: If the voucher is not signed.
         """
         if self.signature is None:
             raise ValueError("Voucher is not signed")
-        
+
         # Create a copy of the voucher data dictionary without masa_signature
         data_to_verify = self.to_dict(True)
-        
+
         # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode('utf-8')
-        
+        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode("utf-8")
+
         return verify(self.signature, voucher_data, signer_public_key)
-    
+
     def print(self):
         """
         Print the voucher object as a pretty-printed JSON string.

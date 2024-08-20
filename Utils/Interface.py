@@ -1,5 +1,3 @@
-
-
 def yes_or_no(prompt: str) -> bool:
     """
     Display a Yes/No prompt to the user.
@@ -12,9 +10,9 @@ def yes_or_no(prompt: str) -> bool:
     """
     while True:
         answer = input(f"{prompt} (yes/no): ").strip().lower()
-        if answer in ['yes', 'y']:
+        if answer in ["yes", "y"]:
             return True
-        elif answer in ['no', 'n']:
+        elif answer in ["no", "n"]:
             return False
         else:
             print("Please answer with 'yes' or 'no'.")

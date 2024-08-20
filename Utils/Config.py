@@ -1,6 +1,5 @@
-
-
 from configparser import ConfigParser
+
 
 class Config:
     config = ConfigParser()
@@ -13,5 +12,5 @@ class Config:
     @staticmethod
     def set(section, key, value):
         Config.config.set(section, key, value)
-        with open('config.ini', 'w') as configfile:
+        with open("config.ini", "w") as configfile:
             Config.config.write(configfile)

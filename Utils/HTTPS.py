@@ -1,16 +1,12 @@
-import ssl
-import socket
-from cryptography.x509 import Certificate
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
-
-import http.server
 import http.client
+import http.server
+import socket
+import ssl
 
-import sys
- 
+from cryptography.x509 import Certificate
+
 from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path
-
 
 
 def load_local_cas(context) -> ssl.SSLContext:
@@ -27,7 +23,7 @@ def load_local_cas(context) -> ssl.SSLContext:
         "MASA/ca/ca_masa_ca.crt",
         "Registrar/ca/ca_registrar_ca.crt",
         "Pledge/ca/ca_manufacturer.crt",
-        "Authorities/ca/ca_caserver_ca.crt"
+        "Authorities/ca/ca_caserver_ca.crt",
     ]
 
     combined_cas = ""
@@ -40,36 +36,38 @@ def load_local_cas(context) -> ssl.SSLContext:
 
     return context
 
+
 class HTTPSServer:
-    def __init__(self, 
-                 address : str, 
-                 port : any, 
-                 certfile : str, 
-                 keyfile : str, 
-                 passphrasefile : str,
-                 routes_post : dict = {}, 
-                 routes_get : dict = {}
-        ):
+    def __init__(
+        self,
+        address: str,
+        port: str | int,
+        certfile: str,
+        keyfile: str,
+        passphrasefile: str,
+        routes_post: dict = {},
+        routes_get: dict = {},
+    ):
         """
         Initialize an HTTPS server.
 
         Parameters:
             address (str): The server address.
-            port (str or int): The server port.
+            port (str | int): The server port.
             certfile (str): The path to the server certificate file.
             keyfile (str): The path to the server private key file.
             passphrasefile (str): The path to the file containing the passphrase for the private key.
             routes_post (dict): A dictionary of POST routes and their corresponding handlers.
             routes_get (dict): A dictionary of GET routes and their corresponding handlers.
-            
+
         Raises:
             ValueError: If no routes are provided.
             ValueError: If the port is not a string or an integer.
         """
         if routes_post is {} and routes_get is {}:
             raise ValueError("No routes provided")
-        
-        if not isinstance(port, (str,int)):
+
+        if not isinstance(port, (str, int)):
             raise ValueError("Port must be a string or an integer")
 
         # Parse port if entered as string
@@ -92,12 +90,14 @@ class HTTPSServer:
         """
         try:
             handler = self.create_handler(self.routes_post, self.routes_get)
-            server_address = (self.address, self.port) 
+            server_address = (self.address, self.port)
             self.httpd = http.server.HTTPServer(server_address, handler)
 
             context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             context.verify_mode = ssl.CERT_REQUIRED
-            context.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase)
+            context.load_cert_chain(
+                certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase
+            )
             context = load_local_cas(context)
             self.httpd.socket = context.wrap_socket(self.httpd.socket, server_side=True)
 
@@ -114,7 +114,7 @@ class HTTPSServer:
         """
         self.httpd.shutdown()
 
-    def create_handler(self, routes_post : dict, routes_get : dict):
+    def create_handler(self, routes_post: dict, routes_get: dict):
         """
         Create a custom HTTP request handler.
 
@@ -124,6 +124,7 @@ class HTTPSServer:
         Returns:
             CustomHTTPRequestHandler: The custom HTTP request handler.
         """
+
         class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
                 handler = routes_post.get(self.path, self.handle_404)
@@ -139,23 +140,25 @@ class HTTPSServer:
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
                 self.wfile.write(b"Page not found")
-        
+
         return CustomHTTPRequestHandler
 
-def send_404(self, message : str = "Error 404"):
+
+def send_404(self, message: str = "Error 404"):
     self.send_response(404)
     self.send_header("Content-type", "text/plain")
     self.end_headers()
     self.wfile.write(b"Error 404")
 
+
 class SSLConnection:
     def __init__(
         self,
-        host : str, 
-        port : int, 
-        cert : Certificate, 
-        private_key : PrivateKeyTypes, 
-        passphrase : str
+        host: str,
+        port: int,
+        cert: str,
+        private_key: str,
+        passphrase: bytes,
     ):
         """
         Initialize an SSL connection.
@@ -163,9 +166,9 @@ class SSLConnection:
         Parameters:
             host (str): The host to connect to.
             port (int): The port to connect to.
-            cert (Certificate): The client certificate.
-            private_key (PrivateKeyTypes): The client private key.
-            passphrase (str): The passphrase for the private key.
+            cert (str): The path to the client certificate.
+            private_key (str): The path to the client private key.
+            passphrase (bytes): The passphrase for the private key.
         """
         self.host = host
         self.port = port
@@ -183,27 +186,37 @@ class SSLConnection:
         """
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
         self.context = load_local_cas(self.context)
-        self.context.load_cert_chain(certfile=self.cert, keyfile=self.private_key, password=self.passphrase)
+        self.context.load_cert_chain(
+            certfile=self.cert,
+            keyfile=self.private_key,
+            password=self.passphrase,
+        )
 
     def connect(self):
         """
         Connect to the server.
         """
-        self.connection = http.client.HTTPSConnection(self.host, port=self.port, context=self.context)
+        self.connection = http.client.HTTPSConnection(
+            self.host, port=self.port, context=self.context
+        )
 
-    def get_server_certificate(self) -> Certificate:
+    def get_server_certificate(self) -> Certificate | None:
         """
         Get the server certificate.
 
         Returns:
-            Certificate: The server certificate.
+            Certificate : The server certificate if it exists, otherwise None.
         """
         with socket.create_connection((self.host, self.port)) as sock:
             with self.context.wrap_socket(sock, server_hostname=self.host) as ssock:
                 server_cert_bytes = ssock.getpeercert(True)
-        self.server_cert = load_certificate_from_bytes(server_cert_bytes)
 
-    def post_request(self, url : str, data : str = None) -> http.client.HTTPResponse:
+        if server_cert_bytes is None:
+            return None
+
+        return load_certificate_from_bytes(server_cert_bytes)
+
+    def post_request(self, url: str, data: str = "") -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
@@ -216,11 +229,10 @@ class SSLConnection:
         """
         self.connection.request(method="POST", url=url, body=data)
 
-
         response = self.connection.getresponse()
         return response
 
-    def get_request(self, url : str) -> http.client.HTTPResponse:
+    def get_request(self, url: str) -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
