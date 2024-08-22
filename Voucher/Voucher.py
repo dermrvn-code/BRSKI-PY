@@ -134,7 +134,7 @@ def parse_voucher(voucher) -> Voucher:
     elif type(voucher) is dict:
         voucher_dict = voucher
     else:
-        raise ValueError("Invalid request format")
+        raise ValueError("Invalid voucher json format")
 
     voucher = Voucher(
         created_on=datetime.fromisoformat(voucher_dict["created-on"]),

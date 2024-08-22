@@ -4,8 +4,11 @@ from os import makedirs, path
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.x509 import (Certificate, load_der_x509_certificate,
-                               load_pem_x509_certificate)
+from cryptography.x509 import (
+    Certificate,
+    load_der_x509_certificate,
+    load_pem_x509_certificate,
+)
 from cryptography.x509.oid import NameOID
 from pyasn1.codec.der import encoder
 from pyasn1.type import char, namedtype, univ
@@ -152,16 +155,16 @@ def generate_certificate_request_builder(
     if serialnumber:
         nameAttributes.append(x509.NameAttribute(NameOID.SERIAL_NUMBER, serialnumber))
 
-    request = x509.CertificateSigningRequestBuilder().subject_name(
+    request_builder = x509.CertificateSigningRequestBuilder().subject_name(
         x509.Name(nameAttributes)
     )
 
     if hostname:
-        request = request.add_extension(
+        request_builder = request_builder.add_extension(
             x509.SubjectAlternativeName([x509.DNSName(hostname)]), critical=False
         )
 
-    return request
+    return request_builder
 
 
 def generate_certificate_builder(
@@ -192,7 +195,7 @@ def generate_certificate_builder(
             days=expiration_days
         )
 
-    cert = (
+    cert_builder = (
         x509.CertificateBuilder()
         .subject_name(request.subject)
         .issuer_name(ca_cert.subject)
@@ -203,13 +206,13 @@ def generate_certificate_builder(
     )
 
     if subject_key_identifier_set:
-        cert = cert.add_extension(
+        cert_builder = cert_builder.add_extension(
             x509.SubjectKeyIdentifier.from_public_key(request.public_key()),
             critical=False,
         )
 
     if authority_key_identifier_set:
-        cert = cert.add_extension(
+        cert_builder = cert_builder.add_extension(
             x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
                 ca_cert.extensions.get_extension_for_class(
                     x509.SubjectKeyIdentifier
@@ -228,12 +231,12 @@ def generate_certificate_builder(
 
     for ext in request.extensions:
         if isinstance(ext.value, valid_extensions):
-            cert = cert.add_extension(ext.value, critical=ext.critical)
+            cert_builder = cert_builder.add_extension(ext.value, critical=ext.critical)
         else:
             print("Extension not supported: ", ext.value)
             pass
 
-    return cert
+    return cert_builder
 
 
 def generate_tls_server_cert(

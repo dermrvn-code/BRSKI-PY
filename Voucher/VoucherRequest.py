@@ -213,7 +213,7 @@ def parse_voucher_request(request) -> VoucherRequest:
     elif type(request) is dict:
         request_dict = request
     else:
-        raise ValueError("Invalid request format")
+        raise ValueError("Invalid voucher request json format")
 
     request = VoucherRequest(
         created_on=(

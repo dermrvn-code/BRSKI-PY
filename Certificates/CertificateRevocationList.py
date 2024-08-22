@@ -58,7 +58,7 @@ def update_certificate_revocation_list(
     """
     Update an existing Certificate Revocation List (CRL) with a new revoked certificate.
 
-    Args:
+    Parameters:
         crl_path (str): Path to the existing CRL file.
         ca_key_path (str): Path to the CA private key file.
         ca_passphrase_path (str): Path to the file containing the passphrase for the CA private key.

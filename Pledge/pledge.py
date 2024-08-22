@@ -13,7 +13,7 @@ from Certificates.Certificate import load_certificate_bytes_from_path
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from Utils.HTTPS import SSLConnection
 from Utils.Printer import *
-from Voucher.Voucher import parse_voucher
+from Voucher.Voucher import Voucher, parse_voucher
 from Voucher.VoucherBase import Assertion
 from Voucher.VoucherRequest import create_pledge_voucher_request
 
@@ -21,9 +21,31 @@ from Voucher.VoucherRequest import create_pledge_voucher_request
 def main() -> None:
     print_title("Pledge")
 
-    # Wait for user to press something
-    input("Press any key to start the pledge...")
+    while True:
+        try:
+            input("Press enter to request a voucher...")
+            voucher = request_voucher("localhost", 8000)
 
+            if voucher:
+                print_descriptor("voucher")
+                voucher.print()
+                print_success("Voucher request successful")
+
+        except KeyboardInterrupt:
+            break
+
+
+def request_voucher(hostname: str, port: int) -> Voucher | None:
+    """
+    Requests a voucher from a well-known URI using the BRSKI protocol.
+    Parameters:
+        hostname (str): The hostname of the server to connect to.
+        port (int): The port number of the server to connect to.
+    Returns:
+        None: This function does not return any value.
+    Raises:
+        Exception: If no valid voucher is received.
+    """
     idevid_cert_path = os.path.join(script_dir, "certs/cert_pledge.crt")
     pledge_private_key_path = os.path.join(script_dir, "certs/cert_private_pledge.key")
     pledge_passphrase_path = os.path.join(script_dir, "certs/passphrase_pledge.txt")
@@ -62,12 +84,10 @@ def main() -> None:
         response_body = response.read()
         try:
             voucher = parse_voucher(response_body.decode())
-            print_descriptor("voucher")
-            voucher.print()
-            print_success("Voucher request successful")
-        except Exception as e:
+            return voucher
+        except ValueError:
             print_error("No valid voucher received: " + response_body.decode())
-            print(e)
+            return None
 
 
 if __name__ == "__main__":
