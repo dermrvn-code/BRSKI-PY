@@ -4,13 +4,15 @@ __pycache__/
 *$py.class
 **/*.pyc
 
-
-
 # VS Code
 /.vscode
 
 # Environment
 .brski_env/
+
+# Sphinx
+**/docs/build/*
+**/docs/source/_modules/*
 
 
 # Project specific
