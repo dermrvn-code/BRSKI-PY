@@ -19,7 +19,7 @@ from Utils.Config import Config
 from Utils.HTTPS import HTTPSServer, send_404
 from Utils.Interface import yes_or_no
 from Utils.Printer import *
-from Voucher.Voucher import create_voucher_from_request
+from Voucher.Voucher import Voucher, create_voucher_from_request
 from Voucher.VoucherRequest import VoucherRequest, parse_voucher_request
 
 
@@ -29,7 +29,6 @@ def handle_request_voucher(self):
     voucher_request_dict = json.loads(post_data)
 
     client_cert_bytes = self.request.getpeercert(True)
-    client_cert_dict = self.request.getpeercert()
 
     voucher_request = parse_voucher_request(voucher_request_dict)
 
@@ -80,6 +79,15 @@ def handle_public_key(self):
 
 
 def validate_voucher_request(voucher_request: VoucherRequest) -> bool:
+    """
+    Validates a voucher request.
+
+    Args:
+        voucher_request (VoucherRequest): The voucher request to be validated.
+
+    Returns:
+        bool: True if the voucher request is valid, False otherwise.
+    """
     voucher_request_dict = voucher_request.to_dict()
     serial_number = voucher_request_dict.get("serial-number")
 
@@ -87,8 +95,22 @@ def validate_voucher_request(voucher_request: VoucherRequest) -> bool:
         f"Can you validate the voucher request with serial number {serial_number}?"
     )
 
+    # TODO: Implement validation of voucher request
 
-def create_voucher(voucher_request, registrar_cert_bytes):
+
+def create_voucher(
+    voucher_request: VoucherRequest, registrar_cert_bytes: bytes
+) -> Voucher:
+    """
+    Create a voucher using the given voucher request and registrar certificate bytes.
+
+    Args:
+        voucher_request (VoucherRequest): The voucher request object.
+        registrar_cert_bytes (bytes): The registrar certificate bytes.
+
+    Returns:
+        voucher (Voucher): The created voucher object.
+    """
     masa_passphrase_path = os.path.join(script_dir, "certs/passphrase_masa.txt")
     private_key_path = os.path.join(script_dir, "certs/cert_private_masa.key")
 
@@ -110,6 +132,7 @@ def main() -> None:
     certfile = os.path.join(script_dir, "certs/cert_masa.crt")
     keyfile = os.path.join(script_dir, "certs/cert_private_masa.key")
     passphrasefile = os.path.join(script_dir, "certs/passphrase_masa.txt")
+    local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
         address="localhost",
@@ -118,6 +141,7 @@ def main() -> None:
         certfile=certfile,
         keyfile=keyfile,
         passphrasefile=passphrasefile,
+        local_cas=local_cas,
     )
     server.start()
 

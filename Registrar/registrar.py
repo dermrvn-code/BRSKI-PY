@@ -28,7 +28,6 @@ def handle_request_voucher(self):
     voucher_request_json = json.loads(post_data)
     voucher_request = parse_voucher_request(voucher_request_json)
 
-    pledge_cert_bytes = self.request.getpeercert(True)
     pledge_cert_dict = self.request.getpeercert()
 
     request_valid = validate_voucher_request(voucher_request, pledge_cert_dict)
@@ -59,14 +58,27 @@ def handle_request_voucher(self):
 
 
 def request_voucher_from_masa(voucher_request: VoucherRequest):
+    """
+    Sends a voucher request to the MASA and retrieves a voucher.
+
+    Args:
+        voucher_request (VoucherRequest): The voucher request object containing the necessary information.
+
+    Returns:
+        Voucher: The voucher issued by the MASA server, or None if the server did not issue a voucher.
+    """
+
     conn = SSLConnection(
-        "localhost",
-        8888,
-        os.path.join(script_dir, "certs/client/cert_registrar_client.crt"),
-        os.path.join(script_dir, "certs/client/cert_private_registrar_client.key"),
-        load_passphrase_from_path(
+        host="localhost",
+        port=8888,
+        cert=os.path.join(script_dir, "certs/client/cert_registrar_client.crt"),
+        private_key=os.path.join(
+            script_dir, "certs/client/cert_private_registrar_client.key"
+        ),
+        passphrase=load_passphrase_from_path(
             os.path.join(script_dir, "certs/client/passphrase_registrar_client.txt")
         ),
+        local_cas=Config.get_values_from_section("CAS"),
     )
     private_key = load_private_key_from_path(
         os.path.join(script_dir, "certs/server/cert_private_registrar_server.key"),
@@ -94,6 +106,17 @@ def request_voucher_from_masa(voucher_request: VoucherRequest):
 def validate_voucher_request(
     voucher_request: VoucherRequest, pledge_cert_dict: dict
 ) -> bool:
+    """
+    Validates a voucher request send by the pledge.
+
+    Args:
+        voucher_request (VoucherRequest): The voucher request to be validated.
+        pledge_cert_dict (dict): The dictionary representation of the pledge certificate.
+
+    Returns:
+        bool: True if the serial numbers match, False otherwise.
+    """
+
     voucher_request_dict = voucher_request.to_dict()
 
     subject = array_to_dict(pledge_cert_dict.get("subject"))
@@ -112,11 +135,24 @@ def validate_voucher_request(
 
     return True
 
+    # TODO: Implement validation of voucher request
 
-def validate_voucher(voucher: Voucher) -> bool:
+
+def validate_voucher(voucher: Voucher | None) -> bool:
+    """
+    Validates the voucher received from the MASA.
+
+    Args:
+        voucher (Voucher | None): The voucher to be validated.
+
+    Returns:
+        bool: True if the voucher is valid, False otherwise.
+    """
     if voucher is None:
         return False
     return True
+
+    # TODO: Implement validation of voucher
 
 
 def main() -> None:
@@ -128,6 +164,7 @@ def main() -> None:
     passphrasefile = os.path.join(
         script_dir, "certs/server/passphrase_registrar_server.txt"
     )
+    local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
         address="localhost",
@@ -136,6 +173,7 @@ def main() -> None:
         certfile=certfile,
         keyfile=keyfile,
         passphrasefile=passphrasefile,
+        local_cas=local_cas,
     )
     server.start()
 

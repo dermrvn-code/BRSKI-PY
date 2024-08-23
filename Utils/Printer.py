@@ -9,10 +9,10 @@ def prettyprint_json(data, shorten=False, shorten_longer_than=35):
     """
     Pretty prints JSON data with optional shortening of long string values.
 
-    Parameters:
+    Args:
         data (dict or str): The JSON data to be pretty printed. It can be either a dictionary or a JSON string.
-        shorten (bool, optional): Whether to shorten long string values. Defaults to False.
-        shorten_longer_than (int, optional): The length threshold for shortening string values. Defaults to 35.
+        shorten (bool): Whether to shorten long string values. Defaults to False.
+        shorten_longer_than (int): The length threshold for shortening string values. Defaults to 35.
 
     Returns:
         None
@@ -44,7 +44,7 @@ def print_title(title: str) -> None:
     """
     Prints a title with a line above and below it.
 
-    Parameters:
+    Args:
         title (str): The title to be printed.
 
     Returns:
@@ -58,10 +58,10 @@ def print_colorful(str: str | tuple[str, ...], color: str, sep: str = " ") -> No
     """
     Prints a string in a specified color.
 
-    Parameters:
+    Args:
         str (str): The strings to be printed.
         color (str): The color to be used.
-        sep (str, optional): The separator between the strings. Defaults to ' '.
+        sep (str): The separator between the strings. Defaults to ' '.
 
     Returns:
         None
@@ -74,9 +74,9 @@ def print_error(*errors: str, sep: str = " ") -> None:
     """
     Prints error messages.
 
-    Parameters:
+    Args:
         *errors (str): The error messages to be printed.
-        sep (str, optional): The separator between the error messages. Defaults to ' '.
+        sep (str): The separator between the error messages. Defaults to ' '.
 
     Returns:
         None
@@ -89,9 +89,9 @@ def print_success(*successes: str, sep: str = " ") -> None:
     """
     Prints success messages.
 
-    Parameters:
+    Args:
         *successes (str): The success messages to be printed.
-        sep (str, optional): The separator between the success messages. Defaults to ' '.
+        sep (str): The separator between the success messages. Defaults to ' '.
 
     Returns:
         None
@@ -104,9 +104,9 @@ def print_warning(*warnings: str, sep: str = " ") -> None:
     """
     Prints warning messages.
 
-    Parameters:
+    Args:
         *warnings (str): The warning messages to be printed.
-        sep (str, optional): The separator between the warning messages. Defaults to ' '.
+        sep (str): The separator between the warning messages. Defaults to ' '.
 
     Returns:
         None
@@ -119,9 +119,9 @@ def print_info(*infos: str, sep: str = " ") -> None:
     """
     Prints info messages.
 
-    Parameters:
+    Args:
         *infos (str): The info messages to be printed.
-        sep (str, optional): The separator between the info messages. Defaults to ' '.
+        sep (str): The separator between the info messages. Defaults to ' '.
 
     Returns:
         None
@@ -134,9 +134,9 @@ def print_descriptor(*descriptors: str, sep: str = " ") -> None:
     """
     Prints descriptors.
 
-    Parameters:
+    Args:
         *descriptors (str): The descriptors to be printed.
-        sep (str, optional): The separator between the descriptors. Defaults to ' '.
+        sep (str): The separator between the descriptors. Defaults to ' '.
 
     Returns:
         None

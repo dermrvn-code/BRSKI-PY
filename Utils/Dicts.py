@@ -2,8 +2,8 @@ def array_to_dict(nested_array) -> dict:
     """
     Converts a nested array into a dictionary.
 
-    Parameters:
-        nested_array (list): A nested array containing subarrays.
+    Args:
+        nested_array: A nested array containing subarrays.
 
     Returns:
         dict: A dictionary where the first element of each subarray is used as the key and the second element is used as the value.

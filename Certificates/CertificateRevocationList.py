@@ -19,7 +19,7 @@ def generate_certificate_revocation_list(
     """
     Generate a Certificate Revocation List (CRL) for a given CA certificate.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the CA certificate file.
         ca_key_path (str): Path to the CA private key file.
         ca_passphrase_path (str): Path to the file containing the passphrase for the CA private key.
@@ -58,7 +58,7 @@ def update_certificate_revocation_list(
     """
     Update an existing Certificate Revocation List (CRL) with a new revoked certificate.
 
-    Parameters:
+    Args:
         crl_path (str): Path to the existing CRL file.
         ca_key_path (str): Path to the CA private key file.
         ca_passphrase_path (str): Path to the file containing the passphrase for the CA private key.
@@ -83,7 +83,6 @@ def update_certificate_revocation_list(
     for revoked_cert in crl:
         crl_builder = crl_builder.add_revoked_certificate(revoked_cert)
 
-    # Optionally, revoke new certificates
     revocation_date = datetime.now(UTC)
     revoked_cert = (
         x509.RevokedCertificateBuilder()

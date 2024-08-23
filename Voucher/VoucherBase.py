@@ -26,8 +26,8 @@ class VoucherBase(ABC):
         """
         Convert the Voucher object to a dictionary.
 
-        Parameters:
-            exclude_signature (bool, optional): Flag indicating if the signature should be excluded from the dictionary. Defaults to False.
+        Args:
+            exclude_signature (bool): Flag indicating if the signature should be excluded from the dictionary. Defaults to False.
 
         Returns:
             dict: The voucher object as a dictionary.
@@ -38,7 +38,7 @@ class VoucherBase(ABC):
         """
         Sign the voucher data using the provided private key.
 
-        Parameters:
+        Args:
             signer_private_key (PrivateKeyTypes): The private key used for signing.
 
         Returns:
@@ -56,7 +56,7 @@ class VoucherBase(ABC):
         """
         Verify the signature of the voucher data using the provided public key.
 
-        Parameters:
+        Args:
             signer_public_key (PublicKeyTypes): The public key used for verification.
 
         Returns:

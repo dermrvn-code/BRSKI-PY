@@ -16,7 +16,6 @@ from Certificates.Keys import (
 )
 
 
-# Generate self-signed root certificate
 def generate_certificate_authority(
     dest_folder: str,
     *,
@@ -28,10 +27,10 @@ def generate_certificate_authority(
     """
     Generate a self-signed root certificate and save it to a file.
 
-    Parameters:
+    Args:
+        dest_folder (str): The destination folder where the certificate file will be saved.
         country_code (str): The country_code name associated with the certificate.
         common_name (str): The common name associated with the certificate.
-        dest_folder (str): The destination folder where the certificate file will be saved.
         days_valid (int): The number of days the certificate will be valid (default is 1825).
         passphrase_length (int): The length of the passphrase used to encrypt the private key (default is 30).
 
@@ -124,13 +123,13 @@ def sign_certificate(
     Signs a certificate and adds CRL Distribution points using the provided CA certificate
     and private key.
 
-    Parameters:
-        ca_cert (x509.Certificate): The CA certificate used for signing.
-        ca_key (PrivateKeyType | CertificateIssuerPrivateKeyTypes): The private key of the CA certificate.
-        cert (x509.Certificate): The certificate to be signed.
+    Args:
+        ca_cert (Certificate): The CA certificate used for signing.
+        ca_key (): The private key of the CA certificate.
+        cert_builder (CertificateBuilder): The certificate builder to be signed.
 
     Returns:
-        x509.Certificate: The signed certificate.
+        Certificate: The signed certificate.
     """
 
     cert_builder = cert_builder.add_extension(
@@ -147,10 +146,10 @@ def load_ca(
     """
     Load the ca certificate and private key from files.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
-        passphrase (str): Passphrase to decrypt the private key.
+        passphrase_path (str): Passphrase to decrypt the private key.
 
     Returns:
         ca_cert (Certificate): Loaded ca certificate.

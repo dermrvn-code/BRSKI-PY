@@ -9,22 +9,19 @@ from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path
 
 
-def load_local_cas(context) -> ssl.SSLContext:
+def load_local_cas(context: ssl.SSLContext, ca_files: list) -> ssl.SSLContext:
     """
     Load local Certificate Authorities (CAs) into the SSL context.
 
-    Parameters:
-        context (ssl.SSLContext): The SSL context.
+    Args:
+        context (SSLContext): The SSL context.
+        ca_files (list): A list of file paths to the CAs.
 
     Returns:
-        ssl.SSLContext: The SSL context with loaded CAs.
+        SSLContext: The SSL context with loaded CAs.
     """
-    ca_files = [
-        "MASA/ca/ca_masa_ca.crt",
-        "Registrar/ca/ca_registrar_ca.crt",
-        "Pledge/ca/ca_manufacturer.crt",
-        "Authorities/ca/ca_caserver_ca.crt",
-    ]
+    if len(ca_files) == 0:
+        return context
 
     combined_cas = ""
     for ca_file in ca_files:
@@ -33,30 +30,32 @@ def load_local_cas(context) -> ssl.SSLContext:
 
     # Load the combined CAs
     context.load_verify_locations(cadata=combined_cas)
-
     return context
 
 
 class HTTPSServer:
     def __init__(
         self,
+        *,
         address: str,
         port: str | int,
         certfile: str,
         keyfile: str,
         passphrasefile: str,
+        local_cas: list[str] = [],
         routes_post: dict = {},
         routes_get: dict = {},
     ):
         """
         Initialize an HTTPS server.
 
-        Parameters:
+        Args:
             address (str): The server address.
             port (str | int): The server port.
             certfile (str): The path to the server certificate file.
             keyfile (str): The path to the server private key file.
             passphrasefile (str): The path to the file containing the passphrase for the private key.
+            local_cas (list): A list of file paths to the local Certificate Authorities (CAs).
             routes_post (dict): A dictionary of POST routes and their corresponding handlers.
             routes_get (dict): A dictionary of GET routes and their corresponding handlers.
 
@@ -76,6 +75,7 @@ class HTTPSServer:
 
         self.address = address
         self.port = port
+        self.local_cas = local_cas
         self.routes_post = routes_post
         self.routes_get = routes_get
         self.certfile = certfile
@@ -98,7 +98,7 @@ class HTTPSServer:
             context.load_cert_chain(
                 certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase
             )
-            context = load_local_cas(context)
+            context = load_local_cas(context, self.local_cas)
             self.httpd.socket = context.wrap_socket(self.httpd.socket, server_side=True)
 
             print(f"Server running on port https://{self.address}:{str(self.port)}...")
@@ -118,7 +118,7 @@ class HTTPSServer:
         """
         Create a custom HTTP request handler.
 
-        Parameters:
+        Args:
             routes (dict): A dictionary of routes and their corresponding handlers.
 
         Returns:
@@ -135,7 +135,7 @@ class HTTPSServer:
                 handler = routes_get.get(data[0], self.handle_404)
                 handler(self, data[1] if len(data) > 1 else None)
 
-            def handle_404(self, optionalself=None):
+            def handle_404(self=None):
                 self.send_response(404)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
@@ -154,27 +154,31 @@ def send_404(self, message: str = "Error 404"):
 class SSLConnection:
     def __init__(
         self,
+        *,
         host: str,
         port: int,
         cert: str,
         private_key: str,
         passphrase: bytes,
+        local_cas: list[str] = [],
     ):
         """
         Initialize an SSL connection.
 
-        Parameters:
+        Args:
             host (str): The host to connect to.
             port (int): The port to connect to.
             cert (str): The path to the client certificate.
             private_key (str): The path to the client private key.
             passphrase (bytes): The passphrase for the private key.
+            local_cas (list): A list of file paths to the local Certificate Authorities (CAs).
         """
         self.host = host
         self.port = port
         self.cert = cert
         self.private_key = private_key
         self.passphrase = passphrase
+        self.local_cas = local_cas
 
         self.create_context()
         self.get_server_certificate()
@@ -185,7 +189,7 @@ class SSLConnection:
         Create the SSL context for the connection.
         """
         self.context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-        self.context = load_local_cas(self.context)
+        self.context = load_local_cas(self.context, self.local_cas)
         self.context.load_cert_chain(
             certfile=self.cert,
             keyfile=self.private_key,
@@ -220,7 +224,7 @@ class SSLConnection:
         """
         Send a POST request to the server.
 
-        Parameters:
+        Args:
             url (str): The URL to send the request to.
             data (str): The data to include in the request body.
 
@@ -236,7 +240,7 @@ class SSLConnection:
         """
         Send a POST request to the server.
 
-        Parameters:
+        Args:
             url (str): The URL to send the request to.
             data (str): The data to include in the request body.
 

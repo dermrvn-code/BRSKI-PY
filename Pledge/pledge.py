@@ -11,6 +11,7 @@ import secrets
 
 from Certificates.Certificate import load_certificate_bytes_from_path
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
+from Utils.Config import Config
 from Utils.HTTPS import SSLConnection
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
@@ -31,6 +32,8 @@ def main() -> None:
                 voucher.print()
                 print_success("Voucher request successful")
 
+                # TODO: Implement a exchange of LDevID Certificate Requests and Establish secure connection
+
         except KeyboardInterrupt:
             break
 
@@ -38,11 +41,14 @@ def main() -> None:
 def request_voucher(hostname: str, port: int) -> Voucher | None:
     """
     Requests a voucher from a well-known URI using the BRSKI protocol.
-    Parameters:
+
+    Args:
         hostname (str): The hostname of the server to connect to.
         port (int): The port number of the server to connect to.
+
     Returns:
-        None: This function does not return any value.
+        None
+
     Raises:
         Exception: If no valid voucher is received.
     """
@@ -50,9 +56,15 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     pledge_private_key_path = os.path.join(script_dir, "certs/cert_private_pledge.key")
     pledge_passphrase_path = os.path.join(script_dir, "certs/passphrase_pledge.txt")
     pledge_passphrase = load_passphrase_from_path(pledge_passphrase_path)
+    local_cas = Config.get_values_from_section("CAS")
 
     conn = SSLConnection(
-        "localhost", 8000, idevid_cert_path, pledge_private_key_path, pledge_passphrase
+        host="localhost",
+        port=8000,
+        cert=idevid_cert_path,
+        private_key=pledge_private_key_path,
+        passphrase=pledge_passphrase,
+        local_cas=local_cas,
     )
 
     pledge_private_key = load_private_key_from_path(

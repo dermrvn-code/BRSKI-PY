@@ -2,7 +2,7 @@ def yes_or_no(prompt: str) -> bool:
     """
     Display a Yes/No prompt to the user.
 
-    Parameters:
+    Args:
         prompt (str): The question to prompt the user.
 
     Returns:

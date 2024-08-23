@@ -4,11 +4,6 @@ from os import makedirs, path
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.x509 import (
-    Certificate,
-    load_der_x509_certificate,
-    load_pem_x509_certificate,
-)
 from cryptography.x509.oid import NameOID
 from pyasn1.codec.der import encoder
 from pyasn1.type import char, namedtype, univ
@@ -17,11 +12,11 @@ from Certificates.CA import load_ca, sign_certificate
 from Certificates.Keys import setup_private_key
 
 
-def load_certificate_from_path(path: str) -> Certificate:
+def load_certificate_from_path(path: str) -> x509.Certificate:
     """
     Load a certificate from a file.
 
-    Parameters:
+    Args:
         path (str): The path to the file containing the certificate.
 
     Returns:
@@ -29,14 +24,14 @@ def load_certificate_from_path(path: str) -> Certificate:
     """
     with open(path, "rb") as f:
         cert_data = f.read()
-    return load_pem_x509_certificate(cert_data, backend=default_backend())
+    return x509.load_pem_x509_certificate(cert_data, backend=default_backend())
 
 
-def load_certificate_from_bytes(data: bytes) -> Certificate:
+def load_certificate_from_bytes(data: bytes) -> x509.Certificate:
     """
     Load a certificate from bytes.
 
-    Parameters:
+    Args:
         data (bytes): The bytes representing the certificate.
 
     Returns:
@@ -46,21 +41,21 @@ def load_certificate_from_bytes(data: bytes) -> Certificate:
         ValueError: If the bytes are neither PEM nor DER encoded.
     """
     try:
-        return load_pem_x509_certificate(data, backend=default_backend())
+        return x509.load_pem_x509_certificate(data, backend=default_backend())
     except:
         try:
-            return load_der_x509_certificate(data, backend=default_backend())
+            return x509.load_der_x509_certificate(data, backend=default_backend())
         except:
             raise ValueError(
                 "Could not load certificate from bytes. Bytes are neither PEM nor DER encoded."
             )
 
 
-def load_certificate_bytes_from_certificate(certfile: Certificate) -> bytes:
+def load_certificate_bytes_from_certificate(certfile: x509.Certificate) -> bytes:
     """
     Get the bytes representation of a certificate.
 
-    Parameters:
+    Args:
         certfile (Certificate): The certificate object.
 
     Returns:
@@ -73,7 +68,7 @@ def load_certificate_bytes_from_path(path) -> bytes:
     """
     Get the bytes representation of a certificate from a file.
 
-    Parameters:
+    Args:
         path (str): The path to the file containing the certificate.
 
     Returns:
@@ -92,10 +87,10 @@ def save_cert_to_file(
     """
     Save the certificate to a file.
 
-    Parameters:
+    Args:
         cert (Certificate): Certificate to be saved.
         dest_folder (str): Destination folder to save the certificate file.
-        common_name (str): Common name used in the certificate.
+        common_name (str): Common name used for naming the file.
         cert_type (str): Type of the certificate. Default is "cert".
 
     Returns:
@@ -122,16 +117,16 @@ def generate_certificate_request_builder(
     """
     Generate a certificate signing request (CSR).
 
-    Parameters:
+    Args:
         country_code (str): Country code for the certificate.
         common_name (str): Common name for the certificate.
-        serialnumber (str): Serial number for the device. Optional.
-        hostname (str): Hostname for the certificate. Optional.
-        organization_name (str): Organization name for the certificate. Optional.
-        organizational_unit_name (str): Organizational unit name for the certificate. Optional.
+        serialnumber (str): Serial number for the device.
+        hostname (str): Hostname for the certificate.
+        organization_name (str): Organization name for the certificate.
+        organizational_unit_name (str): Organizational unit name for the certificate.
 
     Returns:
-        csr (CertificateSigningRequestBuilder): Generated CSR.
+        request_builder (CertificateSigningRequestBuilder): Generated CSR Builder.
     """
     nameAttributes = [x509.NameAttribute(NameOID.COUNTRY_NAME, country_code)]
 
@@ -179,15 +174,15 @@ def generate_certificate_builder(
     """
     Generate a certificate based on the given CSR and CA certificate.
 
-    Parameters:
+    Args:
         request (CertificateSigningRequestBuilder): Certificate signing request.
         ca_cert (Certificate): CA certificate used for signing.
         authority_key_identifier_set (bool): Whether to set the authority key identifier. Default is True.
         subject_key_identifier_set (bool): Whether to set the subject key identifier. Default is True.
         expiration_days (int): Number of days until the certificate expires. Default is 365.
-        expiration_date (datetime): Expiration date of the certificate. Optional.
+        expiration_date (datetime): Explicit expiration date of the certificate.
     Returns:
-        cert (Certificate): Generated certificate.
+        cert_builder (CertificateBuilder): Generated certificate builder.
     """
 
     if expiration_date == None:
@@ -253,14 +248,14 @@ def generate_tls_server_cert(
     """
     Generate a simple device certificate.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
         ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
         common_name (str): Common name for the device certificate.
-        hostname (str): Hostname for the device certificate. Optional.
+        hostname (str): Hostname for the device certificate.
         expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
@@ -305,14 +300,14 @@ def generate_tls_client_cert(
     """
     Generate a simple device certificate.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
         ca_passphrase_path (str): Passphrase for the ca private key.
         dest_folder (str): Destination folder to save the device certificate.
         country_code (str): Country code for the device certificate.
         common_name (str): Common name for the device certificate.
-        hostname (str): Hostname for the device certificate. Optional.
+        hostname (str): Hostname for the device certificate.
         expiration_days (int): Number of days until the certificate expires. Default is 365.
 
     Returns:
@@ -357,7 +352,7 @@ def generate_ra_cert(
     """
     Generate a RA (Registration Authority) certificate.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the CA certificate file.
         ca_key_path (str): Path to the CA private key file.
         ca_passphrase_path (str): Passphrase for the CA private key.
@@ -416,7 +411,7 @@ def generate_idevid_cert(
     """
     Generate an idevid device certificate.
 
-    Parameters:
+    Args:
         ca_cert_path (str): Path to the ca certificate file.
         ca_key_path (str): Path to the ca private key file.
         ca_passphrase_path (str): Passphrase for the ca private key.
@@ -514,7 +509,7 @@ def MASAURLExt(uri: str) -> x509.ExtensionType:
     """
     Creates a MASA URL extension for a certificate.
 
-    Parameters:
+    Args:
         uri (str): The MASA URL to be encoded in the extension.
 
     Returns:

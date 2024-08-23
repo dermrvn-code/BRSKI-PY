@@ -6,10 +6,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from Utils.HTTPS import HTTPSServer
 from Utils.Config import Config
+from Utils.HTTPS import HTTPSServer
 from Utils.Printer import print_title
-
 
 valid_crls = {
     "masa_ca": "/MASA/ca/crl_masa_ca.crl",
@@ -64,6 +63,7 @@ def main() -> None:
     certfile = os.path.join(script_dir, "certs/cert_authorities.crt")
     keyfile = os.path.join(script_dir, "certs/cert_private_authorities.key")
     passphrasefile = os.path.join(script_dir, "certs/passphrase_authorities.txt")
+    local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
         address="localhost",
@@ -72,6 +72,7 @@ def main() -> None:
         certfile=certfile,
         keyfile=keyfile,
         passphrasefile=passphrasefile,
+        local_cas=local_cas,
     )
     server.start()
 

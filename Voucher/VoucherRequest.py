@@ -25,18 +25,18 @@ class VoucherRequest(VoucherBase):
         """
         Initialize a voucher request.
 
-        Parameters:
+        Args:
             serial_number (str): The serial number of the voucher request.
-            created_on (datetime, optional): The creation date of the voucher request. Defaults to None.
-            expires_on (datetime, optional): The expiration date of the voucher request. Defaults to None.
-            assertion (Assertion, optional): The assertion type of the voucher request. Defaults to None.
-            idevid_issuer (bytes, optional): The issuer identifier of the voucher request. Defaults to None.
-            pinned_domain_cert (bytes, optional): The pinned domain certificate of the voucher request. Defaults to None.
-            domain_cert_revocation_checks (bool, optional): Whether to perform domain certificate revocation checks. Defaults to None.
-            nonce (bytes, optional): The nonce of the voucher request. Defaults to None.
-            last_renewal_date (datetime, optional): The last renewal date of the voucher request. Defaults to None.
-            prior_signed_voucher_request (bytes, optional): The prior signed voucher request. Defaults to None.
-            proximity_registrar_cert (bytes, optional): The proximity registrar certificate. Defaults to None.
+            created_on (datetime): The creation date of the voucher request. Defaults to None.
+            expires_on (datetime): The expiration date of the voucher request. Defaults to None.
+            assertion (Assertion): The assertion type of the voucher request. Defaults to None.
+            idevid_issuer (bytes): The issuer identifier of the voucher request. Defaults to None.
+            pinned_domain_cert (bytes): The pinned domain certificate of the voucher request. Defaults to None.
+            domain_cert_revocation_checks (bool): Whether to perform domain certificate revocation checks. Defaults to None.
+            nonce (bytes): The nonce of the voucher request. Defaults to None.
+            last_renewal_date (datetime): The last renewal date of the voucher request. Defaults to None.
+            prior_signed_voucher_request (bytes): The prior signed voucher request. Defaults to None.
+            proximity_registrar_cert (bytes): The proximity registrar certificate. Defaults to None.
 
         Raises:
             ValueError: If the assertion is set to PROXIMITY without providing a proximity registrar certificate.
@@ -129,14 +129,14 @@ def create_pledge_voucher_request(
     """
     Creates a pledge voucher request.
 
-    Parameters:
+    Args:
         pledge_private_key (PrivateKeyTypes): The private key of the pledge.
         serial_number (str): The serial number of the voucher request.
-        assertion (Assertion, optional): The assertion type of the voucher request. Defaults to None.
-        nonce (bytes, optional): The nonce of the voucher request. Defaults to None.
-        idevid_issuer (bytes, optional): The issuer identifier of the voucher request. Defaults to None.
-        proximity_registrar_cert (bytes, optional): The proximity registrar certificate. Defaults to None.
-        validity_days (int, optional): The number of days the voucher request is valid for. Defaults to 7.
+        assertion (Assertion): The assertion type of the voucher request. Defaults to None.
+        nonce (bytes): The nonce of the voucher request. Defaults to None.
+        idevid_issuer (bytes): The issuer identifier of the voucher request. Defaults to None.
+        proximity_registrar_cert (bytes): The proximity registrar certificate. Defaults to None.
+        validity_days (int): The number of days the voucher request is valid for. Defaults to 7.
 
     Returns:
         VoucherRequest: The created pledge voucher request.
@@ -171,7 +171,7 @@ def create_registrar_voucher_request(
     """
     Creates a registrar voucher request.
 
-    Parameters:
+    Args:
         registrar_private_key (PrivateKeyTypes): The private key of the registrar.
         request (VoucherRequest): The original voucher request.
 
@@ -202,7 +202,7 @@ def parse_voucher_request(request) -> VoucherRequest:
     """
     Parses a voucher request from a JSON string or dictionary.
 
-    Parameters:
+    Args:
         request (str or dict): The voucher request in JSON string or dictionary format.
 
     Returns:

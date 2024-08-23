@@ -24,16 +24,16 @@ class Voucher(VoucherBase):
         """
         Initialize a Voucher object.
 
-        Parameters:
+        Args:
             created_on (datetime): The creation date of the voucher.
             assertion (Assertion): The assertion associated with the voucher.
             serial_number (str): The serial number of the voucher.
             pinned_domain_cert (bytes): The pinned domain certificate.
-            expires_on (datetime, optional): The expiration date of the voucher. Defaults to None.
-            idevid_issuer (bytes, optional): The issuer identifier. Defaults to None.
-            domain_cert_revocation_checks (bool, optional): Flag indicating if domain certificate revocation checks are enabled. Defaults to None.
-            nonce (bytes, optional): The nonce value. Defaults to None.
-            last_renewal_date (datetime, optional): The last renewal date of the voucher. Defaults to None.
+            expires_on (datetime): The expiration date of the voucher. Defaults to None.
+            idevid_issuer (bytes): The issuer identifier. Defaults to None.
+            domain_cert_revocation_checks (bool): Flag indicating if domain certificate revocation checks are enabled. Defaults to None.
+            nonce (bytes): The nonce value. Defaults to None.
+            last_renewal_date (datetime): The last renewal date of the voucher. Defaults to None.
         """
         super().__init__()
 
@@ -96,7 +96,7 @@ def create_voucher_from_request(
     """
     Create a Voucher object from a VoucherRequest.
 
-    Parameters:
+    Args:
         request (VoucherRequest): The VoucherRequest object.
         pinned_domain_cert (bytes): The pinned domain certificate.
         masa_private_key (PrivateKeyTypes): The private key used for signing the voucher.
@@ -123,7 +123,7 @@ def parse_voucher(voucher) -> Voucher:
     """
     Parse a voucher from a JSON string or dictionary.
 
-    Parameters:
+    Args:
         voucher (str or dict): The voucher data.
 
     Returns:

@@ -10,13 +10,12 @@ def sign(data, signer_private_key) -> bytes:
     """
     Signs the given data using the private key.
 
-    Parameters:
+    Args:
         data: The data to be signed.
         signer_private_key: The private key used for signing.
 
     Returns:
         The signature as bytes.
-
     """
     signature = signer_private_key.sign(
         data,
@@ -33,14 +32,13 @@ def verify(signature: bytes, verification_data, signer_public_key) -> bool:
     """
     Verifies the given signature against the verification data using the public key.
 
-    Parameters:
-        signature: The signature to be verified.
+    Args:
+        signature (bytes): The signature to be verified.
         verification_data: The data used for verification.
         signer_public_key: The public key used for verification.
 
     Returns:
         True if the verification is successful, False otherwise.
-
     """
     try:
         signer_public_key.verify(
