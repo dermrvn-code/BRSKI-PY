@@ -24,6 +24,7 @@
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [Generate Docs](#generate-docs)
 
 ## Installation
 
@@ -104,5 +105,29 @@ To use the BRSKI Python Implementation, follow these steps:
      ```shell
      start.bat
      ```
+
+## Generate Docs
+
+To generate a sphinx documentation for the BRSKI Python Implementation, follow these steps:
+
+1. Start the virtual environment:
+
+   ```shell
+   start_env.bat
+   ```
+
+2. Navigate to the docs directory:
+
+   ```shell
+   cd docs
+   ```
+
+3. Build the documentation:
+
+   ```shell
+   build_docs.bat
+   ```
+
+4. If the documentation was successfully built, you can find the HTML files in the `docs/build/html` directory.
 
 [(Back to top)](#table-of-contents)
