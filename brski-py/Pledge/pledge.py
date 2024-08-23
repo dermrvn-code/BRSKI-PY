@@ -87,8 +87,11 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     print_descriptor("pledge request")
     request.print()
 
+    headers = {"Content-Type": "application/json"}
     # Request Voucher from well-known URI
-    response = conn.post_request("/.wellknown/brski", json.dumps(request.to_dict()))
+    response = conn.post_request(
+        "/.wellknown/brski", data=json.dumps(request.to_dict()), headers=headers
+    )
 
     if response.status != 200:
         print_error("Voucher request failed")

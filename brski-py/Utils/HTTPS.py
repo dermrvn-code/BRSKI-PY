@@ -225,7 +225,9 @@ class SSLConnection:
 
         return load_certificate_from_bytes(server_cert_bytes)
 
-    def post_request(self, url: str, data: str = "") -> http.client.HTTPResponse:
+    def post_request(
+        self, url: str, *, data: str = "", headers: dict = {}
+    ) -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
@@ -236,7 +238,7 @@ class SSLConnection:
         Returns:
             HTTPResponse: The response
         """
-        self.connection.request(method="POST", url=url, body=data)
+        self.connection.request(method="POST", url=url, body=data, headers=headers)
 
         response = self.connection.getresponse()
         return response

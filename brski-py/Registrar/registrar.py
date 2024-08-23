@@ -1,3 +1,4 @@
+import base64
 import os
 import sys
 
@@ -8,8 +9,12 @@ sys.path.append(parent_dir)
 
 import json
 
-from Certificates.Certificate import load_certificate_from_bytes
+from Certificates.Certificate import (
+    load_certificate_from_bytes,
+    load_certificate_from_path,
+)
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
+from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import NameOID
 from Utils.Config import Config
 from Utils.Dicts import array_to_dict
@@ -91,14 +96,23 @@ def request_voucher_from_masa(voucher_request: VoucherRequest):
             os.path.join(script_dir, "certs/server/passphrase_registrar_server.txt")
         ),
     )
+    ra_cert = load_certificate_from_path(
+        os.path.join(script_dir, "certs/server/cert_registrar_server.crt")
+    )
 
     registrar_request = create_registrar_voucher_request(private_key, voucher_request)
 
     print_descriptor("registrar request")
     registrar_request.print()
 
+    headers = {
+        "Content-Type": "application/json",
+        "X-RA-Cert": base64.b64encode(ra_cert.public_bytes(Encoding.DER)).decode(),
+    }
     response = conn.post_request(
-        "/.wellknown/brski", json.dumps(registrar_request.to_dict())
+        "/.wellknown/brski",
+        data=json.dumps(registrar_request.to_dict()),
+        headers=headers,
     )
 
     if response.status != 200:
@@ -192,7 +206,7 @@ def validate_voucher(voucher: Voucher | None) -> bool:
     Validates the voucher received from the MASA.
 
     Args:
-        voucher (Voucher | None): The voucher to be validated.
+        voucher (Voucher): The voucher to be validated.
 
     Returns:
         bool: True if the voucher is valid, False otherwise.
