@@ -4,6 +4,8 @@ import time
 import pyautogui
 import pygetwindow as gw
 
+source_folder = "brski-py"
+
 scripts = [
     "Pledge/pledge.py",
     "Registrar/registrar.py",
@@ -14,8 +16,9 @@ titles = ["Pledge", "Registrar", "MASA", "Authority"]
 
 # Launch each script in a separate command prompt window and set a custom title
 for script, title in zip(scripts, titles):
+    script_path = f"{source_folder}/{script}"
     subprocess.Popen(
-        f"cmd /k title {title} && py {script}",
+        f"cmd /k title {title} && py {script_path}",
         creationflags=subprocess.CREATE_NEW_CONSOLE,
     )
 

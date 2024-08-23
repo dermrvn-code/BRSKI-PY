@@ -1,12 +1,12 @@
 import http.client
 import http.server
+import os
 import socket
 import ssl
 
-from cryptography.x509 import Certificate
-
 from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path
+from cryptography.x509 import Certificate
 
 
 def load_local_cas(context: ssl.SSLContext, ca_files: list) -> ssl.SSLContext:
@@ -23,9 +23,14 @@ def load_local_cas(context: ssl.SSLContext, ca_files: list) -> ssl.SSLContext:
     if len(ca_files) == 0:
         return context
 
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+
     combined_cas = ""
     for ca_file in ca_files:
-        with open(ca_file, "r") as file:
+        ca_file_path = os.path.join(parent_dir, ca_file)
+
+        with open(ca_file_path, "r") as file:
             combined_cas += file.read()
 
     # Load the combined CAs
