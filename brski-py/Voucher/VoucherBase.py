@@ -2,12 +2,11 @@ import json
 from abc import ABC, abstractmethod
 from enum import Enum
 
+from Certificates.Signature import sign, verify
 from cryptography.hazmat.primitives.asymmetric.types import (
     PrivateKeyTypes,
     PublicKeyTypes,
 )
-
-from Certificates.Signature import sign, verify
 from Utils.Printer import prettyprint_json
 
 
@@ -75,6 +74,9 @@ class VoucherBase(ABC):
         voucher_data = json.dumps(data_to_verify, sort_keys=True).encode("utf-8")
 
         return verify(self.signature, voucher_data, signer_public_key)
+
+    def to_string(self, exclude_signature: bool = False) -> str:
+        return json.dumps(self.to_dict(exclude_signature))
 
     def print(self):
         """

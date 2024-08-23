@@ -1,3 +1,4 @@
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -51,6 +52,8 @@ def verify(signature: bytes, verification_data, signer_public_key) -> bool:
         )
         return True
 
+    except InvalidSignature as e:
+        return False
     except Exception as e:
-        print(f"Verification failed: {e}")
+        print(f"Error while verification: {e}")
         return False

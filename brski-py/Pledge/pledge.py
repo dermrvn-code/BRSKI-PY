@@ -94,12 +94,14 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     )
 
     if response.status != 200:
-        print_error("Voucher request failed")
+        print_error("Voucher request failed: " + response.read().decode())
         return
     else:
         response_body = response.read()
         try:
             voucher = parse_voucher(response_body.decode())
+
+            # TODO: Check voucher
             return voucher
         except ValueError:
             print_error("No valid voucher received: " + response_body.decode())

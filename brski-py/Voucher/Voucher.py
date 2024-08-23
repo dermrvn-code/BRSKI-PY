@@ -83,9 +83,6 @@ class Voucher(VoucherBase):
 
         return dict
 
-    def to_string(self, exclude_signature: bool = False) -> str:
-        return json.dumps(self.to_dict(exclude_signature))
-
 
 def create_voucher_from_request(
     request: VoucherRequest,

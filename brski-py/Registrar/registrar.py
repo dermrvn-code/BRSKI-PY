@@ -18,7 +18,8 @@ from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import NameOID
 from Utils.Config import Config
 from Utils.Dicts import array_to_dict
-from Utils.HTTPS import HTTPSServer, SSLConnection, send_404
+from Utils.HTTPS import HTTPSServer, SSLConnection, send_404, send_406
+from Utils.Logger import Logger
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
 from Voucher.VoucherRequest import (
@@ -34,14 +35,14 @@ def handle_request_voucher(self):
 
     voucher_request_json = json.loads(post_data)
     voucher_request = parse_voucher_request(voucher_request_json)
+    logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     pledge_cert_dict = self.request.getpeercert()
 
-    request_valid = validate_voucher_request(voucher_request, pledge_cert_dict)
+    request_valid, message = validate_voucher_request(voucher_request, pledge_cert_dict)
 
-    # error 406 if request in wrong format, 404 if validation fails
     if request_valid == 1:
-        send_404(self, "Wrong Request Format")
+        send_406(self, "Wrong Request Format")
         return
     elif request_valid == 3:
         print_success("Voucher request is valid")
@@ -49,16 +50,25 @@ def handle_request_voucher(self):
         send_404(self, "Authentication failed")
         return
 
-    voucher = request_voucher_from_masa(voucher_request)
+    logger.log(
+        f"Voucher request forwarded for serial number {voucher_request.serial_number}"
+    )
+    voucher, message = request_voucher_from_masa(voucher_request)
 
     voucher_valid = False
-    if voucher is not None:
-        voucher_valid = validate_voucher(voucher)
+    if voucher is None:
+        send_404(self, message)
+        log_error(logger, voucher_request.serial_number, message, False)
+        return
+
+    voucher_valid, message = validate_voucher(voucher)
 
     if not voucher_valid:
-        send_404(self, "Authentication failed")
+        send_404(self, message)
+        log_error(logger, voucher_request.serial_number, message, False)
     else:
         print_success("Voucher is valid")
+        logger.log(f"Voucher issued and forwarded: {voucher.to_string()}")
 
         # if voucher is valid, send it to the pledge
         self.send_response(200)
@@ -67,7 +77,9 @@ def handle_request_voucher(self):
         self.wfile.write(str.encode(voucher.to_string()))  # type: ignore
 
 
-def request_voucher_from_masa(voucher_request: VoucherRequest):
+def request_voucher_from_masa(
+    voucher_request: VoucherRequest,
+) -> tuple[Voucher | None, str]:
     """
     Sends a voucher request to the MASA and retrieves a voucher.
 
@@ -76,6 +88,7 @@ def request_voucher_from_masa(voucher_request: VoucherRequest):
 
     Returns:
         Voucher: The voucher issued by the MASA server, or None if the server did not issue a voucher.
+        str: The error message if the server did not issue a voucher.
     """
 
     conn = SSLConnection(
@@ -116,15 +129,14 @@ def request_voucher_from_masa(voucher_request: VoucherRequest):
     )
 
     if response.status != 200:
-        print_error("MASA did not issue a voucher")
-        return None
+        return None, response.read().decode()
     else:
-        return parse_voucher(response.read().decode())
+        return parse_voucher(response.read().decode()), ""
 
 
 def validate_voucher_request(
     voucher_request: VoucherRequest, pledge_cert_dict: dict
-) -> int:
+) -> tuple[int, str]:
     """
     Validates a voucher request send by the pledge.
     Checks if the peer certificate matches the idev issuer certificate and if the serial numbers match.
@@ -135,25 +147,29 @@ def validate_voucher_request(
 
     Returns:
         int: 1 if the request is in wrong format, 2 if authentication fails, 3 if the request is valid.
+        str: The error message if the request is invalid.
     """
 
     try:
         voucher_request_dict = voucher_request.to_dict()
     except AttributeError:
-        print_error("Voucher request in wrong format")
-        return 1
+        msg = "Voucher request in wrong format"
+        log_error(logger, voucher_request.serial_number, msg)
+        return 1, msg
 
     # Get the idevid issuer certificate from the request
     idevid_cert_bytes = voucher_request.idevid_issuer
     if idevid_cert_bytes is None:
-        print_error("No idevid issuer in voucher request")
-        return 1
+        msg = "No idevid issuer in voucher request"
+        log_error(logger, voucher_request.serial_number, msg)
+        return 1, msg
     idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
 
     # Verify the signature of the voucher request
     if not voucher_request.verify(idevid_cert.public_key()):
-        print_error("Voucher request signature invalid")
-        return 2
+        msg = "Voucher request signature invalid"
+        log_error(logger, voucher_request.serial_number, msg)
+        return 2, msg
     else:
         print_success("Voucher request signature valid")
 
@@ -163,10 +179,13 @@ def validate_voucher_request(
     )  # parse string as hexadecimal integer
 
     if serial_number != idevid_cert.serial_number:
-        print_error(
-            f"Serial numbers of idev certificates do not match: {serial_number} != {idevid_cert.serial_number}"
+        msg = f"Serial numbers of idev certificates do not match: {serial_number} != {idevid_cert.serial_number}"
+        log_error(
+            logger,
+            voucher_request.serial_number,
+            msg,
         )
-        return 2
+        return 2, msg
     else:
         print_success("Peer certificate matches idev issuer")
 
@@ -191,17 +210,28 @@ def validate_voucher_request(
         == peer_subject_serial_number
         == voucher_serial_number
     ):
-        print_error(
-            f"Serial numbers do not match: {idev_subject_serial_number} != {peer_subject_serial_number} != {voucher_serial_number}"
+        msg = f"Serial numbers do not match: {idev_subject_serial_number} != {peer_subject_serial_number} != {voucher_serial_number}"
+        log_error(
+            logger,
+            voucher_request.serial_number,
+            msg,
         )
-        return 2
+        return 2, msg
     else:
         print_success("Serial numbers match")
 
-    return 3
+    return 3, ""
 
 
-def validate_voucher(voucher: Voucher | None) -> bool:
+def log_error(logger: Logger, serialNumber: str, msg: str, is_request: bool = True):
+    prefix = (
+        "No voucher request was forwarded " if is_request else "No voucher was issued "
+    )
+    print_error(msg)
+    logger.log(f"{prefix} for serial number {serialNumber}: {msg}")
+
+
+def validate_voucher(voucher: Voucher | None) -> tuple[bool, str]:
     """
     Validates the voucher received from the MASA.
 
@@ -210,12 +240,16 @@ def validate_voucher(voucher: Voucher | None) -> bool:
 
     Returns:
         bool: True if the voucher is valid, False otherwise.
+        str: The error message if the voucher is invalid.
     """
     if voucher is None:
-        return False
-    return True
+        return False, "MASA did not issue a voucher"
+    return True, ""
 
-    # TODO: Implement validation of voucher
+    # TODO: Implement any further validation and check of voucher
+
+
+logger = Logger(os.path.join(script_dir, "registrar.log"))
 
 
 def main() -> None:

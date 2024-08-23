@@ -2,7 +2,11 @@ import base64
 import json
 from datetime import datetime, timedelta, timezone
 
-from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
+from Certificates.Signature import verify
+from cryptography.hazmat.primitives.asymmetric.types import (
+    PrivateKeyTypes,
+    PublicKeyTypes,
+)
 from Voucher.VoucherBase import Assertion, VoucherBase
 
 
@@ -121,6 +125,39 @@ class VoucherRequest(VoucherBase):
 
         return dict
 
+    """
+    TODO: Implement the verify method using CMS
+    """
+
+    def verify_prior_signed(self, signer_public_key: PublicKeyTypes) -> bool:
+        """
+        Verify the signature of the prior signed voucher request using the provided public key.
+
+        Args:
+            signer_public_key (PublicKeyTypes): The public key used for verification.
+
+        Returns:
+            bool: True if the signature is valid, False otherwise.
+
+        Raises:
+            ValueError: If the voucher is not signed.
+        """
+        if self.prior_signed_voucher_request is None:
+            raise ValueError("Voucher request has no prior signed voucher request")
+
+        # Create a copy of the voucher data dictionary without masa_signature
+        data_to_verify = self.to_dict(True)
+        del data_to_verify["prior-signed-voucher-request"]
+
+        # Convert to JSON and encode
+        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode("utf-8")
+
+        return verify(
+            self.prior_signed_voucher_request,
+            voucher_data,
+            signer_public_key,
+        )
+
 
 def create_pledge_voucher_request(
     pledge_private_key: PrivateKeyTypes,
@@ -166,6 +203,7 @@ def create_pledge_voucher_request(
             else None
         ),
     )
+
     request.sign(pledge_private_key)
     return request
 
@@ -183,11 +221,10 @@ def create_registrar_voucher_request(
     Returns:
         VoucherRequest: The created registrar voucher request.
     """
-    current_time = datetime.now(timezone.utc)
     prior_signed_voucher_request = request.signature
 
     new_request = VoucherRequest(
-        created_on=current_time,
+        created_on=request.created_on,
         expires_on=request.expires_on,
         assertion=request.assertion,
         serial_number=request.serial_number,

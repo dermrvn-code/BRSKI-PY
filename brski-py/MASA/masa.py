@@ -16,9 +16,11 @@ from Certificates.Keys import (
     load_public_key_from_path,
 )
 from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import ObjectIdentifier, oid
 from Utils.Config import Config
-from Utils.HTTPS import HTTPSServer, send_404
+from Utils.HTTPS import HTTPSServer, send_404, send_406
 from Utils.Interface import yes_or_no
+from Utils.Logger import Logger
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, create_voucher_from_request
 from Voucher.VoucherRequest import VoucherRequest, parse_voucher_request
@@ -31,25 +33,40 @@ def handle_request_voucher(self):
     voucher_request_dict = json.loads(post_data)
 
     voucher_request = parse_voucher_request(voucher_request_dict)
+    logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     registrar_cert_bytes = base64.b64decode(x_ra_cert)
 
     # Validate client and voucher here
-    request_valid = validate_voucher_request(voucher_request, registrar_cert_bytes)
+    request_valid, message = validate_voucher_request(
+        voucher_request, registrar_cert_bytes
+    )
 
     if request_valid == 1:
-        send_404(self, "Wrong Request Format")
+        send_406(self, message)
+        log_error(logger, voucher_request.serial_number, message)
         return
     elif request_valid == 3:
         print_success("Voucher is issued")
     else:
-        send_404(self, "Authentication failed")
+        send_404(self, message)
+        log_error(logger, voucher_request.serial_number, message)
         return
 
-    voucher = create_voucher(voucher_request, registrar_cert_bytes)
-    voucher_json = json.dumps(voucher.to_dict())
+    try:
+        voucher = create_voucher(voucher_request, registrar_cert_bytes)
+        voucher_json = json.dumps(voucher.to_dict())
+    except Exception as e:
+        log_error(
+            logger,
+            voucher_request.serial_number,
+            "Voucher request format could not be parsed",
+        )
+        return
 
-    print_descriptor("masa issued voucher:")
+    logger.log(f"Issuing voucher: {voucher_json}")
+
+    print_descriptor("MASA issued voucher:")
     prettyprint_json(voucher_json, True)
 
     # Send response
@@ -79,9 +96,14 @@ def handle_public_key(self):
     self.wfile.write(public_key_bytes)
 
 
+def log_error(logger: Logger, serialNumber: str, msg: str):
+    print_error(msg)
+    logger.log(f"No voucher was issued for serial number {serialNumber}: {msg}")
+
+
 def validate_voucher_request(
     voucher_request: VoucherRequest, registrar_cert_bytes: bytes | None
-) -> int:
+) -> tuple[int, str]:
     """
     Validates a voucher request send by the registrar.
 
@@ -91,37 +113,68 @@ def validate_voucher_request(
 
     Returns:
         int: 1 if the request is in wrong format, 2 if authentication fails, 3 if the request is valid.
+        str: The message to be displayed in case of an error.
     """
 
     try:
         voucher_request_dict = voucher_request.to_dict()
     except AttributeError:
-        print_error("Voucher request in wrong format")
-        return 1
+        msg = "Voucher request format could not be parsed"
+        print_error(msg)
+        return 1, msg
 
     # Get the idevid issuer certificate from the request
     if registrar_cert_bytes is None:
-        print_error("No idevid issuer in voucher request")
-        return 1
+        msg = "No registrar certificate given"
+        print_error(msg)
+        return 1, msg
     registrar_cert = load_certificate_from_bytes(registrar_cert_bytes)
+
+    # Check if the registrar certificate is authorized to issue vouchers
+    cmc_ra_oid = ObjectIdentifier("1.3.6.1.5.5.7.3.28")  # id-kp-cmcRA OID
+    eku_extension = registrar_cert.extensions.get_extension_for_oid(
+        oid.ExtensionOID.EXTENDED_KEY_USAGE
+    ).value
+
+    if cmc_ra_oid not in eku_extension:  # type: ignore
+        msg = "Registrar certificate is not authorized to issue vouchers"
+        print_error(msg)
+        return 2, msg
 
     # Verify the signature of the voucher request
     if not voucher_request.verify(registrar_cert.public_key()):
-        print_error("Voucher request signature invalid")
-        return 2
+        msg = "Voucher request signature invalid"
+        print_error(msg)
+        return 2, msg
     else:
         print_success("Voucher request signature valid")
 
-    serial_number = voucher_request_dict.get("serial-number")
+    # Validate prior signature
+    idevid_cert_bytes = voucher_request.idevid_issuer
+    if idevid_cert_bytes is None:
+        msg = "No idevid issuer in voucher request"
+        print_error()
+        return 1, msg
+    idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
 
-    if yes_or_no(
+    if not voucher_request.verify_prior_signed(idevid_cert.public_key()):
+        msg = "Voucher request prior signature invalid"
+        print_error(msg)
+        return 2, msg
+    else:
+        print_success("Voucher request prior signature valid")
+
+    """ 
+    Additional validation of the voucher request can be made here
+    """
+
+    serial_number = voucher_request_dict.get("serial-number")
+    if not yes_or_no(
         f"Can you validate the voucher request with serial number {serial_number}?"
     ):
-        return 3
-    else:
-        return 2
+        return 2, "The MASA rejected the voucher request"
 
-    # TODO: Implement validation of voucher request
+    return 3, ""
 
 
 def create_voucher(
@@ -146,6 +199,9 @@ def create_voucher(
         voucher_request, registrar_cert_bytes, private_key
     )
     return voucher
+
+
+logger = Logger(os.path.join(script_dir, "masa.log"))
 
 
 def main() -> None:

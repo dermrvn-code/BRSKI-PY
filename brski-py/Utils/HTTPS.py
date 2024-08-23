@@ -153,7 +153,14 @@ def send_404(self, message: str = "Error 404"):
     self.send_response(404)
     self.send_header("Content-type", "text/plain")
     self.end_headers()
-    self.wfile.write(b"Error 404")
+    self.wfile.write(message.encode())
+
+
+def send_406(self, message: str = "Error 406"):
+    self.send_response(406)
+    self.send_header("Content-type", "text/plain")
+    self.end_headers()
+    self.wfile.write(message.encode())
 
 
 class SSLConnection:
