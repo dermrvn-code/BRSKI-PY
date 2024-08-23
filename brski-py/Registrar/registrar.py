@@ -35,11 +35,14 @@ def handle_request_voucher(self):
     request_valid = validate_voucher_request(voucher_request, pledge_cert_dict)
 
     # error 406 if request in wrong format, 404 if validation fails
-    if not request_valid:
+    if request_valid == 1:
+        send_404(self, "Wrong Request Format")
+        return
+    elif request_valid == 3:
+        print_success("Voucher request is valid")
+    else:
         send_404(self, "Authentication failed")
         return
-    else:
-        print_success("Voucher request is valid")
 
     voucher = request_voucher_from_masa(voucher_request)
 
@@ -107,7 +110,7 @@ def request_voucher_from_masa(voucher_request: VoucherRequest):
 
 def validate_voucher_request(
     voucher_request: VoucherRequest, pledge_cert_dict: dict
-) -> bool:
+) -> int:
     """
     Validates a voucher request send by the pledge.
     Checks if the peer certificate matches the idev issuer certificate and if the serial numbers match.
@@ -117,20 +120,26 @@ def validate_voucher_request(
         pledge_cert_dict (dict): The dictionary representation of the pledge certificate.
 
     Returns:
-        bool: True if the serial numbers match, False otherwise.
+        int: 1 if the request is in wrong format, 2 if authentication fails, 3 if the request is valid.
     """
+
+    try:
+        voucher_request_dict = voucher_request.to_dict()
+    except AttributeError:
+        print_error("Voucher request in wrong format")
+        return 1
 
     # Get the idevid issuer certificate from the request
     idevid_cert_bytes = voucher_request.idevid_issuer
     if idevid_cert_bytes is None:
         print_error("No idevid issuer in voucher request")
-        return False
+        return 1
     idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
 
     # Verify the signature of the voucher request
     if not voucher_request.verify(idevid_cert.public_key()):
         print_error("Voucher request signature invalid")
-        return False
+        return 2
     else:
         print_success("Voucher request signature valid")
 
@@ -143,7 +152,7 @@ def validate_voucher_request(
         print_error(
             f"Serial numbers of idev certificates do not match: {serial_number} != {idevid_cert.serial_number}"
         )
-        return False
+        return 2
     else:
         print_success("Peer certificate matches idev issuer")
 
@@ -157,8 +166,7 @@ def validate_voucher_request(
     peer_subject = array_to_dict(pledge_cert_dict.get("subject"))
     peer_subject_serial_number = peer_subject.get("serialNumber", "")
 
-    # Parse voucher into dictionary and get serial number
-    voucher_request_dict = voucher_request.to_dict()
+    # Get voucher request serial number
     voucher_serial_number = voucher_request_dict.get("serial-number")
 
     print_info("Checking in with pledge with serial number", voucher_serial_number)
@@ -172,11 +180,11 @@ def validate_voucher_request(
         print_error(
             f"Serial numbers do not match: {idev_subject_serial_number} != {peer_subject_serial_number} != {voucher_serial_number}"
         )
-        return False
+        return 2
     else:
         print_success("Serial numbers match")
 
-    return True
+    return 3
 
 
 def validate_voucher(voucher: Voucher | None) -> bool:

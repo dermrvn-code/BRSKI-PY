@@ -62,56 +62,62 @@ class VoucherRequest(VoucherBase):
         self.signature: bytes | None = None
 
     def to_dict(self, exclude_signature: bool = False) -> dict:
-        dict = {
-            "created-on": (
-                self.created_on.isoformat() if self.created_on is not None else None
-            ),
-            "expire-on": (
-                self.expires_on.isoformat() if self.expires_on is not None else None
-            ),
-            "assertion": self.assertion.value if self.assertion is not None else None,
-            "serial-number": self.serial_number,
-            "idevid-issuer": (
-                base64.b64encode(self.idevid_issuer).decode("utf-8")
-                if self.idevid_issuer is not None
-                else None
-            ),
-            "pinned-domain-cert": (
-                base64.b64encode(self.pinned_domain_cert).decode("utf-8")
-                if self.pinned_domain_cert is not None
-                else None
-            ),
-            "domain-cert-revocation-checks": (
-                self.domain_cert_revocation_checks
-                if self.domain_cert_revocation_checks is not None
-                else None
-            ),
-            "nonce": (
-                base64.b64encode(self.nonce).decode("utf-8")
-                if self.nonce is not None
-                else None
-            ),
-            "last-renewal-date": (
-                self.last_renewal_date.isoformat()
-                if self.last_renewal_date is not None
-                else None
-            ),
-            "prior-signed-voucher-request": (
-                base64.b64encode(self.prior_signed_voucher_request).decode("utf-8")
-                if self.prior_signed_voucher_request is not None
-                else None
-            ),
-            "proximity-registrar-cert": (
-                base64.b64encode(self.proximity_registrar_cert).decode("utf-8")
-                if self.proximity_registrar_cert is not None
-                else None
-            ),
-        }
+        try:
+            dict = {
+                "created-on": (
+                    self.created_on.isoformat() if self.created_on is not None else None
+                ),
+                "expire-on": (
+                    self.expires_on.isoformat() if self.expires_on is not None else None
+                ),
+                "assertion": (
+                    self.assertion.value if self.assertion is not None else None
+                ),
+                "serial-number": self.serial_number,
+                "idevid-issuer": (
+                    base64.b64encode(self.idevid_issuer).decode("utf-8")
+                    if self.idevid_issuer is not None
+                    else None
+                ),
+                "pinned-domain-cert": (
+                    base64.b64encode(self.pinned_domain_cert).decode("utf-8")
+                    if self.pinned_domain_cert is not None
+                    else None
+                ),
+                "domain-cert-revocation-checks": (
+                    self.domain_cert_revocation_checks
+                    if self.domain_cert_revocation_checks is not None
+                    else None
+                ),
+                "nonce": (
+                    base64.b64encode(self.nonce).decode("utf-8")
+                    if self.nonce is not None
+                    else None
+                ),
+                "last-renewal-date": (
+                    self.last_renewal_date.isoformat()
+                    if self.last_renewal_date is not None
+                    else None
+                ),
+                "prior-signed-voucher-request": (
+                    base64.b64encode(self.prior_signed_voucher_request).decode("utf-8")
+                    if self.prior_signed_voucher_request is not None
+                    else None
+                ),
+                "proximity-registrar-cert": (
+                    base64.b64encode(self.proximity_registrar_cert).decode("utf-8")
+                    if self.proximity_registrar_cert is not None
+                    else None
+                ),
+            }
 
-        if not exclude_signature and self.signature is not None:
-            dict["signature"] = base64.b64encode(self.signature).decode("utf-8")
+            if not exclude_signature and self.signature is not None:
+                dict["signature"] = base64.b64encode(self.signature).decode("utf-8")
 
-        dict = {key: value for key, value in dict.items() if value is not None}
+            dict = {key: value for key, value in dict.items() if value is not None}
+
+        except Exception as e:
+            raise ValueError("Invalid voucher request format")
 
         return dict
 
