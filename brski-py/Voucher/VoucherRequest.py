@@ -3,7 +3,6 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
-
 from Voucher.VoucherBase import Assertion, VoucherBase
 
 
@@ -267,5 +266,10 @@ def parse_voucher_request(request) -> VoucherRequest:
             if request_dict.get("proximity-registrar-cert") is not None
             else None
         ),
+    )
+    request.signature = (
+        base64.b64decode(request_dict.get("signature", "").encode("utf-8"))
+        if request_dict.get("signature") is not None
+        else None
     )
     return request

@@ -25,6 +25,7 @@ def main() -> None:
     while True:
         try:
             input("Press enter to request a voucher...")
+            print_info("Requesting voucher...")
             voucher = request_voucher("localhost", 8000)
 
             if voucher:

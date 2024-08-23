@@ -1,15 +1,14 @@
 import datetime
 from os import makedirs, path
 
+from Certificates.CA import load_ca, sign_certificate
+from Certificates.Keys import setup_private_key
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.x509.oid import NameOID
 from pyasn1.codec.der import encoder
 from pyasn1.type import char, namedtype, univ
-
-from Certificates.CA import load_ca, sign_certificate
-from Certificates.Keys import setup_private_key
 
 
 def load_certificate_from_path(path: str) -> x509.Certificate:

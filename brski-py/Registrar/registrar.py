@@ -8,7 +8,9 @@ sys.path.append(parent_dir)
 
 import json
 
+from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
+from cryptography.x509.oid import NameOID
 from Utils.Config import Config
 from Utils.Dicts import array_to_dict
 from Utils.HTTPS import HTTPSServer, SSLConnection, send_404
@@ -108,6 +110,7 @@ def validate_voucher_request(
 ) -> bool:
     """
     Validates a voucher request send by the pledge.
+    Checks if the peer certificate matches the idev issuer certificate and if the serial numbers match.
 
     Args:
         voucher_request (VoucherRequest): The voucher request to be validated.
@@ -117,25 +120,63 @@ def validate_voucher_request(
         bool: True if the serial numbers match, False otherwise.
     """
 
-    voucher_request_dict = voucher_request.to_dict()
+    # Get the idevid issuer certificate from the request
+    idevid_cert_bytes = voucher_request.idevid_issuer
+    if idevid_cert_bytes is None:
+        print_error("No idevid issuer in voucher request")
+        return False
+    idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
 
-    subject = array_to_dict(pledge_cert_dict.get("subject"))
-    subject_serial_number = subject.get("serialNumber", "")
+    # Verify the signature of the voucher request
+    if not voucher_request.verify(idevid_cert.public_key()):
+        print_error("Voucher request signature invalid")
+        return False
+    else:
+        print_success("Voucher request signature valid")
+
+    # Check if peer certificate matches idev issuer
+    serial_number = int(
+        pledge_cert_dict.get("serialNumber", ""), 16
+    )  # parse string as hexadecimal integer
+
+    if serial_number != idevid_cert.serial_number:
+        print_error(
+            f"Serial numbers of idev certificates do not match: {serial_number} != {idevid_cert.serial_number}"
+        )
+        return False
+    else:
+        print_success("Peer certificate matches idev issuer")
+
+    # Get the subjects serial number from the idevid certificate
+    idev_subject = idevid_cert.subject
+    idev_subject_serial_number = idev_subject.get_attributes_for_oid(
+        NameOID.SERIAL_NUMBER
+    )[0].value
+
+    # Get the subjects serial number from the peer certificate
+    peer_subject = array_to_dict(pledge_cert_dict.get("subject"))
+    peer_subject_serial_number = peer_subject.get("serialNumber", "")
+
+    # Parse voucher into dictionary and get serial number
+    voucher_request_dict = voucher_request.to_dict()
     voucher_serial_number = voucher_request_dict.get("serial-number")
 
-    print_info("Checking in with pledge with serial number", subject_serial_number)
+    print_info("Checking in with pledge with serial number", voucher_serial_number)
 
-    if subject_serial_number != voucher_serial_number:
+    # Check if serial numbers across all certs and requests match
+    if (
+        not idev_subject_serial_number
+        == peer_subject_serial_number
+        == voucher_serial_number
+    ):
         print_error(
-            f"Serial numbers do not match: {subject_serial_number} != {voucher_serial_number}"
+            f"Serial numbers do not match: {idev_subject_serial_number} != {peer_subject_serial_number} != {voucher_serial_number}"
         )
         return False
     else:
         print_success("Serial numbers match")
 
     return True
-
-    # TODO: Implement validation of voucher request
 
 
 def validate_voucher(voucher: Voucher | None) -> bool:

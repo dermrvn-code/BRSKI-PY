@@ -54,7 +54,7 @@ def print_title(title: str) -> None:
     tprint(title, font="cybermedium")
 
 
-def print_colorful(str: str | tuple[str, ...], color: str, sep: str = " ") -> None:
+def print_colorful(str: str | tuple[str, ...], color, sep: str = " ") -> None:
     """
     Prints a string in a specified color.
 
@@ -70,12 +70,12 @@ def print_colorful(str: str | tuple[str, ...], color: str, sep: str = " ") -> No
     print(f"{color}{sep.join(str)}{Style.RESET_ALL}")
 
 
-def print_error(*errors: str, sep: str = " ") -> None:
+def print_error(*errors, sep: str = " ") -> None:
     """
     Prints error messages.
 
     Args:
-        *errors (str): The error messages to be printed.
+        *errors: The error messages to be printed.
         sep (str): The separator between the error messages. Defaults to ' '.
 
     Returns:
@@ -85,12 +85,12 @@ def print_error(*errors: str, sep: str = " ") -> None:
     print_colorful(errors, color=Fore.RED, sep=sep)
 
 
-def print_success(*successes: str, sep: str = " ") -> None:
+def print_success(*successes, sep: str = " ") -> None:
     """
     Prints success messages.
 
     Args:
-        *successes (str): The success messages to be printed.
+        *successes: The success messages to be printed.
         sep (str): The separator between the success messages. Defaults to ' '.
 
     Returns:
@@ -100,12 +100,12 @@ def print_success(*successes: str, sep: str = " ") -> None:
     print_colorful(successes, color=Fore.GREEN, sep=sep)
 
 
-def print_warning(*warnings: str, sep: str = " ") -> None:
+def print_warning(*warnings, sep: str = " ") -> None:
     """
     Prints warning messages.
 
     Args:
-        *warnings (str): The warning messages to be printed.
+        *warnings: The warning messages to be printed.
         sep (str): The separator between the warning messages. Defaults to ' '.
 
     Returns:
@@ -115,12 +115,12 @@ def print_warning(*warnings: str, sep: str = " ") -> None:
     print_colorful(warnings, color=Fore.YELLOW, sep=sep)
 
 
-def print_info(*infos: str, sep: str = " ") -> None:
+def print_info(*infos, sep: str = " ") -> None:
     """
     Prints info messages.
 
     Args:
-        *infos (str): The info messages to be printed.
+        *infos (): The info messages to be printed.
         sep (str): The separator between the info messages. Defaults to ' '.
 
     Returns:
@@ -130,12 +130,12 @@ def print_info(*infos: str, sep: str = " ") -> None:
     print_colorful(infos, color=Fore.CYAN, sep=sep)
 
 
-def print_descriptor(*descriptors: str, sep: str = " ") -> None:
+def print_descriptor(*descriptors, sep: str = " ") -> None:
     """
     Prints descriptors.
 
     Args:
-        *descriptors (str): The descriptors to be printed.
+        *descriptors (): The descriptors to be printed.
         sep (str): The separator between the descriptors. Defaults to ' '.
 
     Returns:

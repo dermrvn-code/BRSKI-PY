@@ -3,7 +3,6 @@ import json
 from datetime import datetime, timezone
 
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
-
 from Voucher.VoucherBase import Assertion, VoucherBase
 from Voucher.VoucherRequest import VoucherRequest
 
@@ -169,6 +168,9 @@ def parse_voucher(voucher) -> Voucher:
             else None
         ),
     )
-
-    voucher.signature = base64.b64decode(voucher_dict["signature"].encode("utf-8"))
+    voucher.signature = (
+        base64.b64decode(voucher_dict.get("signature", "").encode("utf-8"))
+        if voucher_dict.get("signature") is not None
+        else None
+    )
     return voucher
