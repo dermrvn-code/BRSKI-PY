@@ -4,9 +4,7 @@ import os
 import socket
 import ssl
 
-from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_passphrase_from_path
-from cryptography.x509 import Certificate
 
 
 def load_local_cas(context: ssl.SSLContext, ca_files: list) -> ssl.SSLContext:
@@ -193,7 +191,7 @@ class SSLConnection:
         self.local_cas = local_cas
 
         self.create_context()
-        self.get_server_certificate()
+        self.get_server_certificate_bytes()
         self.connect()
 
     def create_context(self):
@@ -216,12 +214,12 @@ class SSLConnection:
             self.host, port=self.port, context=self.context
         )
 
-    def get_server_certificate(self) -> Certificate | None:
+    def get_server_certificate_bytes(self) -> bytes | None:
         """
         Get the server certificate.
 
         Returns:
-            Certificate : The server certificate if it exists, otherwise None.
+            bytes : The server certificate if it exists, otherwise None.
         """
         with socket.create_connection((self.host, self.port)) as sock:
             with self.context.wrap_socket(sock, server_hostname=self.host) as ssock:
@@ -230,7 +228,7 @@ class SSLConnection:
         if server_cert_bytes is None:
             return None
 
-        return load_certificate_from_bytes(server_cert_bytes)
+        return server_cert_bytes
 
     def post_request(
         self, url: str, *, data: str = "", headers: dict = {}

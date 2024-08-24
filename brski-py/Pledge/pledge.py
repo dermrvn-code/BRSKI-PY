@@ -1,3 +1,4 @@
+import base64
 import os
 import sys
 
@@ -95,11 +96,20 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         print_error("Voucher request failed: " + response.read().decode())
         return None
     else:
+
+        # Get the certificate of the server the response was sent to
+        server_cert = conn.get_server_certificate_bytes()
+
+        if server_cert == None:
+            print_error("Server certificate could not be extracted")
+            return None
+
         response_body = response.read()
         try:
             voucher = parse_voucher(response_body.decode())
+            print_info("Voucher received, validating...")
 
-            valid, error = validate_voucher(voucher, request)
+            valid, error = validate_voucher(voucher, request, server_cert)
 
             if not valid:
                 print_error("Voucher validation failed: " + error)
@@ -111,13 +121,16 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
             return None
 
 
-def validate_voucher(voucher: Voucher, request: VoucherRequest) -> tuple[bool, str]:
+def validate_voucher(
+    voucher: Voucher, request: VoucherRequest, registrar_ra_cert: bytes
+) -> tuple[bool, str]:
     """
     Validates a voucher received from the MASA server.
 
     Args:
         voucher (Voucher): The voucher to be validated.
         request (VoucherRequest): The voucher request the voucher was issued for.
+        registrar_ra_cert (bytes): The certificate of the registrar RA.
 
     Returns:
         bool: True if the voucher is valid, False otherwise.
@@ -136,6 +149,14 @@ def validate_voucher(voucher: Voucher, request: VoucherRequest) -> tuple[bool, s
 
     if voucher.nonce != request.nonce:
         return False, "Nonce mismatch"
+
+    if voucher.pinned_domain_cert == None:
+        return False, "Pinned domain certificate missing"
+    else:
+        if base64.b64decode(voucher.pinned_domain_cert) != base64.b64decode(
+            registrar_ra_cert
+        ):
+            return False, "Registrar RA certificate mismatch"
 
     # TODO: Implement any further validation and check of voucher
 
