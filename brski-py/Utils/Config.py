@@ -1,9 +1,21 @@
+import os
 from configparser import ConfigParser
 
 
 class Config:
     config = ConfigParser()
-    config.read("config.ini")
+    path = "config.ini"
+
+    if not os.path.exists("config.ini"):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+        parent_dir = os.path.abspath(os.path.join(parent_dir, os.pardir))
+        path = os.path.join(parent_dir, "config.ini")
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Configuration file not found at {path}")
+
+    config.read(path)
 
     @staticmethod
     def get(section: str, key: str):

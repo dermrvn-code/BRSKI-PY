@@ -8,7 +8,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.x509.oid import NameOID
 from pyasn1.codec.der import encoder
-from pyasn1.type import char, namedtype, univ
+from pyasn1.type import char, namedtype, univ  # type: ignore
 
 
 def load_certificate_from_path(path: str) -> x509.Certificate:
@@ -521,8 +521,7 @@ def MASAURLExt(uri: str) -> x509.ExtensionType:
 
     # Create an instance of MASAURLSyntax
     masa_url = MASAURLSyntax(uri)
-
-    encoded_masa_url = encoder.encode(masa_url)
+    encoded_masa_url = encoder.encode(masa_url)[2:]  # Skip the first two bytes
 
     return x509.UnrecognizedExtension(
         oid=x509.ObjectIdentifier("1.3.6.1.5.5.7.1.32"), value=encoded_masa_url

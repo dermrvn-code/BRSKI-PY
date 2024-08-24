@@ -21,6 +21,7 @@ def clear_certificates():
     ]
 
     for path in folder:
+        path = os.path.join(parent_dir, path)
         if os.path.exists(path):
             for file in os.listdir(path):
                 file_endings = [

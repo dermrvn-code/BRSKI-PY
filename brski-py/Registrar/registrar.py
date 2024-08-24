@@ -1,6 +1,7 @@
 import base64
 import os
 import sys
+from urllib.parse import urlparse
 
 # Add parent directory to path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,6 +14,7 @@ from Certificates.Certificate import (load_certificate_from_bytes,
                                       load_certificate_from_path)
 from Certificates.Keys import (load_passphrase_from_path,
                                load_private_key_from_path)
+from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import NameOID
 from Utils.Config import Config
@@ -72,6 +74,7 @@ def handle_request_voucher(self):
     logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     pledge_cert_dict = self.request.getpeercert()
+    pledge_cert_bytes = self.request.getpeercert(True)
 
     request_valid, message = validate_voucher_request(voucher_request, pledge_cert_dict)
 
@@ -87,7 +90,13 @@ def handle_request_voucher(self):
     logger.log(
         f"Voucher request forwarded for serial number {voucher_request.serial_number}"
     )
-    voucher, message = request_voucher_from_masa(voucher_request)
+    hostname, port, path = get_masa_url(pledge_cert_bytes)
+    
+    if hostname == None or port == None or path == None:
+        send_404(self, "No MASA URL found")
+        return
+    
+    voucher, message = request_voucher_from_masa(voucher_request, hostname, port, path)
 
     voucher_valid = False
     if voucher is None:
@@ -110,24 +119,53 @@ def handle_request_voucher(self):
         self.end_headers()
         self.wfile.write(str.encode(voucher.to_string()))  # type: ignore
 
+def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str | None]:
+    """
+    Extracts the MASA URL from the idevid certificate.
+
+    Args:
+        idevid_cert_bytes (bytes): The idevid certificate in bytes.
+
+    Returns:
+        str: The hostname of the MASA server.
+        int: The port of the MASA server.
+        str: The path to the MASA post request.
+    """
+    idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
+
+    masa_url_oid = x509.ObjectIdentifier(
+        "1.3.6.1.5.5.7.1.32"
+    )  # oid for masa url extension
+    masa_url_ext = idevid_cert.extensions.get_extension_for_oid(masa_url_oid)
+    masa_url = masa_url_ext.value.value.decode() # type: ignore
+    parsed_url = urlparse(masa_url)
+    
+    return parsed_url.hostname, parsed_url.port, parsed_url.path
 
 def request_voucher_from_masa(
     voucher_request: VoucherRequest,
+    hostname: str,
+    port: int,
+    path: str
 ) -> tuple[Voucher | None, str]:
     """
     Sends a voucher request to the MASA and retrieves a voucher.
 
     Args:
         voucher_request (VoucherRequest): The voucher request object containing the necessary information.
+        hostname (str): The hostname of the MASA server.
+        port (int): The port of the MASA server.
+        path (str): The path to the MASA post request.
 
     Returns:
         Voucher: The voucher issued by the MASA server, or None if the server did not issue a voucher.
         str: The error message if the server did not issue a voucher.
     """
 
+
     conn = SSLConnection(
-        host=Config.get("MASA", "hostname"),
-        port=int(Config.get("MASA", "port")),
+        host=hostname,
+        port=port,
         cert=os.path.join(script_dir, "certs/client/cert_registrar_client.crt"),
         private_key=os.path.join(
             script_dir, "certs/client/cert_private_registrar_client.key"
@@ -157,7 +195,7 @@ def request_voucher_from_masa(
         "X-RA-Cert": base64.b64encode(ra_cert.public_bytes(Encoding.DER)).decode(),
     }
     response = conn.post_request(
-        Config.get("MASA", "brskipath"),
+        path,
         data=registrar_request.to_string(),
         headers=headers,
     )
