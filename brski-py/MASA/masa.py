@@ -10,14 +10,13 @@ sys.path.append(parent_dir)
 import json
 
 from Certificates.Certificate import load_certificate_from_bytes
-from Certificates.Keys import (
-    load_passphrase_from_path,
-    load_private_key_from_path,
-    load_public_key_from_path,
-)
+from Certificates.Keys import (load_passphrase_from_path,
+                               load_private_key_from_path,
+                               load_public_key_from_path)
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import ObjectIdentifier, oid
 from Utils.Config import Config
+from Utils.Dicts import array_to_dict
 from Utils.HTTPS import HTTPSServer, send_404, send_406
 from Utils.Interface import yes_or_no
 from Utils.Logger import Logger
@@ -79,9 +78,9 @@ def handle_request_voucher(self):
 
 def handle_public_key(self):
     client_cert_dict = self.request.getpeercert()
-
-    print_descriptor("Client certificate")
-    prettyprint_json(client_cert_dict, True)
+    subject = client_cert_dict.get("subject", "")
+    subject = array_to_dict(subject)
+    print_info(f"Client '{subject.get("commonName")}' with serialNumber '{subject.get("serialNumber")}' requested a public key")
 
     public_key = load_public_key_from_path(
         os.path.join(script_dir, "certs/cert_public_masa.key")
@@ -91,8 +90,10 @@ def handle_public_key(self):
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
 
+    print_success("Public key sent")
+
     self.send_response(200)
-    self.send_header("Content-type", "text/plain")
+    self.send_header("Content-type", "application/x-pem-file")
     self.end_headers()
     self.wfile.write(public_key_bytes)
 
@@ -209,8 +210,8 @@ def main() -> None:
 
     print_title("MASA")
     routes = {
-        "/.wellknown/brski": handle_request_voucher,
-        "/publickey": handle_public_key,
+        Config.get("MASA", "brskipath"): handle_request_voucher,
+        Config.get("MASA", "publickeypath"): handle_public_key,
     }
     certfile = os.path.join(script_dir, "certs/cert_masa.crt")
     keyfile = os.path.join(script_dir, "certs/cert_private_masa.key")
@@ -218,7 +219,7 @@ def main() -> None:
     local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
-        address="localhost",
+        address=Config.get("MASA", "hostname"),
         port=Config.get("MASA", "port"),
         routes_post=routes,
         certfile=certfile,

@@ -92,8 +92,8 @@ def request_voucher_from_masa(
     """
 
     conn = SSLConnection(
-        host="localhost",
-        port=8888,
+        host=Config.get("MASA", "hostname"),
+        port=int(Config.get("MASA", "port")),
         cert=os.path.join(script_dir, "certs/client/cert_registrar_client.crt"),
         private_key=os.path.join(
             script_dir, "certs/client/cert_private_registrar_client.key"
@@ -123,7 +123,7 @@ def request_voucher_from_masa(
         "X-RA-Cert": base64.b64encode(ra_cert.public_bytes(Encoding.DER)).decode(),
     }
     response = conn.post_request(
-        "/.wellknown/brski",
+        Config.get("MASA", "brskipath"),
         data=registrar_request.to_string(),
         headers=headers,
     )
@@ -254,7 +254,7 @@ logger = Logger(os.path.join(script_dir, "registrar.log"))
 
 def main() -> None:
     print_title("Registrar")
-    routes = {"/.wellknown/brski": handle_request_voucher}
+    routes = {Config.get("REGISTRAR", "brskipath"): handle_request_voucher}
 
     certfile = os.path.join(script_dir, "certs/server/cert_registrar_server.crt")
     keyfile = os.path.join(script_dir, "certs/server/cert_private_registrar_server.key")
@@ -264,7 +264,7 @@ def main() -> None:
     local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
-        address="localhost",
+        address=Config.get("REGISTRAR", "hostname"),
         port=Config.get("REGISTRAR", "port"),
         routes_post=routes,
         certfile=certfile,

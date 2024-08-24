@@ -105,6 +105,22 @@ def load_passphrase_from_path(path: str) -> bytes:
     return passphrase
 
 
+def load_private_key_from_bytes(private_key_data: bytes, passphrase: bytes):
+    """
+    Load a private key from bytes.
+
+    Args:
+        private_key_data (bytes): The private key data as bytes.
+        passphrase (bytes): The passphrase to decrypt the private key as bytes.
+
+    Returns:
+        PrivateKey: The loaded private key.
+    """
+    return serialization.load_pem_private_key(
+        private_key_data, password=passphrase, backend=default_backend()
+    )
+
+
 def load_private_key_from_path(path: str, passphrase: bytes):
     """
     Load a private key from a file.
@@ -119,9 +135,20 @@ def load_private_key_from_path(path: str, passphrase: bytes):
     with open(path, "rb") as f:
         private_key_data = f.read()
 
-    return serialization.load_pem_private_key(
-        private_key_data, password=passphrase, backend=default_backend()
-    )
+    return load_private_key_from_bytes(private_key_data, passphrase=passphrase)
+
+
+def load_public_key_from_bytes(public_key_data: bytes) -> PublicKeyTypes:
+    """
+    Load a public key from bytes.
+
+    Args:
+        public_key_data (bytes): The public key data as bytes.
+
+    Returns:
+        PublicKeyTypes: The loaded public key.
+    """
+    return serialization.load_pem_public_key(public_key_data, backend=default_backend())
 
 
 def load_public_key_from_path(path: str) -> PublicKeyTypes:
@@ -136,7 +163,7 @@ def load_public_key_from_path(path: str) -> PublicKeyTypes:
     """
     with open(path, "rb") as f:
         public_key_data = f.read()
-    return serialization.load_pem_public_key(public_key_data, backend=default_backend())
+    return load_public_key_from_bytes(public_key_data)
 
 
 def setup_private_key(dest_folder: str, common_name: str):

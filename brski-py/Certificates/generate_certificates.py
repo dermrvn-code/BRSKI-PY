@@ -7,14 +7,13 @@ parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from Certificates.CA import generate_certificate_authority
-from Certificates.Certificate import (
-    generate_idevid_cert,
-    generate_ra_cert,
-    generate_tls_client_cert,
-    generate_tls_server_cert,
-)
-from Certificates.CertificateRevocationList import generate_certificate_revocation_list
+from Certificates.Certificate import (generate_idevid_cert, generate_ra_cert,
+                                      generate_tls_client_cert,
+                                      generate_tls_server_cert)
+from Certificates.CertificateRevocationList import \
+    generate_certificate_revocation_list
 from Certificates.clear_certificates import clear_certificates
+from Utils.Config import Config
 
 
 def generate_certificates() -> None:
@@ -34,6 +33,8 @@ def generate_certificates() -> None:
     )
     print("Generated Manufacturer CRL")
 
+    masa_url = f"https://{Config.get("MASA", "hostname")}:{Config.get("MASA", "port")}{Config.get("MASA", "brskipath")}"
+
     # Pledge IDevID certificate
     dest_folder = "Pledge/certs/"
     generate_idevid_cert(
@@ -46,7 +47,7 @@ def generate_certificates() -> None:
         organization_name="HSHL",
         organizational_unit_name="Trustpoint",
         common_name="Pledge",
-        masa_url="https://localhost:8888/.well-known/brski",
+        masa_url=masa_url,
         hwtype="1.3.6.1.4.1.343.2.17.1",
         hwSerialNum="123456",
     )
@@ -76,7 +77,7 @@ def generate_certificates() -> None:
         dest_folder,
         country_code="DE",
         common_name="MASA",
-        hostname="localhost",
+        hostname=Config.get("MASA", "hostname"),
     )
     print("Generated MASA certificate")
 
@@ -104,7 +105,7 @@ def generate_certificates() -> None:
         dest_folder,
         country_code="DE",
         common_name="registrar_server",
-        hostname="localhost",
+        hostname=Config.get("REGISTRAR", "hostname"),
     )
     print("Generated Registrar RA certificate")
 
@@ -116,7 +117,7 @@ def generate_certificates() -> None:
         dest_folder,
         country_code="DE",
         common_name="registrar_client",
-        hostname="localhost",
+        hostname=Config.get("REGISTRAR", "hostname"),
     )
     print("Generated Registrar Client certificate")
 
@@ -148,7 +149,7 @@ def generate_certificates() -> None:
         dest_folder,
         country_code="DE",
         common_name="Authorities",
-        hostname="localhost",
+        hostname=Config.get("AUTHORITIES", "hostname"),
     )
 
 

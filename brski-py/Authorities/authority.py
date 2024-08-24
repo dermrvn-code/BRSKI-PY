@@ -66,7 +66,7 @@ def main() -> None:
     local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(
-        address="localhost",
+        address=Config.get("AUTHORITIES", "hostname"),
         port=Config.get("AUTHORITIES", "port"),
         routes_get=routes,
         certfile=certfile,

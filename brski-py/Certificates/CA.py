@@ -1,19 +1,16 @@
 import datetime
 from os import makedirs, path
 
+from Certificates.Keys import (generate_passphrase, generate_rsa_keys,
+                               load_passphrase_from_path,
+                               load_private_key_from_path)
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.types import PrivateKeyTypes
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import NameOID
-
-from Certificates.Keys import (
-    generate_passphrase,
-    generate_rsa_keys,
-    load_passphrase_from_path,
-    load_private_key_from_path,
-)
+from Utils.Config import Config
 
 
 def generate_certificate_authority(
@@ -84,7 +81,7 @@ def generate_certificate_authority(
                     x509.DistributionPoint(
                         full_name=[
                             x509.UniformResourceIdentifier(
-                                "https://localhost:8008/crl?from=" + common_name.lower()
+                                f"https://{Config.get("AUTHORITIES", "hostname")}:{Config.get("AUTHORITIES", "port")}{Config.get("AUTHORITIES", "crlpath")}?from=" + common_name.lower()
                             )
                         ],
                         relative_name=None,
