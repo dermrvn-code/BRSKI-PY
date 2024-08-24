@@ -21,7 +21,7 @@ from Utils.HTTPS import HTTPSServer, send_404, send_406
 from Utils.Interface import yes_or_no
 from Utils.Logger import Logger
 from Utils.Printer import *
-from Voucher.Voucher import Voucher, create_voucher_from_request
+from Voucher.Voucher import Voucher, create_voucher_from_request, parse_voucher
 from Voucher.VoucherRequest import VoucherRequest, parse_voucher_request
 
 
@@ -35,13 +35,15 @@ def handle_request_voucher(self):
         voucher_request = parse_voucher_request(voucher_request_dict)
     except ValueError:
         log_error(
-            logger,
+            global_logger,
             "(not parsed)",
             "Voucher request format could not be parsed",
         )
         return
 
-    logger.log(f"Received voucher request: {voucher_request.to_string()}")
+    idev_logger = Logger(os.path.join(script_dir, f"logs/{voucher_request.serial_number}.log"))
+    audit_logger = Logger(os.path.join(script_dir, f"auditlogs/{voucher_request.serial_number}.log"))
+    idev_logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     registrar_cert_bytes = base64.b64decode(x_ra_cert)
 
@@ -52,28 +54,95 @@ def handle_request_voucher(self):
 
     if request_valid == 1:
         send_406(self, message)
-        log_error(logger, voucher_request.serial_number, message)
+        log_error(idev_logger, voucher_request.serial_number, message)
         return
     elif request_valid == 3:
         print_success("Voucher is issued")
     else:
         send_404(self, message)
-        log_error(logger, voucher_request.serial_number, message)
+        log_error(idev_logger, voucher_request.serial_number, message)
         return
 
     voucher = create_voucher(voucher_request, registrar_cert_bytes)
     voucher_json = voucher.to_string()
 
-    logger.log(f"Issuing voucher: {voucher_json}")
+    idev_logger.log(f"Issuing voucher: {voucher_json}")
 
     print_descriptor("MASA issued voucher:")
     voucher.print()
+
+    audit_logger.log(voucher_json)
 
     # Send response
     self.send_response(200)
     self.send_header("Content-type", "text/json")
     self.end_headers()
     self.wfile.write(str.encode(voucher_json))
+
+def handle_request_audit_log(self):
+    content_length = int(self.headers["Content-Length"])
+    post_data = self.rfile.read(content_length)
+    voucher_request_dict = json.loads(post_data)
+
+    try:
+        voucher_request = parse_voucher_request(voucher_request_dict)
+    except ValueError:
+        log_error(
+            global_logger,
+            "(not parsed)",
+            "Voucher request format could not be parsed",
+        )
+        return
+    
+    audit_logger = Logger(os.path.join(script_dir, f"auditlogs/{voucher_request.serial_number}.log"))
+
+    logs = audit_logger.get_log_list()
+
+    events = []
+
+    for log in logs:
+        time = log.get("time", "")
+        voucher = log.get("message", "")
+        
+        try:
+            voucher = parse_voucher(voucher)
+        except ValueError:
+            continue
+
+        if(voucher.idevid_issuer is None):
+            continue
+
+
+        pinned_domain_cert = load_certificate_from_bytes(voucher.pinned_domain_cert)
+        subject_key_identifier = pinned_domain_cert.extensions.get_extension_for_oid(
+            oid.ExtensionOID.SUBJECT_KEY_IDENTIFIER
+        )
+        domain = subject_key_identifier.value.key_identifier # type: ignore
+
+        event = {
+            "date": time, 
+            "domainID": base64.b64encode(domain).decode(), 
+            "nonce": base64.b64encode(voucher.nonce).decode() if voucher.nonce is not None else "", 
+            "assertion": voucher.assertion.value,
+        }
+        events.append(event)
+
+    response = {
+        "version": "1",
+        "events": events
+    }
+    response_json = json.dumps((response))
+
+    global_logger.log(f"Audit log requested for serial number {voucher_request.serial_number}")
+
+    self.send_response(200)
+    self.send_header("Content-type", "application/json")
+    self.end_headers()
+    self.wfile.write(response_json.encode())
+
+
+
+    
 
 
 def handle_public_key(self):
@@ -98,9 +167,10 @@ def handle_public_key(self):
     self.wfile.write(public_key_bytes)
 
 
-def log_error(logger: Logger, serialNumber: str, msg: str):
+def log_error(logger: Logger | None, serialNumber: str, msg: str):
     print_error(msg)
-    logger.log(f"No voucher was issued for serial number {serialNumber}: {msg}")
+    if logger is not None:
+        logger.log(f"No voucher was issued for serial number {serialNumber}: {msg}")
 
 
 def validate_voucher_request(
@@ -202,16 +272,14 @@ def create_voucher(
     )
     return voucher
 
-
-logger = Logger(os.path.join(script_dir, "masa.log"))
-
-
+global_logger = Logger(os.path.join(script_dir, "masa.log"))
 def main() -> None:
 
     print_title("MASA")
     routes = {
         Config.get("MASA", "brskipath"): handle_request_voucher,
         Config.get("MASA", "publickeypath"): handle_public_key,
+        Config.get("MASA", "auditlogpath"): handle_request_audit_log,
     }
     certfile = os.path.join(script_dir, "certs/cert_masa.crt")
     keyfile = os.path.join(script_dir, "certs/cert_private_masa.key")

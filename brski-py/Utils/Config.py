@@ -40,9 +40,6 @@ class Config:
             section (str): The section in the configuration file.
             key (str): The key to set the value for.
             value (str): The value to set for the key.
-
-        Returns:
-            None
         """
         Config.config.set(section, key, value)
         with open("config.ini", "w") as configfile:
