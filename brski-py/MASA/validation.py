@@ -1,4 +1,7 @@
-# validation.py
+from paths import set_parent_dir
+
+script_dir, parent_dir = set_parent_dir(__file__)
+
 from Certificates.Certificate import load_certificate_from_bytes
 from cryptography.x509 import ObjectIdentifier, oid
 from Utils.Interface import yes_or_no

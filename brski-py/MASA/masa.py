@@ -1,17 +1,7 @@
-# app.py
-import os
-import sys
+from paths import set_parent_dir
+from request_handlers import *
 
-from request_handlers import (
-    handle_public_key,
-    handle_request_audit_log,
-    handle_request_voucher,
-)
-
-# Add parent directory to path
-script_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
-sys.path.append(parent_dir)
+script_dir, parent_dir = set_parent_dir(__file__)
 
 from Utils.Config import Config
 from Utils.HTTPS import HTTPSServer
@@ -28,9 +18,9 @@ def main() -> None:
         Config.get("MASA", "publickeypath"): handle_public_key,
         Config.get("MASA", "auditlogpath"): (handle_request_audit_log, global_logger),
     }
-    certfile = os.path.join(script_dir, "certs/cert_masa.crt")
-    keyfile = os.path.join(script_dir, "certs/cert_private_masa.key")
-    passphrasefile = os.path.join(script_dir, "certs/passphrase_masa.txt")
+    certfile = os.path.join(script_dir, cert_file_path)
+    keyfile = os.path.join(script_dir, key_file_path)
+    passphrasefile = os.path.join(script_dir, passphrase_file_path)
     local_cas = Config.get_values_from_section("CAS")
 
     server = HTTPSServer(

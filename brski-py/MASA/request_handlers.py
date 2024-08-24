@@ -2,18 +2,14 @@
 import base64
 import json
 import os
-import sys
 
+from creation import *
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import oid
+from paths import *
+from validation import *
 
-from creation import create_voucher
-from validation import validate_voucher_request
-
-# Add parent directory to path
-script_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
-sys.path.append(parent_dir)
+script_dir, parent_dir = set_parent_dir(__file__)
 
 from Certificates.Certificate import load_certificate_from_bytes
 from Certificates.Keys import load_public_key_from_path
@@ -155,7 +151,7 @@ def handle_public_key(self):
     )
 
     public_key = load_public_key_from_path(
-        os.path.join(script_dir, "certs/cert_public_masa.key")
+        os.path.join(script_dir, public_key_file_path)
     )
     public_key_bytes = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
