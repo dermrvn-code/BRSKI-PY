@@ -43,11 +43,9 @@ class VoucherBase(ABC):
         Returns:
             bytes: The signature of the voucher data.
         """
-        # Create a copy of the voucher data dictionary without masa_signature
-        data_to_sign = self.to_dict(True)
 
         # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_sign, sort_keys=True).encode("utf-8")
+        voucher_data = self.to_string(True).encode()
 
         self.signature = sign(voucher_data, signer_private_key)
 
@@ -67,16 +65,13 @@ class VoucherBase(ABC):
         if self.signature is None:
             raise ValueError("Voucher is not signed")
 
-        # Create a copy of the voucher data dictionary without masa_signature
-        data_to_verify = self.to_dict(True)
-
         # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode("utf-8")
+        voucher_data = self.to_string(True).encode()
 
         return verify(self.signature, voucher_data, signer_public_key)
 
     def to_string(self, exclude_signature: bool = False) -> str:
-        return json.dumps(self.to_dict(exclude_signature))
+        return json.dumps(self.to_dict(exclude_signature), sort_keys=True)
 
     def print(self):
         """

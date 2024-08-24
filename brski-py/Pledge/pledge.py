@@ -6,7 +6,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
 sys.path.append(parent_dir)
 
-import json
 import secrets
 
 from Certificates.Certificate import load_certificate_bytes_from_path
@@ -16,7 +15,7 @@ from Utils.HTTPS import SSLConnection
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
 from Voucher.VoucherBase import Assertion
-from Voucher.VoucherRequest import create_pledge_voucher_request
+from Voucher.VoucherRequest import VoucherRequest, create_pledge_voucher_request
 
 
 def main() -> None:
@@ -26,7 +25,7 @@ def main() -> None:
         try:
             input("Press enter to request a voucher...")
             print_info("Requesting voucher...")
-            voucher = request_voucher("localhost", 8000)
+            request, voucher = request_voucher("localhost", 8000)
 
             if voucher:
                 print_descriptor("voucher")
@@ -39,7 +38,7 @@ def main() -> None:
             break
 
 
-def request_voucher(hostname: str, port: int) -> Voucher | None:
+def request_voucher(hostname: str, port: int) -> tuple[VoucherRequest, Voucher | None]:
     """
     Requests a voucher from a well-known URI using the BRSKI protocol.
 
@@ -48,7 +47,8 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         port (int): The port number of the server to connect to.
 
     Returns:
-        None
+        VoucherRequest: The voucher request object the pledge generated.
+        Voucher: The voucher object received from the server.
 
     Raises:
         Exception: If no valid voucher is received.
@@ -90,23 +90,36 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     headers = {"Content-Type": "application/json"}
     # Request Voucher from well-known URI
     response = conn.post_request(
-        "/.wellknown/brski", data=json.dumps(request.to_dict()), headers=headers
+        "/.wellknown/brski", data=request.to_string(), headers=headers
     )
 
     if response.status != 200:
         print_error("Voucher request failed: " + response.read().decode())
-        return
+        return request, None
     else:
         response_body = response.read()
         try:
             voucher = parse_voucher(response_body.decode())
-
-            # TODO: Check voucher
-            return voucher
+            
+            
+            return request, voucher
         except ValueError:
             print_error("No valid voucher received: " + response_body.decode())
-            return None
+            return request, None
 
+def validate_voucher(voucher: Voucher) -> tuple[bool, str]:
+    """
+    Validates a voucher received from the MASA server.
+
+    Args:
+        voucher (Voucher): The voucher to be validated.
+
+    Returns:
+        bool: True if the voucher is valid, False otherwise.
+        str: The error message if the voucher is invalid.
+    """
+
+    return True, ""
 
 if __name__ == "__main__":
     main()

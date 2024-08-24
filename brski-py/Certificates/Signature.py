@@ -52,7 +52,7 @@ def verify(signature: bytes, verification_data, signer_public_key) -> bool:
         )
         return True
 
-    except InvalidSignature as e:
+    except InvalidSignature:
         return False
     except Exception as e:
         print(f"Error while verification: {e}")

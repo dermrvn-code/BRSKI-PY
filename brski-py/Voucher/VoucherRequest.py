@@ -79,12 +79,12 @@ class VoucherRequest(VoucherBase):
                 ),
                 "serial-number": self.serial_number,
                 "idevid-issuer": (
-                    base64.b64encode(self.idevid_issuer).decode("utf-8")
+                    base64.b64encode(self.idevid_issuer).decode()
                     if self.idevid_issuer is not None
                     else None
                 ),
                 "pinned-domain-cert": (
-                    base64.b64encode(self.pinned_domain_cert).decode("utf-8")
+                    base64.b64encode(self.pinned_domain_cert).decode()
                     if self.pinned_domain_cert is not None
                     else None
                 ),
@@ -94,7 +94,7 @@ class VoucherRequest(VoucherBase):
                     else None
                 ),
                 "nonce": (
-                    base64.b64encode(self.nonce).decode("utf-8")
+                    base64.b64encode(self.nonce).decode()
                     if self.nonce is not None
                     else None
                 ),
@@ -104,19 +104,19 @@ class VoucherRequest(VoucherBase):
                     else None
                 ),
                 "prior-signed-voucher-request": (
-                    base64.b64encode(self.prior_signed_voucher_request).decode("utf-8")
+                    base64.b64encode(self.prior_signed_voucher_request).decode()
                     if self.prior_signed_voucher_request is not None
                     else None
                 ),
                 "proximity-registrar-cert": (
-                    base64.b64encode(self.proximity_registrar_cert).decode("utf-8")
+                    base64.b64encode(self.proximity_registrar_cert).decode()
                     if self.proximity_registrar_cert is not None
                     else None
                 ),
             }
 
             if not exclude_signature and self.signature is not None:
-                dict["signature"] = base64.b64encode(self.signature).decode("utf-8")
+                dict["signature"] = base64.b64encode(self.signature).decode()
 
             dict = {key: value for key, value in dict.items() if value is not None}
 
@@ -150,7 +150,7 @@ class VoucherRequest(VoucherBase):
         del data_to_verify["prior-signed-voucher-request"]
 
         # Convert to JSON and encode
-        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode("utf-8")
+        voucher_data = json.dumps(data_to_verify, sort_keys=True).encode()
 
         return verify(
             self.prior_signed_voucher_request,
@@ -251,7 +251,10 @@ def parse_voucher_request(request) -> VoucherRequest:
         VoucherRequest: The parsed voucher request.
     """
     if type(request) is str:
-        request_dict = json.loads(request)
+        try:
+            request_dict = json.loads(request)
+        except json.JSONDecodeError:
+            raise ValueError("Invalid voucher request json format")
     elif type(request) is dict:
         request_dict = request
     else:
@@ -271,12 +274,12 @@ def parse_voucher_request(request) -> VoucherRequest:
         assertion=(Assertion(request_dict.get("assertion", ""))),
         serial_number=request_dict.get("serial-number", ""),
         idevid_issuer=(
-            base64.b64decode(request_dict.get("idevid-issuer", "").encode("utf-8"))
+            base64.b64decode(request_dict.get("idevid-issuer", "").encode())
             if request_dict.get("idevid-issuer") is not None
             else None
         ),
         pinned_domain_cert=(
-            base64.b64decode(request_dict.get("pinned-domain-cert", "").encode("utf-8"))
+            base64.b64decode(request_dict.get("pinned-domain-cert", "").encode())
             if request_dict.get("pinned-domain-cert") is not None
             else None
         ),
@@ -286,7 +289,7 @@ def parse_voucher_request(request) -> VoucherRequest:
             else None
         ),
         nonce=(
-            base64.b64decode(request_dict.get("nonce", "").encode("utf-8"))
+            base64.b64decode(request_dict.get("nonce", "").encode())
             if request_dict.get("nonce") is not None
             else None
         ),
@@ -297,21 +300,19 @@ def parse_voucher_request(request) -> VoucherRequest:
         ),
         prior_signed_voucher_request=(
             base64.b64decode(
-                request_dict.get("prior-signed-voucher-request", "").encode("utf-8")
+                request_dict.get("prior-signed-voucher-request", "").encode()
             )
             if request_dict.get("prior-signed-voucher-request") is not None
             else None
         ),
         proximity_registrar_cert=(
-            base64.b64decode(
-                request_dict.get("proximity-registrar-cert", "").encode("utf-8")
-            )
+            base64.b64decode(request_dict.get("proximity-registrar-cert", "").encode())
             if request_dict.get("proximity-registrar-cert") is not None
             else None
         ),
     )
     request.signature = (
-        base64.b64decode(request_dict.get("signature", "").encode("utf-8"))
+        base64.b64decode(request_dict.get("signature", "").encode())
         if request_dict.get("signature") is not None
         else None
     )

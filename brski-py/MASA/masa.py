@@ -32,7 +32,16 @@ def handle_request_voucher(self):
     post_data = self.rfile.read(content_length)
     voucher_request_dict = json.loads(post_data)
 
-    voucher_request = parse_voucher_request(voucher_request_dict)
+    try:
+        voucher_request = parse_voucher_request(voucher_request_dict)
+    except ValueError:
+        log_error(
+            logger,
+            "(not parsed)",
+            "Voucher request format could not be parsed",
+        )
+        return
+
     logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     registrar_cert_bytes = base64.b64decode(x_ra_cert)
@@ -53,21 +62,13 @@ def handle_request_voucher(self):
         log_error(logger, voucher_request.serial_number, message)
         return
 
-    try:
-        voucher = create_voucher(voucher_request, registrar_cert_bytes)
-        voucher_json = json.dumps(voucher.to_dict())
-    except Exception as e:
-        log_error(
-            logger,
-            voucher_request.serial_number,
-            "Voucher request format could not be parsed",
-        )
-        return
+    voucher = create_voucher(voucher_request, registrar_cert_bytes)
+    voucher_json = voucher.to_string()
 
     logger.log(f"Issuing voucher: {voucher_json}")
 
     print_descriptor("MASA issued voucher:")
-    prettyprint_json(voucher_json, True)
+    voucher.print()
 
     # Send response
     self.send_response(200)
@@ -118,7 +119,7 @@ def validate_voucher_request(
 
     try:
         voucher_request_dict = voucher_request.to_dict()
-    except AttributeError:
+    except ValueError:
         msg = "Voucher request format could not be parsed"
         print_error(msg)
         return 1, msg

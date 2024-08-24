@@ -124,7 +124,7 @@ def request_voucher_from_masa(
     }
     response = conn.post_request(
         "/.wellknown/brski",
-        data=json.dumps(registrar_request.to_dict()),
+        data=registrar_request.to_string(),
         headers=headers,
     )
 
@@ -152,7 +152,7 @@ def validate_voucher_request(
 
     try:
         voucher_request_dict = voucher_request.to_dict()
-    except AttributeError:
+    except ValueError:
         msg = "Voucher request in wrong format"
         log_error(logger, voucher_request.serial_number, msg)
         return 1, msg

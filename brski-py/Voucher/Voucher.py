@@ -56,16 +56,14 @@ class Voucher(VoucherBase):
             "assertion": self.assertion.value,
             "serial-number": self.serial_number,
             "idevid-issuer": (
-                base64.b64encode(self.idevid_issuer).decode("utf-8")
+                base64.b64encode(self.idevid_issuer).decode()
                 if self.idevid_issuer is not None
                 else None
             ),
-            "pinned-domain-cert": base64.b64encode(self.pinned_domain_cert).decode(
-                "utf-8"
-            ),
+            "pinned-domain-cert": base64.b64encode(self.pinned_domain_cert).decode(),
             "domain-cert-revocation-checks": self.domain_cert_revocation_checks,
             "nonce": (
-                base64.b64encode(self.nonce).decode("utf-8")
+                base64.b64encode(self.nonce).decode()
                 if self.nonce is not None
                 else None
             ),
@@ -77,7 +75,7 @@ class Voucher(VoucherBase):
         }
 
         if not exclude_signature and self.signature is not None:
-            dict["signature"] = base64.b64encode(self.signature).decode("utf-8")
+            dict["signature"] = base64.b64encode(self.signature).decode()
 
         dict = {key: value for key, value in dict.items() if value is not None}
 
@@ -115,12 +113,12 @@ def create_voucher_from_request(
     return voucher
 
 
-def parse_voucher(voucher) -> Voucher:
+def parse_voucher(voucher: str | dict) -> Voucher:
     """
     Parse a voucher from a JSON string or dictionary.
 
     Args:
-        voucher (str or dict): The voucher data.
+        voucher (str | dict): The voucher data.
 
     Returns:
         Voucher: The parsed Voucher object.
@@ -132,7 +130,7 @@ def parse_voucher(voucher) -> Voucher:
     else:
         raise ValueError("Invalid voucher json format")
 
-    voucher = Voucher(
+    parsed_voucher = Voucher(
         created_on=datetime.fromisoformat(voucher_dict["created-on"]),
         expires_on=(
             datetime.fromisoformat(voucher_dict.get("expire-on", ""))
@@ -142,12 +140,12 @@ def parse_voucher(voucher) -> Voucher:
         assertion=Assertion(voucher_dict["assertion"]),
         serial_number=voucher_dict["serial-number"],
         idevid_issuer=(
-            base64.b64decode(voucher_dict.get("idevid-issuer", "").encode("utf-8"))
+            base64.b64decode(voucher_dict.get("idevid-issuer", "").encode())
             if voucher_dict.get("idevid-issuer") is not None
             else None
         ),
         pinned_domain_cert=base64.b64decode(
-            voucher_dict.get("pinned-domain-cert", "").encode("utf-8")
+            voucher_dict.get("pinned-domain-cert", "").encode()
         ),
         domain_cert_revocation_checks=(
             voucher_dict.get("domain-cert-revocation-checks")
@@ -155,7 +153,7 @@ def parse_voucher(voucher) -> Voucher:
             else None
         ),
         nonce=(
-            base64.b64decode(voucher_dict.get("nonce", "").encode("utf-8"))
+            base64.b64decode(voucher_dict.get("nonce", "").encode())
             if voucher_dict.get("nonce") is not None
             else None
         ),
@@ -165,9 +163,9 @@ def parse_voucher(voucher) -> Voucher:
             else None
         ),
     )
-    voucher.signature = (
-        base64.b64decode(voucher_dict.get("signature", "").encode("utf-8"))
+    parsed_voucher.signature = (
+        base64.b64decode(voucher_dict.get("signature", "").encode())
         if voucher_dict.get("signature") is not None
         else None
     )
-    return voucher
+    return parsed_voucher
