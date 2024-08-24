@@ -392,6 +392,10 @@ def generate_ra_cert(
     return cert
 
 
+# TODO: write a function to generate a ldevID certificate request
+# TODO: write a function to generate a ldevID certificate from this request
+
+
 def generate_idevid_cert(
     ca_cert_path: str,
     ca_key_path: str,

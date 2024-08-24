@@ -59,8 +59,12 @@ class HTTPSServer:
             keyfile (str): The path to the server private key file.
             passphrasefile (str): The path to the file containing the passphrase for the private key.
             local_cas (list): A list of file paths to the local Certificate Authorities (CAs).
-            routes_post (dict): A dictionary of POST routes and their corresponding handlers.
-            routes_get (dict): A dictionary of GET routes and their corresponding handlers.
+            routes_post (dict): A dictionary with the routes as the keys and the values
+                                either being the handler or a tuple with the handler
+                                and its additional arguments.
+            routes_get (dict): A dictionary with the routes as the keys and the values
+                                either being the handler or a tuple with the handler
+                                and its additional arguments.
 
         Raises:
             ValueError: If no routes are provided.
@@ -122,7 +126,9 @@ class HTTPSServer:
         Create a custom HTTP request handler.
 
         Args:
-            routes (dict): A dictionary of routes and their corresponding handlers.
+            routes (dict): A dictionary with the routes as the keys and the values
+                            either being the handler or a tuple with the handler
+                            and its additional arguments.
 
         Returns:
             CustomHTTPRequestHandler: The custom HTTP request handler.
@@ -131,7 +137,12 @@ class HTTPSServer:
         class CustomHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
                 handler = routes_post.get(self.path, self.handle_404)
-                handler(self)
+
+                if isinstance(handler, tuple):
+                    handler_func, *handler_args = handler
+                    handler_func(self, *handler_args)
+                else:
+                    handler(self)
 
             def do_GET(self):
                 data = self.path.split("?")

@@ -406,6 +406,10 @@ def validate_voucher(voucher: Voucher | None) -> tuple[bool, str]:
     # TODO: Implement any further validation and check of voucher
 
 
+# TODO: Refactor the code over multiple files
+
+# TODO: Write sign_ldevid_request and url handler
+# TODO: Write a socket communication script with ldevid_cert to display secure connection establishment to pledge
 
 def main() -> None:
     print_title("Registrar")

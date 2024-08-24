@@ -9,16 +9,12 @@ sys.path.append(parent_dir)
 
 import secrets
 
-from Certificates.Certificate import (
-    load_certificate_bytes_from_path,
-    load_certificate_from_path,
-)
+from Certificates.Certificate import load_certificate_bytes_from_path
 from Certificates.Keys import (
     load_passphrase_from_path,
     load_private_key_from_path,
     load_public_key_from_bytes,
 )
-from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 from Utils.Config import Config
 from Utils.HTTPS import SSLConnection
@@ -272,6 +268,11 @@ def send_voucher_status(
         Config.get("REGISTRAR", "voucherstatuspath"), data=json.dumps(voucher_status)
     )
 
+
+# TODO: Refactor the code over multiple files
+
+# TODO: Write request_ldevid_cert function
+# TODO: Write a socket communication script with ldevid_cert to display secure connection establishment
 
 if __name__ == "__main__":
     main()
