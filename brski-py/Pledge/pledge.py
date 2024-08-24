@@ -112,9 +112,11 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
             valid, error = validate_voucher(voucher, request, server_cert)
 
             if not valid:
+                send_voucher_status(False, reason=error)
                 print_error("Voucher validation failed: " + error)
                 return None
 
+            send_voucher_status(True)
             return voucher
         except ValueError:
             print_error("No valid voucher received: " + response_body.decode())
@@ -231,6 +233,40 @@ def request_masa_public_key() -> PublicKeyTypes | None:
         except Exception:
             print_error("MASA public key could not be extracted")
             return None
+
+
+def send_voucher_status(
+    status: bool, version: str = "1", reason: str = "", reason_context: str = ""
+) -> None:
+    """
+    Sends the status of the voucher to the MASA server.
+
+    Args:
+        version (str): The version of the voucher.
+        status (bool): The status of the voucher.
+        reason (str): The reason for the status.
+        reason_context (str): The context of the reason.
+
+    Raises:
+        ValueError: If the status is False and no reason is provided.
+    """
+    if not status and reason == "":
+        raise ValueError("Reason must be provided if status is False")
+
+    voucher_status = {
+        "version": version,
+        "status": status,
+        "reason": reason,
+        "reason_context": reason_context,
+    }
+
+    conn, _, _, _ = server_connection(
+        Config.get("REGISTRAR", "hostname"), int(Config.get("REGISTRAR", "port"))
+    )
+
+    conn.post_request(
+        Config.get("REGISTRAR", "voucherstatuspath"), data=json.dumps(voucher_status)
+    )
 
 
 if __name__ == "__main__":

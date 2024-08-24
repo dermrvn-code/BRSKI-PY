@@ -9,11 +9,10 @@ sys.path.append(parent_dir)
 
 import json
 
-from Certificates.Certificate import (
-    load_certificate_from_bytes,
-    load_certificate_from_path,
-)
-from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
+from Certificates.Certificate import (load_certificate_from_bytes,
+                                      load_certificate_from_path)
+from Certificates.Keys import (load_passphrase_from_path,
+                               load_private_key_from_path)
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509.oid import NameOID
 from Utils.Config import Config
@@ -22,11 +21,46 @@ from Utils.HTTPS import HTTPSServer, SSLConnection, send_404, send_406
 from Utils.Logger import Logger
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
-from Voucher.VoucherRequest import (
-    VoucherRequest,
-    create_registrar_voucher_request,
-    parse_voucher_request,
-)
+from Voucher.VoucherRequest import (VoucherRequest,
+                                    create_registrar_voucher_request,
+                                    parse_voucher_request)
+
+
+def handle_voucher_status(self):
+    content_length = int(self.headers["Content-Length"])
+    post_data = self.rfile.read(content_length)
+    pledge_cert_dict = self.request.getpeercert()
+    subject = array_to_dict(pledge_cert_dict.get("subject"))
+
+    if pledge_cert_dict is None:
+        send_404(self, "No peer certificate found")
+        return
+
+    voucher_status = json.loads(post_data)
+
+    # version = voucher_status.get("version", "")
+    status = voucher_status.get("status", False)
+    reason = voucher_status.get("reason", "")
+    reason_context = voucher_status.get("reason_context", "")
+
+    if status:
+        print_success(
+            "Voucher status is valid for pledge with serial number",
+            subject.get("serialNumber", ""),
+        )
+    else:
+        print_error(
+            "Voucher status is invalid for pledge with serial number ",
+            subject.get("serialNumber", ""),
+        )
+        print_info(f"Reason: {reason}")
+        print_info(f"Reason context: {reason_context}")
+        logger.log(f"Voucher status for pledge with serialNumber {subject.get("serialNumber", "")} is invalid: {reason} - {reason_context}")
+
+    self.send_response(200)
+    self.send_header("Content-type", "text/plain")
+    self.end_headers()
+    self.wfile.write(b"OK")
 
 
 def handle_request_voucher(self):
@@ -254,7 +288,10 @@ logger = Logger(os.path.join(script_dir, "registrar.log"))
 
 def main() -> None:
     print_title("Registrar")
-    routes = {Config.get("REGISTRAR", "brskipath"): handle_request_voucher}
+    routes = {
+        Config.get("REGISTRAR", "brskipath"): handle_request_voucher, 
+        Config.get("REGISTRAR", "voucherstatuspath"): handle_voucher_status
+    }
 
     certfile = os.path.join(script_dir, "certs/server/cert_registrar_server.crt")
     keyfile = os.path.join(script_dir, "certs/server/cert_private_registrar_server.key")
