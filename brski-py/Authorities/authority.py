@@ -11,10 +11,10 @@ from Utils.HTTPS import HTTPSServer
 from Utils.Printer import print_title
 
 valid_crls = {
-    "masa_ca": "/MASA/ca/crl_masa_ca.crl",
-    "registrar_ca": "/Registrar/ca/crl_registrar_ca.crl",
-    "manufacturer": "/Pledge/ca/crl_manufacturer.crl",
-    "caserver_ca": "/Authorities/ca/crl_caserver_ca.crl",
+    "masa_ca": "/MASA/certs/ca/crl_masa_ca.crl",
+    "registrar_ca": "/Registrar/certs/ca/crl_registrar_ca.crl",
+    "manufacturer": "/Pledge/certs/ca/crl_manufacturer.crl",
+    "caserver_ca": "/Authorities/certs/ca/crl_caserver_ca.crl",
 }
 
 

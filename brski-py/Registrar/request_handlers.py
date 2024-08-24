@@ -3,7 +3,7 @@ import os
 
 from log import log_error
 from masa_communication import *
-from paths import set_parent_dir
+from paths import logs_folder, requestslog_folder, set_parent_dir
 
 script_dir, parent_dir = set_parent_dir(__file__)
 
@@ -21,7 +21,7 @@ def handle_voucher_status(self):
     pledge_cert_dict = self.request.getpeercert()
     subject = array_to_dict(pledge_cert_dict.get("subject"))
 
-    idev_logger = Logger(os.path.join(script_dir, f"logs/{subject.get('serialNumber', '')}.log"))
+    idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{subject.get('serialNumber', '')}.log"))
 
     if pledge_cert_dict is None:
         send_404(self, "No peer certificate found")
@@ -71,8 +71,8 @@ def handle_request_voucher(self):
     voucher_request_json = json.loads(post_data)
     voucher_request = parse_voucher_request(voucher_request_json)
 
-    idev_logger = Logger(os.path.join(script_dir, f"logs/{voucher_request.serial_number}.log"))
-    request_logger = Logger(os.path.join(script_dir, f"requests/{voucher_request.serial_number}.log"))
+    idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{voucher_request.serial_number}.log"))
+    request_logger = Logger(os.path.join(script_dir,requestslog_folder, f"{voucher_request.serial_number}.log"))
     idev_logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
     pledge_cert_dict = self.request.getpeercert()

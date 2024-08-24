@@ -36,10 +36,10 @@ def handle_request_voucher(self, global_logger: Logger):
         return
 
     idev_logger = Logger(
-        os.path.join(script_dir, f"logs/{voucher_request.serial_number}.log")
+        os.path.join(script_dir, logs_folder, f"{voucher_request.serial_number}.log")
     )
     audit_logger = Logger(
-        os.path.join(script_dir, f"auditlogs/{voucher_request.serial_number}.log")
+        os.path.join(script_dir,auditlog_folder,  f"{voucher_request.serial_number}.log")
     )
     idev_logger.log(f"Received voucher request: {voucher_request.to_string()}")
 
@@ -92,7 +92,7 @@ def handle_request_audit_log(self, global_logger: Logger):
         return
 
     audit_logger = Logger(
-        os.path.join(script_dir, f"auditlogs/{voucher_request.serial_number}.log")
+        os.path.join(script_dir, auditlog_folder, f"{voucher_request.serial_number}.log")
     )
 
     logs = audit_logger.get_log_list()

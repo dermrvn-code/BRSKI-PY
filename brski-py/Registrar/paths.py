@@ -9,6 +9,11 @@ client_cert_file_path = "certs/client/cert_registrar_client.crt"
 client_key_file_path = "certs/client/cert_private_registrar_client.key"
 client_passphrase_file_path = "certs/client/passphrase_registrar_client.txt"
 
+log_folder = "log"
+global_log_file = f"{log_folder}/registrar.log"
+logs_folder = f"{log_folder}/pledgelogs"
+requestslog_folder = f"{log_folder}/requests"
+
 
 def set_parent_dir(filepath: str) -> tuple[str, str]:
     """

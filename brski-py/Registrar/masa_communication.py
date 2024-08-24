@@ -63,7 +63,7 @@ def request_audit_log_from_masa(pledge_serial_number: str) -> dict:
     """
     # Get most previous request of this pledge
     request_logger = Logger(
-        os.path.join(script_dir, f"requests/{pledge_serial_number}.log")
+        os.path.join(script_dir, requestslog_folder, f"{pledge_serial_number}.log")
     )
     logs = request_logger.get_log_list()
 

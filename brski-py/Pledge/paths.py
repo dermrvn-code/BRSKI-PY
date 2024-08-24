@@ -1,15 +1,9 @@
 import os
 import sys
 
-cert_file_path = "certs/cert_masa.crt"
-key_file_path = "certs/cert_private_masa.key"
-public_key_file_path = "certs/cert_public_masa.key"
-passphrase_file_path = "certs/passphrase_masa.txt"
-
-log_folder = "log"
-global_log_file = f"{log_folder}/masa.log"
-logs_folder = f"{log_folder}/pledgelogs"
-auditlog_folder = f"{log_folder}/auditlogs"
+cert_file_path = "certs/cert_pledge.crt"
+key_file_path = "certs/cert_private_pledge.key"
+passphrase_file_path = "certs/passphrase_pledge.txt"
 
 
 def set_parent_dir(filepath: str) -> tuple[str, str]:

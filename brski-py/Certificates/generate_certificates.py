@@ -18,7 +18,7 @@ from Utils.Config import Config
 
 def generate_certificates() -> None:
     # Manufacturer ca
-    dest_folder = "../Pledge/ca/"
+    dest_folder = "../Pledge/certs/ca/"
     common_name = "Manufacturer"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -54,7 +54,7 @@ def generate_certificates() -> None:
     print("Generated Pledge IDevID certificate")
 
     # MASA ca
-    dest_folder = "../MASA/ca/"
+    dest_folder = "../MASA/certs/ca/"
     common_name = "MASA_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -82,7 +82,7 @@ def generate_certificates() -> None:
     print("Generated MASA certificate")
 
     # Registrar ca
-    dest_folder = "../Registrar/ca/"
+    dest_folder = "../Registrar/certs/ca/"
     common_name = "Registrar_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -122,7 +122,7 @@ def generate_certificates() -> None:
     print("Generated Registrar Client certificate")
 
     # CA Server ca
-    dest_folder = "../Authorities/ca/"
+    dest_folder = "../Authorities/certs/ca/"
     common_name = "CAServer_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(

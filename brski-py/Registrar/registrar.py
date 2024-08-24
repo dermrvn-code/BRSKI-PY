@@ -1,4 +1,4 @@
-from paths import set_parent_dir
+from paths import global_log_file, set_parent_dir
 from request_handlers import *
 
 script_dir, parent_dir = set_parent_dir(__file__)
@@ -9,6 +9,8 @@ from Utils.Printer import *
 
 # TODO: Write sign_ldevid_request and url handler
 # TODO: Write a socket communication script with ldevid_cert to display secure connection establishment to pledge
+
+global_logger = Logger(os.path.join(script_dir, global_log_file))
 
 
 def main() -> None:

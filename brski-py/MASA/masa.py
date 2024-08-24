@@ -1,4 +1,4 @@
-from paths import set_parent_dir
+from paths import global_log_file, set_parent_dir
 from request_handlers import *
 
 script_dir, parent_dir = set_parent_dir(__file__)
@@ -8,7 +8,7 @@ from Utils.HTTPS import HTTPSServer
 from Utils.Logger import Logger
 from Utils.Printer import print_title
 
-global_logger = Logger(os.path.join(script_dir, "masa.log"))
+global_logger = Logger(os.path.join(script_dir, global_log_file))
 
 
 def main() -> None:
