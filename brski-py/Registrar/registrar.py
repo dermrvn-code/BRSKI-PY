@@ -73,7 +73,7 @@ def handle_voucher_status(self):
     print_descriptor("Audit log received from MASA")
     prettyprint_json(audit_log, True)
 
-    # TODO: Implement further processing of the audit log
+    # TODO: Implement any further processing of the audit log
     
 
 

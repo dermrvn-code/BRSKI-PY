@@ -248,8 +248,9 @@ class SSLConnection:
         response = self.connection.getresponse()
         return response
 
-    # TODO: Add headers parameter
-    def get_request(self, url: str) -> http.client.HTTPResponse:
+    def get_request(
+        self, url: str, *, body: dict = {}, headers: dict = {}
+    ) -> http.client.HTTPResponse:
         """
         Send a POST request to the server.
 
@@ -260,7 +261,7 @@ class SSLConnection:
         Returns:
             HTTPResponse: The response body.
         """
-        self.connection.request(method="GET", url=url)
+        self.connection.request(method="GET", url=url, body=body, headers=headers)
 
         response = self.connection.getresponse()
         return response
