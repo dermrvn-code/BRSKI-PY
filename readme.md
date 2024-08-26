@@ -106,6 +106,14 @@ To use the BRSKI Python Implementation, follow these steps:
      start.bat
      ```
 
+5. Reset the demonstrator:
+
+   If you want to reset the demonstrators logs and saved statuses, you can do so by running the `brski-py/reset_process.py` script: 
+
+   ```shell
+   py brski-py/reset_process.py
+   ```
+
 ## Generate Docs
 
 To generate a sphinx documentation for the BRSKI Python Implementation, follow these steps:

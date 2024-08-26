@@ -50,3 +50,11 @@ To use the BRSKI Python Implementation, follow these steps:
      .. code-block:: shell
 
         start.bat
+
+5. **Reset the demonstrator:**
+
+   If you want to reset the demonstrators logs and saved statuses, you can do so by running the `brski-py/reset_process.py` script: 
+
+     .. code-block:: shell
+
+        py brski-py/reset_process.py
