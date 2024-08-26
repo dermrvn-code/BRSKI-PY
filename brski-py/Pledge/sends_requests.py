@@ -14,7 +14,7 @@ from Certificates.Keys import (
 )
 from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 from Utils.Config import Config
-from Utils.HTTPS import SSLConnection
+from Utils.HTTPS import SSLConnection, SSLSocketClient
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
 from Voucher.VoucherBase import Assertion
@@ -70,7 +70,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     else:
 
         # Get the certificate of the server the response was sent to
-        server_cert = conn.get_server_certificate_bytes()
+        server_cert = conn.server_certificate_bytes
 
         if server_cert == None:
             print_error("Server certificate could not be extracted")
@@ -96,6 +96,46 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         except ValueError:
             print_error("No valid voucher received: " + response_body.decode())
             return None
+
+
+def open_socket_connection(
+    hostname: str,
+    port: int,
+    cert_file_path: str,
+    key_file_path: str,
+    passphrase_file_path: str,
+) -> None:
+    """
+    Opens a socket connection to the specified hostname and port.
+
+    Args:
+        hostname (str): The hostname of the server.
+        port (int): The port number of the server.
+        cert_file_path (str): The path to the certificate file.
+        key_file_path (str): The path to the private key file.
+        passphrase_file_path (str): The path to the passphrase file.
+    """
+
+    local_cas = Config.get_values_from_section("CAS")
+    socket = SSLSocketClient(
+        host=hostname,
+        port=port,
+        cert=cert_file_path,
+        private_key=key_file_path,
+        passphrasefile=passphrase_file_path,
+        local_cas=local_cas,
+    )
+
+    socket.connect()
+
+    while True:
+        try:
+            data = input("Enter data to send: ")
+            socket.send_message(data)
+            response = socket.receive_message()
+            print("Received: " + response)
+        except KeyboardInterrupt:
+            break
 
 
 def server_connection(
@@ -132,7 +172,7 @@ def server_connection(
             port=port,
             cert=idevid_cert_path,
             private_key=pledge_private_key_path,
-            passphrase=pledge_passphrase,
+            passphrasefile=pledge_passphrase_path,
             local_cas=local_cas,
         ),
         idevid_cert_path,

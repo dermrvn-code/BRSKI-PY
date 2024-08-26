@@ -413,8 +413,8 @@ class SSLSocketClient:
         self.cert = cert
         self.private_key = private_key
 
-        passphrase = load_passphrase_from_path(passphrasefile)
-        self.passphrase = passphrase
+        print(f"Loading passphrase from {passphrasefile}...")
+        self.passphrase = load_passphrase_from_path(passphrasefile)
         self.local_cas = local_cas
 
         self.context = self.create_context()

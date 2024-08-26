@@ -33,6 +33,8 @@ def main() -> None:
         keyfile=keyfile,
         passphrasefile=passphrasefile,
         local_cas=local_cas,
+        enable_socket=True,
+        socket_port=Config.get("REGISTRAR", "localcommunicationport"),
     )
     server.start()
 

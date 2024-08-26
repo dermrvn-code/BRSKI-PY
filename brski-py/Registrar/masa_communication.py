@@ -169,8 +169,6 @@ def server_connection(hostname: str, port: int) -> SSLConnection:
         port=port,
         cert=os.path.join(script_dir, client_cert_file_path),
         private_key=os.path.join(script_dir, client_key_file_path),
-        passphrase=load_passphrase_from_path(
-            os.path.join(script_dir, client_passphrase_file_path)
-        ),
+        passphrasefile=os.path.join(script_dir, client_passphrase_file_path),
         local_cas=Config.get_values_from_section("CAS"),
     )

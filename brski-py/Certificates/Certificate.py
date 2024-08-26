@@ -330,7 +330,7 @@ def generate_tls_server_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key, private_key_path = setup_private_key(dest_folder, common_name)
+    private_key, _, _ = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -382,7 +382,7 @@ def generate_tls_client_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key, _ = setup_private_key(dest_folder, common_name)
+    private_key, _, _ = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -434,7 +434,7 @@ def generate_ra_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key, _ = setup_private_key(dest_folder, common_name)
+    private_key, _, _ = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -500,7 +500,7 @@ def generate_idevid_cert(
     """
 
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key, _ = setup_private_key(dest_folder, common_name)
+    private_key, _, _ = setup_private_key(dest_folder, common_name)
 
     useOtherName = hwtype != "" and hwSerialNum != ""
 
@@ -652,7 +652,7 @@ def generate_ldevid_request(
     country_code: str,
     serialnumber: str,
     common_name: str,
-) -> tuple[x509.CertificateSigningRequest, str, str]:
+) -> tuple[x509.CertificateSigningRequest, str, str, str]:
     """
     Generate an LDevID certificate request.
 
@@ -665,19 +665,21 @@ def generate_ldevid_request(
 
     Returns:
         request (CertificateSigningRequest): Generated certificate request.
-        file_path (str): Path to the saved certificate request
+        request_file_path (str): Path to the saved certificate request
         private_key_path (str): Path to the saved private key
     """
 
-    private_key, private_key_path = setup_private_key(dest_folder_key, common_name)
+    private_key, private_key_path, passphrase_file_path = setup_private_key(
+        dest_folder_key, common_name
+    )
 
     # Generate CSR
     request = generate_certificate_request_builder(
         country_code=country_code, common_name=common_name, serialnumber=serialnumber
     ).sign(private_key, hashes.SHA256())
 
-    file_path = save_request_to_file(
+    request_file_path = save_request_to_file(
         request, dest_folder=dest_folder_request, common_name=common_name
     )
 
-    return request, file_path, private_key_path
+    return request, request_file_path, private_key_path, passphrase_file_path

@@ -13,7 +13,7 @@ from Utils.Config import Config
 from Utils.Printer import print_error, print_success
 
 
-def request_ldevid_cert(serialnumber: str) -> tuple[str | None, str | None]:
+def request_ldevid_cert(serialnumber: str) -> tuple[str, str, str]:
     """
     Requests an LDevID certificate for a given serial number.
 
@@ -32,12 +32,14 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str | None, str | None]:
     common_name = f"pledge.{serialnumber}"
 
     # Build the request
-    request, file_path, private_key_path = generate_ldevid_request(
-        dest_folder_request=dest_folder_request,
-        dest_folder_key=dest_folder_key_cert,
-        country_code="DE",
-        serialnumber=serialnumber,
-        common_name=common_name,
+    request, file_path, private_key_path, passphrase_file_path = (
+        generate_ldevid_request(
+            dest_folder_request=dest_folder_request,
+            dest_folder_key=dest_folder_key_cert,
+            country_code="DE",
+            serialnumber=serialnumber,
+            common_name=common_name,
+        )
     )
     request_bytes = request.public_bytes(Encoding.PEM)
 
@@ -56,7 +58,7 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str | None, str | None]:
         print_error(
             "Request for LDevID certificate failed: " + response.read().decode()
         )
-        return "", ""
+        return "", "", ""
 
     cert_bytes = response.read()
     ldevid_cert = load_certificate_from_bytes(cert_bytes)
@@ -69,4 +71,4 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str | None, str | None]:
         + dest_folder_key_cert
     )
 
-    return private_key_path, cert_path
+    return cert_path, private_key_path, passphrase_file_path

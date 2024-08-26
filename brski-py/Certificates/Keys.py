@@ -8,7 +8,9 @@ from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 
 
 # Generate a random passphrase
-def generate_passphrase(dest_folder: str, common_name: str, length: int = 30) -> str:
+def generate_passphrase(
+    dest_folder: str, common_name: str, length: int = 30
+) -> tuple[str, str]:
     """
     Generate a random passphrase and save it to a file.
 
@@ -19,6 +21,7 @@ def generate_passphrase(dest_folder: str, common_name: str, length: int = 30) ->
 
     Returns:
         passphrase (str): The generated passphrase.
+        file_path (str): The path to the file containing the passphrase.
     """
     alphabet = (
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="
@@ -30,12 +33,11 @@ def generate_passphrase(dest_folder: str, common_name: str, length: int = 30) ->
     if not path.exists(dest_folder):
         makedirs(dest_folder)
 
-    with open(
-        path.join(dest_folder, "passphrase_" + common_name.lower() + ".txt"), "w"
-    ) as f:
+    file_path = path.join(dest_folder, common_name + "_passphrase.txt")
+    with open(file_path, "w") as f:
         f.write(passphrase)
 
-    return passphrase
+    return passphrase, file_path
 
 
 def generate_rsa_keys(
@@ -183,10 +185,13 @@ def setup_private_key(dest_folder: str, common_name: str):
     Returns:
         private_key (RSAPrivateKey): The generated RSA private key.
         private_key_path (str): The path to the private key file.
+        passphrase_file_path (str): The path to the passphrase file.
     """
-    cert_passphrase = generate_passphrase(dest_folder, common_name)
+    cert_passphrase, passphrase_file_path = generate_passphrase(
+        dest_folder, common_name
+    )
     private_key, public_key, private_key_path, public_key_path = generate_rsa_keys(
         cert_passphrase, dest_folder, common_name
     )
 
-    return private_key, private_key_path
+    return (private_key, private_key_path, passphrase_file_path)
