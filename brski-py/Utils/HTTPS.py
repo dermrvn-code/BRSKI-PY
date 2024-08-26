@@ -147,9 +147,16 @@ class HTTPSServer:
             def do_GET(self):
                 data = self.path.split("?")
                 handler = routes_get.get(data[0], self.handle_404)
-                handler(self, data[1] if len(data) > 1 else None)
 
-            def handle_404(self=None):
+                if isinstance(handler, tuple):
+                    handler_func, *handler_args = handler
+                    handler_func(
+                        self, data[1] if len(data) > 1 else None, *handler_args
+                    )
+                else:
+                    handler(self, data[1] if len(data) > 1 else None)
+
+            def handle_404(self=None, *args):
                 self.send_response(404)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()

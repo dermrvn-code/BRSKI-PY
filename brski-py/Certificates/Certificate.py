@@ -11,6 +11,45 @@ from pyasn1.codec.der import encoder
 from pyasn1.type import char, namedtype, univ  # type: ignore
 
 
+def load_request_from_bytes(data: bytes) -> x509.CertificateSigningRequest:
+    """
+    Load a certificate request from bytes.
+
+    Args:
+        data (bytes): The bytes representing the certificate request.
+
+    Returns:
+        CertificateSigningRequest: The loaded certificate request.
+
+    Raises:
+        ValueError: If the bytes are neither PEM nor DER encoded.
+    """
+    try:
+        return x509.load_pem_x509_csr(data, backend=default_backend())
+    except:
+        try:
+            return x509.load_der_x509_csr(data, backend=default_backend())
+        except:
+            raise ValueError(
+                "Could not load certificate request from bytes. Bytes are neither PEM nor DER encoded."
+            )
+
+
+def load_request_from_path(path: str) -> x509.CertificateSigningRequest:
+    """
+    Load a certificate request from a file.
+
+    Args:
+        path (str): The path to the file containing the certificate request.
+
+    Returns:
+        CertificateSigningRequest: The loaded certificate request.
+    """
+    with open(path, "rb") as f:
+        request_data = f.read()
+    return load_request_from_bytes(request_data)
+
+
 def load_certificate_from_path(path: str) -> x509.Certificate:
     """
     Load a certificate from a file.
@@ -82,7 +121,7 @@ def save_cert_to_file(
     *,
     common_name: str,
     file_prefix: str = "cert",
-):
+) -> str:
     """
     Save the certificate to a file.
 
@@ -93,15 +132,45 @@ def save_cert_to_file(
         cert_type (str): Type of the certificate. Default is "cert".
 
     Returns:
-        None
+        file_path (str): Path to the saved certificate file.
     """
     if not path.exists(dest_folder):
         makedirs(dest_folder)
 
-    with open(
-        path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".crt"), "wb"
-    ) as device_cert_file:
+    file_path = path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".crt")
+    with open(file_path, "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
+
+    return file_path
+
+
+def save_request_to_file(
+    request: x509.CertificateSigningRequest,
+    dest_folder: str,
+    *,
+    common_name: str,
+    file_prefix: str = "request",
+) -> str:
+    """
+    Save the certificate request to a file.
+
+    Args:
+        request (CertificateSigningRequest): Certificate request to be saved.
+        dest_folder (str): Destination folder to save the certificate request file.
+        common_name (str): Common name used for naming the file.
+        file_prefix (str): Prefix used for naming the file. Default is "request".
+
+    Returns:
+        file_path (str): Path to the saved certificate request file.
+    """
+    if not path.exists(dest_folder):
+        makedirs(dest_folder)
+
+    file_path = path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".csr")
+    with open(file_path, "wb") as request_file:
+        request_file.write(request.public_bytes(serialization.Encoding.PEM))
+
+    return file_path
 
 
 def generate_certificate_request_builder(
@@ -261,7 +330,7 @@ def generate_tls_server_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key = setup_private_key(dest_folder, common_name)
+    private_key, private_key_path = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -313,7 +382,7 @@ def generate_tls_client_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key = setup_private_key(dest_folder, common_name)
+    private_key, _ = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -365,7 +434,7 @@ def generate_ra_cert(
         cert (Certificate): Generated certificate.
     """
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key = setup_private_key(dest_folder, common_name)
+    private_key, _ = setup_private_key(dest_folder, common_name)
 
     # Generate CSR
     request = generate_certificate_request_builder(
@@ -390,10 +459,6 @@ def generate_ra_cert(
 
     save_cert_to_file(cert, dest_folder, common_name=common_name)
     return cert
-
-
-# TODO: write a function to generate a ldevID certificate request
-# TODO: write a function to generate a ldevID certificate from this request
 
 
 def generate_idevid_cert(
@@ -435,7 +500,7 @@ def generate_idevid_cert(
     """
 
     ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
-    private_key = setup_private_key(dest_folder, common_name)
+    private_key, _ = setup_private_key(dest_folder, common_name)
 
     useOtherName = hwtype != "" and hwSerialNum != ""
 
@@ -530,3 +595,89 @@ def MASAURLExt(uri: str) -> x509.ExtensionType:
     return x509.UnrecognizedExtension(
         oid=x509.ObjectIdentifier("1.3.6.1.5.5.7.1.32"), value=encoded_masa_url
     )
+
+
+def generate_ldevid_cert_from_request(
+    request: x509.CertificateSigningRequest,
+    *,
+    ca_cert_path: str,
+    ca_key_path: str,
+    ca_passphrase_path: str,
+    dest_folder: str,
+) -> x509.Certificate:
+    """
+    Generates an LDevID certificate from a certificate request.
+
+    Args:
+        request (CertificateSigningRequest): The certificate signing request.
+        ca_cert_path (str): The file path of the CA certificate.
+        ca_key_path (str): The file path of the CA private key.
+        ca_passphrase_path (str): The file path of the passphrase for the CA private key.
+        dest_folder (str): The destination folder to save the generated certificate.
+        common_name (str): The common name for the generated certificate.
+
+    Returns:
+        Certificate: The generated LDevID certificate.
+
+    Raises:
+        ValueError: If the common name is not found in the certificate request
+    """
+
+    ca_cert, ca_key = load_ca(ca_cert_path, ca_key_path, ca_passphrase_path)
+
+    cert = generate_certificate_builder(
+        request,
+        ca_cert=ca_cert,
+        expiration_date=datetime.datetime(
+            9999, 12, 31
+        ),  # "infinite" far away expiration date
+    )
+    cert = sign_certificate(ca_cert, ca_key, cert)
+
+    common_name = request.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+
+    if len(common_name) == 0:
+        raise ValueError("Common name not found in certificate request.")
+
+    common_name = str(common_name[0].value)
+
+    save_cert_to_file(cert, dest_folder, common_name=common_name)
+    return cert
+
+
+def generate_ldevid_request(
+    *,
+    dest_folder_request: str,
+    dest_folder_key: str,
+    country_code: str,
+    serialnumber: str,
+    common_name: str,
+) -> tuple[x509.CertificateSigningRequest, str, str]:
+    """
+    Generate an LDevID certificate request.
+
+    Args:
+        dest_folder_request (str): Destination folder to save the certificate request.
+        dest_folder_key (str): Destination folder to save the private key.
+        country_code (str): Country code for the certificate request.
+        serialnumber (str): Serial number for the device.
+        common_name (str): Common name for the device certificate.
+
+    Returns:
+        request (CertificateSigningRequest): Generated certificate request.
+        file_path (str): Path to the saved certificate request
+        private_key_path (str): Path to the saved private key
+    """
+
+    private_key, private_key_path = setup_private_key(dest_folder_key, common_name)
+
+    # Generate CSR
+    request = generate_certificate_request_builder(
+        country_code=country_code, common_name=common_name, serialnumber=serialnumber
+    ).sign(private_key, hashes.SHA256())
+
+    file_path = save_request_to_file(
+        request, dest_folder=dest_folder_request, common_name=common_name
+    )
+
+    return request, file_path, private_key_path

@@ -1,5 +1,7 @@
 from Certificates.Certificate import load_certificate_from_bytes
+from cryptography.x509 import CertificateSigningRequest
 from cryptography.x509.oid import NameOID
+from enroll import get_device_enrollment_status
 from log import log_error
 from paths import set_parent_dir
 
@@ -118,3 +120,15 @@ def validate_voucher(voucher: Voucher | None) -> tuple[bool, str]:
     return True, ""
 
     # TODO: Implement any further validation and check of voucher
+
+
+def validate_ldevid_cert_request(
+    request: CertificateSigningRequest, serialnumber: str
+) -> tuple[bool, str]:
+
+    device_enrollment_status = get_device_enrollment_status(serialnumber)
+
+    if device_enrollment_status.get("allowed", False):
+        return True, ""
+
+    return False, "Pledge is not allowed to request LDevID Certificate"

@@ -38,7 +38,7 @@ def generate_certificate_authority(
         passphrase (str): The passphrase used to encrypt the private key.
     """
     passphrase = generate_passphrase(dest_folder, common_name, passphrase_length)
-    key, _ = generate_rsa_keys(passphrase, dest_folder, common_name, "ca")
+    key, _, _, _ = generate_rsa_keys(passphrase, dest_folder, common_name, "ca")
 
     subject = issuer = x509.Name(
         [

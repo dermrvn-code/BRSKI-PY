@@ -40,7 +40,7 @@ def generate_passphrase(dest_folder: str, common_name: str, length: int = 30) ->
 
 def generate_rsa_keys(
     passphrase: str, dest_folder: str, common_name: str, prefix: str = "cert"
-) -> tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+) -> tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey, str, str]:
     """
     Generates RSA private and public keys and saves them to files.
 
@@ -52,6 +52,8 @@ def generate_rsa_keys(
     Returns:
         private_key (RSAPrivateKey): The generated RSA private key.
         public_key (RSAPublicKey): The generated RSA public key.
+        private_key_path (str): The path to the private key file.
+        public_key_path (str): The path to the public key file.
     """
     private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
@@ -75,19 +77,23 @@ def generate_rsa_keys(
         makedirs(dest_folder)
 
     # Write the private key to a file
+    private_key_path = path.join(
+        dest_folder, prefix + "_private_" + common_name.lower() + ".key"
+    )
     with open(
-        path.join(dest_folder, prefix + "_private_" + common_name.lower() + ".key"),
+        private_key_path,
         "wb",
     ) as key_file:
         key_file.write(encrypted_key)
 
     # Write the public key to a file
-    with open(
-        path.join(dest_folder, prefix + "_public_" + common_name.lower() + ".key"), "wb"
-    ) as key_file:
+    public_key_path = path.join(
+        dest_folder, prefix + "_public_" + common_name.lower() + ".key"
+    )
+    with open(public_key_path, "wb") as key_file:
         key_file.write(public_key_bytes)
 
-    return private_key, public_key
+    return private_key, public_key, private_key_path, public_key_path
 
 
 def load_passphrase_from_path(path: str) -> bytes:
@@ -176,10 +182,11 @@ def setup_private_key(dest_folder: str, common_name: str):
 
     Returns:
         private_key (RSAPrivateKey): The generated RSA private key.
+        private_key_path (str): The path to the private key file.
     """
     cert_passphrase = generate_passphrase(dest_folder, common_name)
-    private_key, public_key = generate_rsa_keys(
+    private_key, public_key, private_key_path, public_key_path = generate_rsa_keys(
         cert_passphrase, dest_folder, common_name
     )
 
-    return private_key
+    return private_key, private_key_path

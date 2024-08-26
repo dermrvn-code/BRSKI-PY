@@ -115,6 +115,11 @@ def server_connection(
         bytes: The passphrase of the pledge's private key.
     """
 
+    serialnumber = Config.get("PLEDGE", "serialnumber")
+    cert_file_path = f"certs/cert_pledge-{serialnumber}.crt"
+    key_file_path = f"certs/cert_private_pledge-{serialnumber}.key"
+    passphrase_file_path = f"certs/passphrase_pledge-{serialnumber}.txt"
+
     idevid_cert_path = os.path.join(script_dir, cert_file_path)
     pledge_private_key_path = os.path.join(script_dir, key_file_path)
     pledge_passphrase_path = os.path.join(script_dir, passphrase_file_path)

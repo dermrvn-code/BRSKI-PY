@@ -7,7 +7,6 @@ from Utils.Config import Config
 from Utils.HTTPS import HTTPSServer
 from Utils.Printer import *
 
-# TODO: Write sign_ldevid_request and url handler
 # TODO: Write a socket communication script with ldevid_cert to display secure connection establishment to pledge
 
 global_logger = Logger(os.path.join(script_dir, global_log_file))
@@ -18,6 +17,7 @@ def main() -> None:
     routes = {
         Config.get("REGISTRAR", "brskipath"): handle_request_voucher,
         Config.get("REGISTRAR", "voucherstatuspath"): handle_voucher_status,
+        Config.get("REGISTRAR", "ldevidrequestpath"): handle_request_ldevid_cert,
     }
 
     certfile = os.path.join(script_dir, server_cert_file_path)

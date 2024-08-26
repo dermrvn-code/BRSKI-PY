@@ -18,7 +18,7 @@ class Config:
     config.read(path)
 
     @staticmethod
-    def get(section: str, key: str):
+    def get(section: str, key: str, default_return: str = ""):
         """
         Retrieve the value of a configuration key from the specified section.
 
@@ -29,7 +29,7 @@ class Config:
         Returns:
             str: The value associated with the specified key in the specified section.
         """
-        return Config.config.get(section, key)
+        return Config.config.get(section, key, fallback=default_return)
 
     @staticmethod
     def set(section: str, key: str, value: str):

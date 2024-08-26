@@ -33,6 +33,7 @@ def generate_certificates() -> None:
     )
     print("Generated Manufacturer CRL")
 
+    serialnumber = Config.get("PLEDGE", "serialnumber")
     masa_url = f"https://{Config.get("MASA", "hostname")}:{Config.get("MASA", "port")}{Config.get("MASA", "brskipath")}"
 
     # Pledge IDevID certificate
@@ -43,13 +44,13 @@ def generate_certificates() -> None:
         passphrase_path,
         dest_folder,
         country_code="DE",
-        serialnumber="02481632",
-        organization_name="HSHL",
-        organizational_unit_name="Trustpoint",
-        common_name="Pledge",
+        serialnumber=serialnumber,
+        organization_name=Config.get("PLEDGE", "organization"),
+        organizational_unit_name=Config.get("PLEDGE", "organizationunit"),
+        common_name=f"pledge-{serialnumber}",
         masa_url=masa_url,
-        hwtype="1.3.6.1.4.1.343.2.17.1",
-        hwSerialNum="123456",
+        hwtype=Config.get("PLEDGE", "hwtypeoid"),
+        hwSerialNum=Config.get("PLEDGE", "hwserialnumber"),
     )
     print("Generated Pledge IDevID certificate")
 

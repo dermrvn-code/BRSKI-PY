@@ -1,10 +1,6 @@
 import os
 import sys
 
-cert_file_path = "certs/cert_pledge.crt"
-key_file_path = "certs/cert_private_pledge.key"
-passphrase_file_path = "certs/passphrase_pledge.txt"
-
 
 def set_parent_dir(filepath: str) -> tuple[str, str]:
     """

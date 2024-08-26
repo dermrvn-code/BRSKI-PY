@@ -1,12 +1,16 @@
 import json
 import os
 
+from enroll import set_device_enrollment_status
 from log import log_error
 from masa_communication import *
 from paths import logs_folder, requestslog_folder, set_parent_dir
+from validation import validate_ldevid_cert_request
 
 script_dir, parent_dir = set_parent_dir(__file__)
 
+from Certificates.Certificate import (generate_ldevid_cert_from_request,
+                                      load_request_from_bytes)
 from Utils.Dicts import array_to_dict
 from Utils.HTTPS import send_404, send_406
 from Utils.Logger import Logger
@@ -20,8 +24,9 @@ def handle_voucher_status(self):
     post_data = self.rfile.read(content_length)
     pledge_cert_dict = self.request.getpeercert()
     subject = array_to_dict(pledge_cert_dict.get("subject"))
+    pledge_serialnumber = subject.get("serialNumber", "")
 
-    idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{subject.get('serialNumber', '')}.log"))
+    idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{pledge_serialnumber}.log"))
 
     if pledge_cert_dict is None:
         send_404(self, "No peer certificate found")
@@ -60,9 +65,11 @@ def handle_voucher_status(self):
     print_descriptor("Audit log received from MASA")
     prettyprint_json(audit_log, True)
 
-    # TODO: Implement any further processing of the audit log
-    
+    # TODO: Implement any further processing and validation of the audit log
 
+    print_success("Setting device enrollment status to allowed")
+    set_device_enrollment_status(pledge_serialnumber, allowed=True)
+    
 
 def handle_request_voucher(self):
     content_length = int(self.headers["Content-Length"])
@@ -122,3 +129,57 @@ def handle_request_voucher(self):
         self.send_header("Content-type", "text/json")
         self.end_headers()
         self.wfile.write(str.encode(voucher.to_string()))  
+
+
+def handle_request_ldevid_cert(self):
+    content_length = int(self.headers["Content-Length"])
+    request_data = self.rfile.read(content_length)
+    pledge_cert_dict = self.request.getpeercert()
+
+    subject = pledge_cert_dict.get("subject", "")
+    subject = array_to_dict(subject)
+    serialnumber = subject.get("serialNumber")
+
+    if serialnumber is None:
+        send_404(self, "No serial number found in idevcert, could not issue ldevid cert")
+        return
+    
+
+
+    request = load_request_from_bytes(request_data)
+
+    idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{serialnumber}.log"))
+    idev_logger.log(f"Received ldevid cert request for pledge with serial number: {serialnumber}")
+
+    request_valid, message = validate_ldevid_cert_request(request, serialnumber)
+
+    if not request_valid:
+        send_404(self, message)
+        msg = f"Request for ldevid cert for pledge with serial number: {serialnumber} is invalid: {message}"
+        idev_logger.log(msg)
+        print_error(msg)
+        return
+
+    dest_folder = os.path.join(script_dir, "issued_ldevid_certs")
+    ca_cert_path = os.path.join(script_dir, "certs/ca/ca_registrar_ca.crt")
+    ca_key_path = os.path.join(script_dir, "certs/ca/ca_private_registrar_ca.key")
+    passphrase_path = os.path.join(script_dir, "certs/ca/passphrase_registrar_ca.txt")
+
+    cert = generate_ldevid_cert_from_request(
+            request, 
+            ca_cert_path=ca_cert_path, 
+            ca_key_path=ca_key_path, 
+            ca_passphrase_path=passphrase_path, 
+            dest_folder=dest_folder
+        )
+
+    set_device_enrollment_status(serialnumber, enrolled=True)
+
+    msg = f"Certificate issued and enrollment completed for pledge with serial number: {serialnumber}"
+    print_success(msg)
+    idev_logger.log(msg)
+
+    self.send_response(200)
+    self.send_header("Content-type", "application/pkix-cert")
+    self.end_headers()
+    self.wfile.write(cert.public_bytes(Encoding.PEM))  

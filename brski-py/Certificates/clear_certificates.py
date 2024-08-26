@@ -10,6 +10,7 @@ sys.path.append(parent_dir)
 def clear_certificates():
     folder = [
         "Pledge/certs/ca/",
+        "Pledge/certs/ldevid/",
         "Pledge/certs/",
         "MASA/certs/ca/",
         "MASA/certs/",
