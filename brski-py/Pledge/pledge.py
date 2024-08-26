@@ -37,9 +37,9 @@ def main() -> None:
                 )
                 cert_file_path, private_key_path = request_ldevid_cert(serialnumber)
 
-            # TODO: Implement a exchange of LDevID Certificate Requests and Establish secure connection
+            # TODO: Establish secure connection
 
-            print("\n"*3)
+            print("\n" * 3)
         except KeyboardInterrupt:
             break
 
