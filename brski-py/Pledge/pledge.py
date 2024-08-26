@@ -40,6 +40,7 @@ def communication():
         or ldev_passphrase_path == ""
     ):
         print_error("No valid LDevID certificate found")
+        return
 
     open_socket_connection(
         Config.get("REGISTRAR", "hostname"),
@@ -98,10 +99,6 @@ def load_ldev_certs() -> tuple[str, str, str]:
     cert_path = os.path.join(dest_folder, f"cert_pledge.{serialnumber}.crt")
     passphrase_path = os.path.join(dest_folder, f"pledge.{serialnumber}_passphrase.txt")
 
-    print(os.path.exists(private_key_path), private_key_path)
-    print(os.path.exists(cert_path), cert_path)
-    print(os.path.exists(passphrase_path), passphrase_path)
-
     if (
         os.path.exists(private_key_path)
         and os.path.exists(cert_path)
@@ -111,8 +108,6 @@ def load_ldev_certs() -> tuple[str, str, str]:
     else:
         return "", "", ""
 
-
-# TODO: Write a socket communication script with ldevid_cert to display secure connection establishment
 
 if __name__ == "__main__":
     main()
