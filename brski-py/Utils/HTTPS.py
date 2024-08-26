@@ -3,6 +3,7 @@ import http.server
 import os
 import socket
 import ssl
+import threading
 
 from Certificates.Keys import load_passphrase_from_path
 
@@ -48,9 +49,11 @@ class HTTPSServer:
         local_cas: list[str] = [],
         routes_post: dict = {},
         routes_get: dict = {},
+        enable_socket: bool = False,  # New parameter for enabling socket communication
+        socket_port: str | int | None = None,  # Default port for socket communication
     ):
         """
-        Initialize an HTTPS server.
+        Initialize an HTTPS server with optional socket communication.
 
         Args:
             address (str): The server address.
@@ -65,20 +68,27 @@ class HTTPSServer:
             routes_get (dict): A dictionary with the routes as the keys and the values
                                 either being the handler or a tuple with the handler
                                 and its additional arguments.
+            enable_socket (bool): Whether to enable socket communication.
+            socket_port (str | int): The port to use for socket communication.
 
         Raises:
-            ValueError: If no routes are provided.
-            ValueError: If the port is not a string or an integer.
+            ValueError: If no routes are provided or if socket communication is enabled but no socket port is provided.
+
         """
-        if routes_post is {} and routes_get is {}:
+        if routes_post == {} and routes_get == {}:
             raise ValueError("No routes provided")
 
-        if not isinstance(port, (str, int)):
-            raise ValueError("Port must be a string or an integer")
+        if enable_socket and socket_port is None:
+            raise ValueError(
+                "Socket port must be provided if socket communication is enabled"
+            )
 
         # Parse port if entered as string
         if isinstance(port, str):
             port = int(port)
+
+        if isinstance(socket_port, str):
+            socket_port = int(socket_port)
 
         self.address = address
         self.port = port
@@ -87,29 +97,40 @@ class HTTPSServer:
         self.routes_get = routes_get
         self.certfile = certfile
         self.keyfile = keyfile
+        self.enable_socket = enable_socket
+        self.socket_port = socket_port
 
         passphrase = load_passphrase_from_path(passphrasefile)
         self.passphrase = passphrase
 
     def start(self):
         """
-        Start the HTTPS server.
+        Start the HTTPS server and optionally the socket server.
         """
         try:
             handler = self.create_handler(self.routes_post, self.routes_get)
             server_address = (self.address, self.port)
             self.httpd = http.server.HTTPServer(server_address, handler)
 
-            context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            context.verify_mode = ssl.CERT_REQUIRED
-            context.load_cert_chain(
+            self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            self.context.verify_mode = ssl.CERT_REQUIRED
+            self.context.load_cert_chain(
                 certfile=self.certfile, keyfile=self.keyfile, password=self.passphrase
             )
-            context = load_local_cas(context, self.local_cas)
+            context = load_local_cas(self.context, self.local_cas)
             self.httpd.socket = context.wrap_socket(self.httpd.socket, server_side=True)
 
-            print(f"Server running on port https://{self.address}:{str(self.port)}...")
-            self.httpd.serve_forever()
+            # Start the HTTP server in a separate thread
+            http_thread = threading.Thread(target=self.httpd.serve_forever)
+            http_thread.start()
+            print(f"HTTPS server running on https://{self.address}:{self.port}...")
+
+            if self.enable_socket:
+                # Start the socket server in a separate thread if enabled
+                socket_thread = threading.Thread(target=self.start_socket_server)
+                socket_thread.start()
+
+            http_thread.join()
         except KeyboardInterrupt:
             print("\nStopping server...")
             self.stop()
@@ -126,9 +147,8 @@ class HTTPSServer:
         Create a custom HTTP request handler.
 
         Args:
-            routes (dict): A dictionary with the routes as the keys and the values
-                            either being the handler or a tuple with the handler
-                            and its additional arguments.
+            routes_post (dict): A dictionary with the POST routes.
+            routes_get (dict): A dictionary with the GET routes.
 
         Returns:
             CustomHTTPRequestHandler: The custom HTTP request handler.
@@ -164,6 +184,85 @@ class HTTPSServer:
 
         return CustomHTTPRequestHandler
 
+    def start_socket_server(self):
+        """
+        Start the SSL socket server to accept and handle client connections.
+        """
+        try:
+            # Create a socket
+            server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+            # Bind the socket to the address and port
+            server_socket.bind((self.address, self.socket_port))
+
+            # Start listening for incoming connections
+            server_socket.listen(5)
+            print(f"Socket server listening on {self.address}:{self.socket_port}...")
+
+            while True:
+                # Accept a new client connection
+                client_socket, client_address = server_socket.accept()
+
+                # Wrap the client socket with SSL
+                ssl_client_socket = self.context.wrap_socket(
+                    client_socket, server_side=True
+                )
+
+                # Handle the new client connection in a separate thread
+                client_thread = threading.Thread(
+                    target=self.handle_socket_client,
+                    args=(ssl_client_socket, client_address),
+                    daemon=True,
+                )
+                client_thread.start()
+
+        except Exception as e:
+            print(f"Socket server error: {e}")
+        finally:
+            server_socket.close()
+
+    def handle_socket_client(self, client_socket, client_address):
+        """
+        Handle communication with a connected socket client.
+
+        Args:
+            client_socket (socket.socket): The client's socket.
+            client_address (tuple): The client's address (host, port).
+        """
+        print(f"New connection from {client_address}")
+
+        def chat_window():
+            """
+            Open a new console chat window for communicating with the client.
+            """
+            while True:
+                try:
+                    # Receive message from the client
+                    message = client_socket.recv(4096).decode()
+                    if not message:
+                        print(f"Connection with {client_address} closed.")
+                        break
+                    print(f"Client ({client_address}): {message}")
+
+                    # Input response from server user
+                    response = input("You: ")
+                    client_socket.sendall(response.encode())
+
+                except ConnectionResetError:
+                    print(f"Connection with {client_address} was reset.")
+                    break
+                except Exception as e:
+                    print(f"Error: {e}")
+                    break
+
+            # Close the client socket when done
+            client_socket.close()
+
+        # Start a new thread for the chat window
+        chat_thread = threading.Thread(target=chat_window, daemon=True)
+        chat_thread.start()
+
 
 def send_404(self, message: str = "Error 404"):
     self.send_response(404)
@@ -187,7 +286,7 @@ class SSLConnection:
         port: int,
         cert: str,
         private_key: str,
-        passphrase: bytes,
+        passphrasefile: str,
         local_cas: list[str] = [],
     ):
         """
@@ -205,11 +304,13 @@ class SSLConnection:
         self.port = port
         self.cert = cert
         self.private_key = private_key
-        self.passphrase = passphrase
         self.local_cas = local_cas
 
+        passphrase = load_passphrase_from_path(passphrasefile)
+        self.passphrase = passphrase
+
         self.create_context()
-        self.get_server_certificate_bytes()
+        self.server_certificate_bytes = self.get_server_certificate_bytes()
         self.connect()
 
     def create_context(self):
@@ -283,3 +384,103 @@ class SSLConnection:
 
         response = self.connection.getresponse()
         return response
+
+
+class SSLSocketClient:
+    def __init__(
+        self,
+        *,
+        host: str,
+        port: int,
+        cert: str,
+        private_key: str,
+        passphrasefile: str,
+        local_cas: list[str] = [],
+    ):
+        """
+        Initialize an SSL socket client.
+
+        Args:
+            host (str): The server's hostname or IP address.
+            port (int): The port to connect to.
+            cert (str): The path to the client certificate.
+            private_key (str): The path to the client private key.
+            passphrasefile (str): The path to the file containing the passphrase for the private key.
+            local_cas (list): A list of file paths to the local Certificate Authorities (CAs).
+        """
+        self.host = host
+        self.port = port
+        self.cert = cert
+        self.private_key = private_key
+
+        passphrase = load_passphrase_from_path(passphrasefile)
+        self.passphrase = passphrase
+        self.local_cas = local_cas
+
+        self.context = self.create_context()
+        self.connection = None
+
+    def create_context(self) -> ssl.SSLContext:
+        """
+        Create the SSL context for the socket connection.
+
+        Returns:
+            SSLContext: The configured SSL context.
+        """
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        context.load_cert_chain(
+            certfile=self.cert, keyfile=self.private_key, password=self.passphrase
+        )
+        context = load_local_cas(context, self.local_cas)
+        return context
+
+    def connect(self):
+        """
+        Establish a secure SSL connection to the server.
+        """
+        raw_socket = socket.create_connection((self.host, self.port))
+        self.connection = self.context.wrap_socket(
+            raw_socket, server_hostname=self.host
+        )
+        print(f"Connected to {self.host}:{self.port} over SSL")
+
+    def send_message(self, message: str):
+        """
+        Send a message to the server.
+
+        Args:
+            message (str): The message to send.
+        """
+        if not self.connection:
+            raise ConnectionError("Socket is not connected. Call connect() first.")
+
+        self.connection.sendall(message.encode())
+        print(f"Sent: {message}")
+
+    def receive_message(self, buffer_size: int = 4096) -> str:
+        """
+        Receive a message from the server.
+
+        Args:
+            buffer_size (int): The maximum amount of data to be received at once.
+
+        Returns:
+            str: The received message.
+        """
+        if not self.connection:
+            raise ConnectionError("Socket is not connected. Call connect() first.")
+
+        data = self.connection.recv(buffer_size)
+        message = data.decode()
+        print(f"Received: {message}")
+        return message
+
+    def close(self):
+        """
+        Close the SSL socket connection.
+        """
+        if self.connection:
+            self.connection.close()
+            print("Connection closed.")
+        else:
+            print("No connection to close.")
