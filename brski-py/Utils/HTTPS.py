@@ -49,8 +49,8 @@ class HTTPSServer:
         local_cas: list[str] = [],
         routes_post: dict = {},
         routes_get: dict = {},
-        enable_socket: bool = False,  # New parameter for enabling socket communication
-        socket_port: str | int | None = None,  # Default port for socket communication
+        enable_socket: bool = False,
+        socket_port: str | int | None = None,
     ):
         """
         Initialize an HTTPS server with optional socket communication.

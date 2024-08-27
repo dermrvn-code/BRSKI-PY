@@ -68,7 +68,6 @@ def print_error(*errors, sep: str = " ") -> None:
     Args:
         *errors: The error messages to be printed.
         sep (str): The separator between the error messages. Defaults to ' '.
-
     """
 
     print_colorful(errors, color=Fore.RED, sep=sep)
@@ -81,7 +80,6 @@ def print_success(*successes, sep: str = " ") -> None:
     Args:
         *successes: The success messages to be printed.
         sep (str): The separator between the success messages. Defaults to ' '.
-
     """
 
     print_colorful(successes, color=Fore.GREEN, sep=sep)
@@ -94,7 +92,6 @@ def print_warning(*warnings, sep: str = " ") -> None:
     Args:
         *warnings: The warning messages to be printed.
         sep (str): The separator between the warning messages. Defaults to ' '.
-
     """
 
     print_colorful(warnings, color=Fore.YELLOW, sep=sep)
@@ -107,7 +104,6 @@ def print_info(*infos, sep: str = " ") -> None:
     Args:
         *infos (): The info messages to be printed.
         sep (str): The separator between the info messages. Defaults to ' '.
-
     """
 
     print_colorful(infos, color=Fore.CYAN, sep=sep)
@@ -120,7 +116,6 @@ def print_descriptor(*descriptors, sep: str = " ") -> None:
     Args:
         *descriptors (): The descriptors to be printed.
         sep (str): The separator between the descriptors. Defaults to ' '.
-
     """
 
     print_colorful(descriptors, color=Fore.LIGHTCYAN_EX, sep=sep)

@@ -582,7 +582,6 @@ def MASAURLExt(uri: str) -> x509.ExtensionType:
 
     Returns:
         Extension: The MASA URL extension.
-
     """
 
     class MASAURLSyntax(char.IA5String):
