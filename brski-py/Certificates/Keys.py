@@ -20,8 +20,9 @@ def generate_passphrase(
         length (int): The length of the passphrase (default is 30).
 
     Returns:
-        passphrase (str): The generated passphrase.
-        file_path (str): The path to the file containing the passphrase.
+        Tuple:
+        - str: The generated passphrase.
+        - str: The path to the file containing the passphrase.
     """
     alphabet = (
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="
@@ -52,10 +53,11 @@ def generate_rsa_keys(
         common_name (str): The common name used in the key filenames.
 
     Returns:
-        private_key (RSAPrivateKey): The generated RSA private key.
-        public_key (RSAPublicKey): The generated RSA public key.
-        private_key_path (str): The path to the private key file.
-        public_key_path (str): The path to the public key file.
+        Tuple:
+        - RSAPrivateKey: The generated RSA private key.
+        - RSAPublicKey: The generated RSA public key.
+        - str: The path to the private key file.
+        - str: The path to the public key file.
     """
     private_key = rsa.generate_private_key(
         public_exponent=65537, key_size=2048, backend=default_backend()
@@ -183,9 +185,10 @@ def setup_private_key(dest_folder: str, common_name: str):
         common_name (str): The common name for the certificate.
 
     Returns:
-        private_key (RSAPrivateKey): The generated RSA private key.
-        private_key_path (str): The path to the private key file.
-        passphrase_file_path (str): The path to the passphrase file.
+        Tuple:
+        - RSAPrivateKey: The generated RSA private key.
+        - str: The path to the private key file.
+        - str: The path to the passphrase file.
     """
     cert_passphrase, passphrase_file_path = generate_passphrase(
         dest_folder, common_name

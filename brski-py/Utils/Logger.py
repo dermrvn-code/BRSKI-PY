@@ -27,12 +27,9 @@ class Logger:
         """
         Logs a message with the specified log level.
 
-        Parameters:
+        Args:
             message (str): The message to be logged.
             level (int, optional): The log level. Defaults to logging.INFO.
-
-        Returns:
-            None
         """
 
         self.logger.log(level, message)
@@ -58,7 +55,7 @@ class Logger:
         """
         Parses a log line and returns a dictionary containing the log record.
 
-        Parameters:
+        Args:
             line (str): The log line to be parsed.
 
         Returns:

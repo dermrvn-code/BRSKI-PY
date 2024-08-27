@@ -20,8 +20,9 @@ def set_parent_dir(filepath: str) -> tuple[str, str]:
         filepath (str): The file path.
 
     Returns:
-        script_dir (str): The directory of the given file path.
-        parent_dir (str): The parent directory of the given file path.
+        Tuple:
+        - str: The directory of the given file path.
+        - str: The parent directory of the given file path.
     """
     # Add parent directory to path
     script_dir = os.path.dirname(os.path.abspath(filepath))

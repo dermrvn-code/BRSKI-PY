@@ -14,9 +14,6 @@ def prettyprint_json(data, shorten=False, shorten_longer_than=35):
         shorten (bool): Whether to shorten long string values. Defaults to False.
         shorten_longer_than (int): The length threshold for shortening string values. Defaults to 35.
 
-    Returns:
-        None
-
     Raises:
         ValueError: If the data is not a dictionary or a JSON string.
     """
@@ -46,9 +43,6 @@ def print_title(title: str) -> None:
 
     Args:
         title (str): The title to be printed.
-
-    Returns:
-        None
     """
 
     tprint(title, font="cybermedium")
@@ -62,9 +56,6 @@ def print_colorful(str: str | tuple[str, ...], color, sep: str = " ") -> None:
         str (str): The strings to be printed.
         color (str): The color to be used.
         sep (str): The separator between the strings. Defaults to ' '.
-
-    Returns:
-        None
     """
 
     print(f"{color}{sep.join(str)}{Style.RESET_ALL}")
@@ -78,8 +69,6 @@ def print_error(*errors, sep: str = " ") -> None:
         *errors: The error messages to be printed.
         sep (str): The separator between the error messages. Defaults to ' '.
 
-    Returns:
-        None
     """
 
     print_colorful(errors, color=Fore.RED, sep=sep)
@@ -93,8 +82,6 @@ def print_success(*successes, sep: str = " ") -> None:
         *successes: The success messages to be printed.
         sep (str): The separator between the success messages. Defaults to ' '.
 
-    Returns:
-        None
     """
 
     print_colorful(successes, color=Fore.GREEN, sep=sep)
@@ -108,8 +95,6 @@ def print_warning(*warnings, sep: str = " ") -> None:
         *warnings: The warning messages to be printed.
         sep (str): The separator between the warning messages. Defaults to ' '.
 
-    Returns:
-        None
     """
 
     print_colorful(warnings, color=Fore.YELLOW, sep=sep)
@@ -123,8 +108,6 @@ def print_info(*infos, sep: str = " ") -> None:
         *infos (): The info messages to be printed.
         sep (str): The separator between the info messages. Defaults to ' '.
 
-    Returns:
-        None
     """
 
     print_colorful(infos, color=Fore.CYAN, sep=sep)
@@ -138,8 +121,6 @@ def print_descriptor(*descriptors, sep: str = " ") -> None:
         *descriptors (): The descriptors to be printed.
         sep (str): The separator between the descriptors. Defaults to ' '.
 
-    Returns:
-        None
     """
 
     print_colorful(descriptors, color=Fore.LIGHTCYAN_EX, sep=sep)

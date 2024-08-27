@@ -27,8 +27,9 @@ def validate_voucher_request(
         idev_logger (Logger): The logger to log the validation results.
 
     Returns:
-        int: 1 if the request is in wrong format, 2 if authentication fails, 3 if the request is valid.
-        str: The error message if the request is invalid.
+        Tuple:
+        - int: 1 if the request is in wrong format, 2 if authentication fails, 3 if the request is valid.
+        - str: The error message if the request is invalid.
     """
 
     try:
@@ -112,8 +113,9 @@ def validate_voucher(voucher: Voucher | None) -> tuple[bool, str]:
         voucher (Voucher): The voucher to be validated.
 
     Returns:
-        bool: True if the voucher is valid, False otherwise.
-        str: The error message if the voucher is invalid.
+        Tuple:
+        - bool: True if the voucher is valid, False otherwise.
+        - str: The error message if the voucher is invalid.
     """
     if voucher is None:
         return False, "MASA did not issue a voucher"

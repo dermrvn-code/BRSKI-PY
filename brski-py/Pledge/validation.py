@@ -25,8 +25,9 @@ def validate_voucher(
         registrar_ra_cert (bytes): The certificate of the registrar RA.
 
     Returns:
-        bool: True if the voucher is valid, False otherwise.
-        str: The error message if the voucher is invalid.
+        Tuple:
+        - bool: True if the voucher is valid, False otherwise.
+        - str: The error message if the voucher is invalid.
     """
 
     if masa_public_key is None:

@@ -264,18 +264,32 @@ class HTTPSServer:
         chat_thread.start()
 
 
-def send_404(self, message: str = "Error 404"):
-    self.send_response(404)
-    self.send_header("Content-type", "text/plain")
-    self.end_headers()
-    self.wfile.write(message.encode())
+def send_404(handler: http.server.BaseHTTPRequestHandler, message: str = "Error 404"):
+    """
+    Sends a 404 response with the specified message.
+
+    Args:
+        handler (BaseHTTPRequestHandler): The request handler.
+        message (str): The error message to be sent. Default is "Error 404".
+    """
+    handler.send_response(404)
+    handler.send_header("Content-type", "text/plain")
+    handler.end_headers()
+    handler.wfile.write(message.encode())
 
 
-def send_406(self, message: str = "Error 406"):
-    self.send_response(406)
-    self.send_header("Content-type", "text/plain")
-    self.end_headers()
-    self.wfile.write(message.encode())
+def send_406(handler: http.server.BaseHTTPRequestHandler, message: str = "Error 406"):
+    """
+    Sends a 406 response with the specified message.
+
+    Args:
+        BaseHTTPRequestHandler: The request handler.
+        str: The error message to be sent. Default is "Error 406".
+    """
+    handler.send_response(406)
+    handler.send_header("Content-type", "text/plain")
+    handler.end_headers()
+    handler.wfile.write(message.encode())
 
 
 class SSLConnection:
