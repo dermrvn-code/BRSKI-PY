@@ -22,7 +22,9 @@ def set_device_enrollment_status(
 
     enrollment_status, enrollment_file_path = get_enrollment_status()
 
-    device_enrollment_status = get_device_enrollment_status(serialnumber, enrollment_status)
+    device_enrollment_status = get_device_enrollment_status(
+        serialnumber, enrollment_status
+    )
 
     enrollment_status[serialnumber] = {
         "allowed": (
@@ -49,8 +51,8 @@ def get_device_enrollment_status(
 
     Returns:
         dict: A dictionary containing the enrollment status of the device. The dictionary has the following keys:
-            - allowed (bool): Indicates whether the device is allowed for enrollment.
-            - enrolled (bool): Indicates whether the device is already enrolled.
+        - bool: Indicates whether the device is allowed for enrollment.
+        - bool: Indicates whether the device is already enrolled.
     """
 
     if enrollment_status is None:
@@ -70,8 +72,9 @@ def get_enrollment_status() -> tuple[dict, str]:
     Reads the enrollment status of all devices from the enrollment status file.
 
     Returns:
-        enrollment_status : A dictionary containing the enrollment status of all devices.
-        str : The path to the enrollment status file.
+        Tuple:
+        - dict : A dictionary containing the enrollment status of all devices.
+        - str : The path to the enrollment status file.
     """
     enrollment_status_file_path = os.path.join(
         script_dir, Config.get("REGISTRAR", "enrollmentstatusfile")

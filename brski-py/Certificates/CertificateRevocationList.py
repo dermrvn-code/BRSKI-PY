@@ -28,7 +28,6 @@ def generate_certificate_revocation_list(
 
     Returns:
         dest (str): Path to the generated CRL file.
-
     """
 
     ca_passphrase = load_passphrase_from_path(ca_passphrase_path)
@@ -63,10 +62,6 @@ def update_certificate_revocation_list(
         ca_key_path (str): Path to the CA private key file.
         ca_passphrase_path (str): Path to the file containing the passphrase for the CA private key.
         revoked_cert_serial_number (int): Serial number of the certificate to be revoked.
-
-    Returns:
-        None
-
     """
 
     with open(crl_path, "rb") as f:

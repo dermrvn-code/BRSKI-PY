@@ -30,9 +30,6 @@ class Logger:
         Parameters:
             message (str): The message to be logged.
             level (int, optional): The log level. Defaults to logging.INFO.
-
-        Returns:
-            None
         """
 
         self.logger.log(level, message)

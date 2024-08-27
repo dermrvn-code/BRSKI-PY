@@ -84,9 +84,10 @@ def load_ldev_certs() -> tuple[str, str, str]:
     Load the LDevID certificate files.
 
     Returns:
-        str: The path to the LDevID certificate file.
-        str: The path to the LDevID private key file.
-        str: The path to the LDevID passphrase file.
+        Tuple:
+        - str: The path to the LDevID certificate file.
+        - str: The path to the LDevID private key file.
+        - str: The path to the LDevID passphrase file.
     """
 
     # Destination folder for the LDevID certificate files

@@ -581,7 +581,7 @@ def MASAURLExt(uri: str) -> x509.ExtensionType:
         uri (str): The MASA URL to be encoded in the extension.
 
     Returns:
-        x509.Extension: The MASA URL extension.
+        Extension: The MASA URL extension.
 
     """
 
@@ -664,9 +664,10 @@ def generate_ldevid_request(
         common_name (str): Common name for the device certificate.
 
     Returns:
-        request (CertificateSigningRequest): Generated certificate request.
-        request_file_path (str): Path to the saved certificate request
-        private_key_path (str): Path to the saved private key
+        Tuple:
+        - CertificateSigningRequest: Generated certificate request.
+        - str: Path to the saved certificate request
+        - str: Path to the saved private key
     """
 
     private_key, private_key_path, passphrase_file_path = setup_private_key(

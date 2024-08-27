@@ -33,7 +33,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         Voucher: The voucher object received from the server.
 
     Raises:
-        Exception: If no valid voucher is received.
+        ValueError: If no valid voucher is received.
     """
     conn, idevid_cert_path, pledge_private_key_path, pledge_passphrase = (
         server_connection(hostname, port)
@@ -149,10 +149,11 @@ def server_connection(
         port (int): The port number of the server.
 
     Returns:
-        SSLConnection: The SSL connection object.
-        str: The path to the pledge's identity certificate
-        str: The path to the pledge's private key.
-        bytes: The passphrase of the pledge's private key.
+        Tuple:
+        - SSLConnection: The SSL connection object.
+        - str: The path to the pledge's identity certificate
+        - str: The path to the pledge's private key.
+        - bytes: The passphrase of the pledge's private key.
     """
 
     serialnumber = Config.get("PLEDGE", "serialnumber")

@@ -35,9 +35,10 @@ def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str 
         idevid_cert_bytes (bytes): The idevid certificate in bytes.
 
     Returns:
-        str: The hostname of the MASA server.
-        int: The port of the MASA server.
-        str: The path to the MASA post request.
+        Tuple:
+        - str: The hostname of the MASA server.
+        - int: The port of the MASA server.
+        - str: The path to the MASA post request.
     """
     idevid_cert = load_certificate_from_bytes(idevid_cert_bytes)
 
@@ -116,8 +117,9 @@ def request_voucher_from_masa(
         path (str): The path to the MASA post request.
 
     Returns:
-        Voucher: The voucher issued by the MASA server, or None if the server did not issue a voucher.
-        str: The error message if the server did not issue a voucher.
+        Tuple:
+        - Voucher: The voucher issued by the MASA server, or None if the server did not issue a voucher.
+        - str: The error message if the server did not issue a voucher.
     """
 
     conn = server_connection(hostname, port)

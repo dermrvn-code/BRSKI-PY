@@ -21,8 +21,9 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str, str, str]:
         serialnumber (str): The serial number of the pledge.
 
     Returns:
-        private_key_path (str): The path to the private key file.
-        cert_path (str): The path to the certificate file.
+        Tuple:
+        - str: The path to the private key file.
+        - str: The path to the certificate file.
     """
 
     # Destination folder for the LDevID certificate files

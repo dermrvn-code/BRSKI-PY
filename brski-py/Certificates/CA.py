@@ -32,10 +32,11 @@ def generate_certificate_authority(
         passphrase_length (int): The length of the passphrase used to encrypt the private key (default is 30).
 
     Returns:
-        certificate_path (str): The path to the generated certificate file.
-        private_key_path (str): The path to the generated private key file.
-        public_key_path (str): The path to the generated public key file.
-        passphrase (str): The passphrase used to encrypt the private key.
+        Tuple:
+        - str: The path to the generated certificate file.
+        - str: The path to the generated private key file.
+        - str: The path to the generated public key file.
+        - str: The passphrase used to encrypt the private key.
     """
     passphrase, _ = generate_passphrase(dest_folder, common_name, passphrase_length)
     key, _, _, _ = generate_rsa_keys(passphrase, dest_folder, common_name, "ca")
@@ -149,8 +150,9 @@ def load_ca(
         passphrase_path (str): Passphrase to decrypt the private key.
 
     Returns:
-        ca_cert (Certificate): Loaded ca certificate.
-        ca_key (PrivateKeyTypes): Loaded ca private key.
+        Tuple:
+        - Certificate: Loaded ca certificate.
+        - PrivateKeyTypes: Loaded ca private key.
     """
 
     ca_passphrase = load_passphrase_from_path(passphrase_path)
