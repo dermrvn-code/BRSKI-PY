@@ -30,7 +30,7 @@ def generate_certificate_authority(
         common_name (str): The common name associated with the certificate.
         days_valid (int): The number of days the certificate will be valid (default is 1825).
         passphrase_length (int): The length of the passphrase used to encrypt the private key (default is 30).
-
+        
     Returns:
         Tuple:
         - str: The path to the generated certificate file.

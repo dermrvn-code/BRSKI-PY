@@ -256,10 +256,8 @@ class HTTPSServer:
                     print(f"Error: {e}")
                     break
 
-            # Close the client socket when done
             client_socket.close()
 
-        # Start a new thread for the chat window
         chat_thread = threading.Thread(target=chat_window, daemon=True)
         chat_thread.start()
 

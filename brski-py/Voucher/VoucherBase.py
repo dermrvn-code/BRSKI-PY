@@ -35,17 +35,13 @@ class VoucherBase(ABC):
 
     def sign(self, signer_private_key: PrivateKeyTypes):
         """
-        Sign the voucher data using the provided private key.
+        Sign the voucher data using the provided private key and appends it to the voucher object.
 
         Args:
             signer_private_key (PrivateKeyTypes): The private key used for signing.
-
-        Returns:
-            bytes: The signature of the voucher data.
         """
-
-        # Convert to JSON and encode
-        voucher_data = self.to_string(True).encode()
+        # Convert to JSON and exclude any existing signature
+        voucher_data = self.to_json(True).encode()
 
         self.signature = sign(voucher_data, signer_private_key)
 
@@ -58,19 +54,19 @@ class VoucherBase(ABC):
 
         Returns:
             bool: True if the signature is valid, False otherwise.
-
-        Raises:
-            ValueError: If the voucher is not signed.
         """
         if self.signature is None:
-            raise ValueError("Voucher is not signed")
+            return False
 
-        # Convert to JSON and encode
-        voucher_data = self.to_string(True).encode()
+        # Convert to JSON and exclude the signature
+        voucher_data = self.to_json(True).encode()
 
         return verify(self.signature, voucher_data, signer_public_key)
 
-    def to_string(self, exclude_signature: bool = False) -> str:
+    def to_json(self, exclude_signature: bool = False) -> str:
+        """
+        Returns the voucher object as a JSON string.
+        """
         return json.dumps(self.to_dict(exclude_signature), sort_keys=True)
 
     def print(self):

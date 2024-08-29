@@ -92,7 +92,7 @@ def request_audit_log_from_masa(pledge_serial_number: str) -> dict:
     conn = server_connection(hostname, port)
 
     headers = {"Content-Type": "application/json"}
-    data = request.to_string()
+    data = request.to_json()
     response = conn.post_request(
         Config.get("MASA", "auditlogpath"), data=data, headers=headers
     )
@@ -144,7 +144,7 @@ def request_voucher_from_masa(
     }
     response = conn.post_request(
         path,
-        data=registrar_request.to_string(),
+        data=registrar_request.to_json(),
         headers=headers,
     )
 

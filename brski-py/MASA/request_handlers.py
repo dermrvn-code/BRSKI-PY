@@ -39,9 +39,11 @@ def handle_request_voucher(self, global_logger: Logger):
         os.path.join(script_dir, logs_folder, f"{voucher_request.serial_number}.log")
     )
     audit_logger = Logger(
-        os.path.join(script_dir,auditlog_folder,  f"{voucher_request.serial_number}.log")
+        os.path.join(
+            script_dir, auditlog_folder, f"{voucher_request.serial_number}.log"
+        )
     )
-    idev_logger.log(f"Received voucher request: {voucher_request.to_string()}")
+    idev_logger.log(f"Received voucher request: {voucher_request.to_json()}")
 
     registrar_cert_bytes = base64.b64decode(x_ra_cert)
 
@@ -62,7 +64,7 @@ def handle_request_voucher(self, global_logger: Logger):
         return
 
     voucher = create_voucher(voucher_request, registrar_cert_bytes)
-    voucher_json = voucher.to_string()
+    voucher_json = voucher.to_json()
 
     idev_logger.log(f"Issuing voucher: {voucher_json}")
 
@@ -92,7 +94,9 @@ def handle_request_audit_log(self, global_logger: Logger):
         return
 
     audit_logger = Logger(
-        os.path.join(script_dir, auditlog_folder, f"{voucher_request.serial_number}.log")
+        os.path.join(
+            script_dir, auditlog_folder, f"{voucher_request.serial_number}.log"
+        )
     )
 
     logs = audit_logger.get_log_list()

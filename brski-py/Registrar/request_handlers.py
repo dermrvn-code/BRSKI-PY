@@ -80,7 +80,7 @@ def handle_request_voucher(self):
 
     idev_logger = Logger(os.path.join(script_dir, logs_folder, f"{voucher_request.serial_number}.log"))
     request_logger = Logger(os.path.join(script_dir,requestslog_folder, f"{voucher_request.serial_number}.log"))
-    idev_logger.log(f"Received voucher request: {voucher_request.to_string()}")
+    idev_logger.log(f"Received voucher request: {voucher_request.to_json()}")
 
     pledge_cert_dict = self.request.getpeercert()
     pledge_cert_bytes = self.request.getpeercert(True)
@@ -96,7 +96,7 @@ def handle_request_voucher(self):
         send_404(self, "Authentication failed")
         return
 
-    request_logger.log(f"{voucher_request.to_string()}")
+    request_logger.log(f"{voucher_request.to_json()}")
 
     idev_logger.log(
         f"Voucher request forwarded for serial number {voucher_request.serial_number}"
@@ -122,13 +122,13 @@ def handle_request_voucher(self):
         log_error(idev_logger, voucher_request.serial_number, message, False)
     else:
         print_success("Voucher is valid")
-        idev_logger.log(f"Voucher issued and forwarded: {voucher.to_string()}")
+        idev_logger.log(f"Voucher issued and forwarded: {voucher.to_json()}")
 
         # if voucher is valid, send it to the pledge
         self.send_response(200)
         self.send_header("Content-type", "text/json")
         self.end_headers()
-        self.wfile.write(str.encode(voucher.to_string()))  
+        self.wfile.write(str.encode(voucher.to_json()))  
 
 
 def handle_request_ldevid_cert(self):

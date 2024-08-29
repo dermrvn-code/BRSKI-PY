@@ -61,7 +61,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     headers = {"Content-Type": "application/json"}
     # Request Voucher from well-known URI
     response = conn.post_request(
-        Config.get("REGISTRAR", "brskipath"), data=request.to_string(), headers=headers
+        Config.get("REGISTRAR", "brskipath"), data=request.to_json(), headers=headers
     )
 
     if response.status != 200:

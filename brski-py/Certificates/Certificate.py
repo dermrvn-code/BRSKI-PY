@@ -494,7 +494,6 @@ def generate_idevid_cert(
         hwtype (str): OID of Hardware Modules Type. Default is None.
         hwSerialNum (str): Serial Number of the hardware Module. Default is None.
 
-
     Returns:
         cert (Certificate): Generated certificate.
     """
@@ -542,7 +541,6 @@ def generate_idevid_cert(
             critical=False,
         )
 
-    # Add idevid specific extensions
     request = request.sign(private_key, hashes.SHA256())
 
     # Create certificate with an "infinite" far away expiration date
