@@ -33,6 +33,12 @@ class VoucherBase(ABC):
         """
         pass
 
+    def to_json(self, exclude_signature: bool = False) -> str:
+        """
+        Returns the voucher object as a JSON string.
+        """
+        return json.dumps(self.to_dict(exclude_signature), sort_keys=True)
+
     def sign(self, signer_private_key: PrivateKeyTypes):
         """
         Sign the voucher data using the provided private key and appends it to the voucher object.
@@ -62,12 +68,6 @@ class VoucherBase(ABC):
         voucher_data = self.to_json(True).encode()
 
         return verify(self.signature, voucher_data, signer_public_key)
-
-    def to_json(self, exclude_signature: bool = False) -> str:
-        """
-        Returns the voucher object as a JSON string.
-        """
-        return json.dumps(self.to_dict(exclude_signature), sort_keys=True)
 
     def print(self):
         """
