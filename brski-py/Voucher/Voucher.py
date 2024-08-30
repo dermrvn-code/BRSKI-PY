@@ -86,6 +86,7 @@ def create_voucher_from_request(
     request: VoucherRequest,
     pinned_domain_cert: bytes,
     masa_private_key: PrivateKeyTypes,
+    assertion: Assertion,
 ) -> Voucher:
     """
     Create a Voucher object from a VoucherRequest.
@@ -103,7 +104,7 @@ def create_voucher_from_request(
     voucher = Voucher(
         created_on=current_time,
         expires_on=request.expires_on,
-        assertion=request.assertion,
+        assertion=assertion,
         serial_number=request.serial_number,
         idevid_issuer=request.idevid_issuer,
         pinned_domain_cert=pinned_domain_cert,

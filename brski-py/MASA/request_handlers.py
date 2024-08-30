@@ -63,7 +63,10 @@ def handle_request_voucher(self, global_logger: Logger):
         log_error(idev_logger, voucher_request.serial_number, message)
         return
 
-    voucher = create_voucher(voucher_request, registrar_cert_bytes)
+    # TODO: Implement assertion selection, depending on assertion method used
+    assertion = Assertion.PROXIMITY
+
+    voucher = create_voucher(voucher_request, registrar_cert_bytes, assertion=assertion)
     voucher_json = voucher.to_json()
 
     idev_logger.log(f"Issuing voucher: {voucher_json}")
