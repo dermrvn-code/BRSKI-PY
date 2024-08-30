@@ -69,7 +69,7 @@ To use the BRSKI Python Implementation, follow these steps:
    1. Tab into the 'Certificates' directory:
 
    ```shell
-   cd Certificates
+   cd brski-py/Certificates
    ```
 
    2. Run the script to generate all the necessary keys and certificates:
@@ -108,7 +108,7 @@ To use the BRSKI Python Implementation, follow these steps:
 
 5. Reset the demonstrator:
 
-   If you want to reset the demonstrators logs and saved statuses, you can do so by running the `brski-py/reset_process.py` script: 
+   If you want to reset the demonstrators logs and saved statuses, you can do so by running the `brski-py/reset_process.py` script:
 
    ```shell
    py brski-py/reset_process.py

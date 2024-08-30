@@ -19,7 +19,7 @@ To use the BRSKI Python Implementation, follow these steps:
 
       .. code-block:: shell
 
-         cd Certificates
+         cd brski-py/Certificates
 
    2. **Run the script to generate all the necessary keys and certificates:**
 
