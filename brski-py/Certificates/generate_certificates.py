@@ -19,6 +19,7 @@ from Utils.Config import Config
 def generate_certificates() -> None:
     # Manufacturer ca
     dest_folder = "../Pledge/certs/ca/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     common_name = "Manufacturer"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -38,6 +39,7 @@ def generate_certificates() -> None:
 
     # Pledge IDevID certificate
     dest_folder = "../Pledge/certs/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     generate_idevid_cert(
         ca_cert_path,
         ca_key_path,
@@ -56,6 +58,7 @@ def generate_certificates() -> None:
 
     # MASA ca
     dest_folder = "../MASA/certs/ca/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     common_name = "MASA_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -71,6 +74,7 @@ def generate_certificates() -> None:
     print("Generated MASA CRL")
 
     dest_folder = "../MASA/certs/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     generate_tls_server_cert(
         ca_cert_path,
         ca_key_path,
@@ -84,6 +88,7 @@ def generate_certificates() -> None:
 
     # Registrar ca
     dest_folder = "../Registrar/certs/ca/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     common_name = "Registrar_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -99,6 +104,7 @@ def generate_certificates() -> None:
     print("Generated Registrar CRL")
 
     dest_folder = "../Registrar/certs/server"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     generate_ra_cert(
         ca_cert_path,
         ca_key_path,
@@ -111,6 +117,7 @@ def generate_certificates() -> None:
     print("Generated Registrar RA certificate")
 
     dest_folder = "../Registrar/certs/client"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     generate_tls_client_cert(
         ca_cert_path,
         ca_key_path,
@@ -124,6 +131,7 @@ def generate_certificates() -> None:
 
     # CA Server ca
     dest_folder = "../Authorities/certs/ca/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     common_name = "CAServer_ca"
     (ca_cert_path, ca_key_path, ca_public_key_path, passphrase_path) = (
         generate_certificate_authority(
@@ -143,6 +151,7 @@ def generate_certificates() -> None:
     print("Generated Authorities CRL")
 
     dest_folder = "../Authorities/certs/"
+    dest_folder = os.path.abspath(os.path.join(script_dir, dest_folder))
     generate_tls_server_cert(
         ca_cert_path,
         ca_key_path,

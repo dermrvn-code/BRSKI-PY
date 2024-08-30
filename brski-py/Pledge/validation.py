@@ -45,7 +45,7 @@ def validate_voucher(
     if voucher.pinned_domain_cert == None:
         return False, "Pinned domain certificate missing"
     else:
-        if base64.b64decode(voucher.pinned_domain_cert) != base64.b64decode(
+        if base64.b64encode(voucher.pinned_domain_cert) != base64.b64encode(
             registrar_ra_cert
         ):
             return False, "Registrar RA certificate mismatch"

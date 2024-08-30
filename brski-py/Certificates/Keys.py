@@ -34,7 +34,7 @@ def generate_passphrase(
     if not path.exists(dest_folder):
         makedirs(dest_folder)
 
-    file_path = path.join(dest_folder, common_name + "_passphrase.txt")
+    file_path = path.join(dest_folder, f"passphrase_{common_name.lower()}.txt")
     with open(file_path, "w") as f:
         f.write(passphrase)
 

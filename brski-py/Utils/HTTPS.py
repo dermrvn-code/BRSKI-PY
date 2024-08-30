@@ -483,7 +483,6 @@ class SSLSocketClient:
 
         data = self.connection.recv(buffer_size)
         message = data.decode()
-        print(f"Received: {message}")
         return message
 
     def close(self):

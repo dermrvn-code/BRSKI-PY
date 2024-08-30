@@ -74,9 +74,9 @@ def bootstrap():
             serialnumber
         )
 
-    if cert_file_path == "" or private_key_path == "" or passphrase_path == "":
-        print_error("No valid LDevID certificate received")
-        return
+        if cert_file_path == "" or private_key_path == "" or passphrase_path == "":
+            print_error("No valid LDevID certificate received")
+            return
 
 
 def load_ldev_certs() -> tuple[str, str, str]:
@@ -98,7 +98,7 @@ def load_ldev_certs() -> tuple[str, str, str]:
         dest_folder, f"cert_private_pledge.{serialnumber}.key"
     )
     cert_path = os.path.join(dest_folder, f"cert_pledge.{serialnumber}.crt")
-    passphrase_path = os.path.join(dest_folder, f"pledge.{serialnumber}_passphrase.txt")
+    passphrase_path = os.path.join(dest_folder, f"passphrase_pledge.{serialnumber}.txt")
 
     if (
         os.path.exists(private_key_path)

@@ -80,22 +80,20 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         try:
             voucher = parse_voucher(response_body.decode())
             print_info("Voucher received, validating...")
-
-            masa_public_key = request_masa_public_key()
-            valid, error = validate_voucher(
-                voucher, request, server_cert, masa_public_key
-            )
-
-            if not valid:
-                send_voucher_status(False, reason=error)
-                print_error("Voucher validation failed: " + error)
-                return None
-
-            send_voucher_status(True)
-            return voucher
         except ValueError:
-            print_error("No valid voucher received: " + response_body.decode())
+            print_error("Voucher format was not valid: " + response_body.decode())
             return None
+
+        masa_public_key = request_masa_public_key()
+        valid, error = validate_voucher(voucher, request, server_cert, masa_public_key)
+
+        if not valid:
+            send_voucher_status(False, reason=error)
+            print_error("Voucher validation failed: " + error)
+            return None
+
+        send_voucher_status(True)
+        return voucher
 
 
 def open_socket_connection(
