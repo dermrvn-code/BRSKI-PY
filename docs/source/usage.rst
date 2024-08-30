@@ -15,17 +15,11 @@ To use the BRSKI Python Implementation, follow these steps:
 
    When starting the demonstrator for the first time, you need to generate all the necessary keys and certificates. To do so, follow these steps:
 
-   1. **Tab into the 'Certificates' directory:**
+   1.  **Run the script to generate all the necessary keys and certificates:**
 
       .. code-block:: shell
 
-         cd brski-py/Certificates
-
-   2. **Run the script to generate all the necessary keys and certificates:**
-
-      .. code-block:: shell
-
-         py generate_certificates.py
+         py brski-py/Certificates/generate_certificates.py
 
 3. **Adjust the configuration:**
 
