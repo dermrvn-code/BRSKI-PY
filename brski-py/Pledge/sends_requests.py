@@ -6,7 +6,7 @@ from validation import *
 script_dir, parent_dir = set_parent_dir(__file__)
 
 
-from Certificates.Certificate import load_certificate_bytes_from_path
+from Certificates.Certificate import load_certificate_from_path
 from Certificates.Keys import (
     load_passphrase_from_path,
     load_private_key_from_path,
@@ -42,7 +42,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     pledge_private_key = load_private_key_from_path(
         pledge_private_key_path, pledge_passphrase
     )
-    idevid = load_certificate_bytes_from_path(idevid_cert_path)
+    idevid_cert = load_certificate_from_path(idevid_cert_path)
 
     nonce = secrets.token_bytes(128)
 
@@ -51,7 +51,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
         serial_number="02481632",
         assertion=Assertion.VERIFIED,
         nonce=nonce,
-        idevid_issuer=idevid,
+        idevid_issuer_certificate=idevid_cert,
         validity_days=7,
     )
 

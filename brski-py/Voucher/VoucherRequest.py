@@ -7,6 +7,7 @@ from cryptography.hazmat.primitives.asymmetric.types import (
     PrivateKeyTypes,
     PublicKeyTypes,
 )
+from cryptography.x509 import AuthorityKeyIdentifier, Certificate
 from Voucher.VoucherBase import Assertion, VoucherBase
 
 
@@ -33,7 +34,7 @@ class VoucherRequest(VoucherBase):
             created_on (datetime): The creation date of the voucher request. Defaults to None.
             expires_on (datetime): The expiration date of the voucher request. Defaults to None.
             assertion (Assertion): The assertion type of the voucher request. Defaults to None.
-            idevid_issuer (bytes): The issuer identifier of the voucher request. Defaults to None.
+            idevid_issuer (bytes): The issuer Authority Key Identifier. Defaults to None.
             pinned_domain_cert (bytes): The pinned domain certificate of the voucher request. Defaults to None.
             domain_cert_revocation_checks (bool): Whether to perform domain certificate revocation checks. Defaults to None.
             nonce (bytes): The nonce of the voucher request. Defaults to None.
@@ -155,7 +156,7 @@ def create_pledge_voucher_request(
     serial_number: str,
     assertion: Assertion,
     nonce: bytes | None = None,
-    idevid_issuer: bytes | None = None,
+    idevid_issuer_certificate: Certificate | None = None,
     proximity_registrar_cert: bytes | None = None,
     validity_days: int = 7,
 ) -> VoucherRequest:
@@ -177,12 +178,21 @@ def create_pledge_voucher_request(
     current_time = datetime.now(timezone.utc)
     expiration_time = datetime.now(timezone.utc) + timedelta(days=validity_days)
 
+    idev_id_issuer_authkey = None
+    if idevid_issuer_certificate is not None:
+        idev_id_issuer_authkey = (
+            idevid_issuer_certificate.extensions.get_extension_for_class(
+                AuthorityKeyIdentifier
+            )
+        )
+        idev_id_issuer_authkey = idev_id_issuer_authkey.value.key_identifier
+
     request = VoucherRequest(
         created_on=current_time,
         expires_on=expiration_time,
         assertion=assertion,
         serial_number=serial_number,
-        idevid_issuer=idevid_issuer,
+        idevid_issuer=idev_id_issuer_authkey,
         pinned_domain_cert=None,
         domain_cert_revocation_checks=False,
         nonce=nonce,

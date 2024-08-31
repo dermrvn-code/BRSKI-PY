@@ -4,8 +4,8 @@ import json
 import os
 
 from creation import *
+from cryptography import x509
 from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import oid
 from paths import *
 from validation import *
 
@@ -24,6 +24,7 @@ from Voucher.VoucherRequest import parse_voucher_request
 def handle_request_voucher(self, global_logger: Logger):
     content_length = int(self.headers["Content-Length"])
     x_ra_cert = self.headers["X-RA-Cert"]
+    x_idevid_cert = self.headers["X-IDevID-Cert"]
     post_data = self.rfile.read(content_length)
     voucher_request_dict = json.loads(post_data)
 
@@ -46,10 +47,13 @@ def handle_request_voucher(self, global_logger: Logger):
     idev_logger.log(f"Received voucher request: {voucher_request.to_json()}")
 
     registrar_cert_bytes = base64.b64decode(x_ra_cert)
+    idevid_cert_bytes = base64.b64decode(x_idevid_cert)
 
     # Validate client and voucher here
     request_valid, message = validate_voucher_request(
-        voucher_request, registrar_cert_bytes
+        voucher_request,
+        idevid_cert_bytes=idevid_cert_bytes,
+        registrar_cert_bytes=registrar_cert_bytes,
     )
 
     if request_valid == 1:
@@ -119,10 +123,10 @@ def handle_request_audit_log(self, global_logger: Logger):
             continue
 
         pinned_domain_cert = load_certificate_from_bytes(voucher.pinned_domain_cert)
-        subject_key_identifier = pinned_domain_cert.extensions.get_extension_for_oid(
-            oid.ExtensionOID.SUBJECT_KEY_IDENTIFIER
+        subject_key_identifier = pinned_domain_cert.extensions.get_extension_for_class(
+            x509.SubjectKeyIdentifier
         )
-        domain = subject_key_identifier.value.key_identifier  # type: ignore
+        domain = subject_key_identifier.value.key_identifier
 
         event = {
             "date": time,

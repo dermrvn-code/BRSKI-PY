@@ -22,6 +22,7 @@ from Voucher.VoucherRequest import parse_voucher_request
 def handle_voucher_status(self):
     content_length = int(self.headers["Content-Length"])
     post_data = self.rfile.read(content_length)
+    pledge_cert_bytes = self.request.getpeercert(True)
     pledge_cert_dict = self.request.getpeercert()
     subject = array_to_dict(pledge_cert_dict.get("subject"))
     pledge_serialnumber = subject.get("serialNumber", "")
@@ -61,7 +62,7 @@ def handle_voucher_status(self):
     self.wfile.write(b"OK")
 
     # Request audit log from MASA
-    audit_log = request_audit_log_from_masa(subject.get("serialNumber", ""))
+    audit_log = request_audit_log_from_masa(subject.get("serialNumber", ""), pledge_cert_bytes)
     print_descriptor("Audit log received from MASA")
     prettyprint_json(audit_log, True)
 
@@ -85,7 +86,7 @@ def handle_request_voucher(self):
     pledge_cert_dict = self.request.getpeercert()
     pledge_cert_bytes = self.request.getpeercert(True)
 
-    request_valid, message = validate_voucher_request(voucher_request, pledge_cert_dict, idev_logger=idev_logger)
+    request_valid, message = validate_voucher_request(voucher_request, idevid_cert_bytes=pledge_cert_bytes, pledge_cert_dict=pledge_cert_dict, idev_logger=idev_logger)
 
     if request_valid == 1:
         send_406(self, "Wrong Request Format")
@@ -107,7 +108,7 @@ def handle_request_voucher(self):
         send_404(self, "No MASA URL found")
         return
     
-    voucher, message = request_voucher_from_masa(voucher_request, hostname, port, path)
+    voucher, message = request_voucher_from_masa(voucher_request, idevid_cert_bytes=pledge_cert_bytes, hostname=hostname, port=port, path=path)
 
     voucher_valid = False
     if voucher is None:

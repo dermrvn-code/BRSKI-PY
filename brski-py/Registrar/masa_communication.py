@@ -52,7 +52,9 @@ def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str 
     return parsed_url.hostname, parsed_url.port, parsed_url.path
 
 
-def request_audit_log_from_masa(pledge_serial_number: str) -> dict:
+def request_audit_log_from_masa(
+    pledge_serial_number: str, idevid_certificate_bytes: bytes
+) -> dict:
     """
     Sends a request to the MASA to retrieve the audit log.
 
@@ -83,7 +85,7 @@ def request_audit_log_from_masa(pledge_serial_number: str) -> dict:
         print_error("No idevid issuer in voucher request")
         return {}
 
-    hostname, port, _ = get_masa_url(request.idevid_issuer)
+    hostname, port, _ = get_masa_url(idevid_certificate_bytes)
 
     if hostname == None or port == None:
         print_error("No MASA URL found")
@@ -105,7 +107,12 @@ def request_audit_log_from_masa(pledge_serial_number: str) -> dict:
 
 
 def request_voucher_from_masa(
-    voucher_request: VoucherRequest, hostname: str, port: int, path: str
+    voucher_request: VoucherRequest,
+    *,
+    idevid_cert_bytes: bytes,
+    hostname: str,
+    port: int,
+    path: str,
 ) -> tuple[Voucher | None, str]:
     """
     Sends a voucher request to the MASA and retrieves a voucher.
@@ -141,6 +148,7 @@ def request_voucher_from_masa(
     headers = {
         "Content-Type": "application/json",
         "X-RA-Cert": base64.b64encode(ra_cert.public_bytes(Encoding.DER)).decode(),
+        "X-IDevID-Cert": base64.b64encode(idevid_cert_bytes).decode(),
     }
     response = conn.post_request(
         path,

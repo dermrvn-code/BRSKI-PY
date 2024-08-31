@@ -29,7 +29,7 @@ class Voucher(VoucherBase):
             serial_number (str): The serial number of the voucher.
             pinned_domain_cert (bytes): The pinned domain certificate.
             expires_on (datetime): The expiration date of the voucher. Defaults to None.
-            idevid_issuer (bytes): The issuer identifier. Defaults to None.
+            idevid_issuer (bytes): The issuer Authority Key Identifier. Defaults to None.
             domain_cert_revocation_checks (bool): Flag indicating if domain certificate revocation checks are enabled. Defaults to None.
             nonce (bytes): The nonce value. Defaults to None.
             last_renewal_date (datetime): The last renewal date of the voucher. Defaults to None.

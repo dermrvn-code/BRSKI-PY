@@ -15,7 +15,11 @@ from Voucher.VoucherRequest import VoucherRequest
 
 
 def validate_voucher_request(
-    voucher_request: VoucherRequest, pledge_cert_dict: dict, *, idev_logger: Logger
+    voucher_request: VoucherRequest,
+    *,
+    idevid_cert_bytes: bytes,
+    pledge_cert_dict: dict,
+    idev_logger: Logger,
 ) -> tuple[int, str]:
     """
     Validates a voucher request send by the pledge.
@@ -40,7 +44,6 @@ def validate_voucher_request(
         return 1, msg
 
     # Get the idevid issuer certificate from the request
-    idevid_cert_bytes = voucher_request.idevid_issuer
     if idevid_cert_bytes is None:
         msg = "No idevid issuer in voucher request"
         log_error(idev_logger, voucher_request.serial_number, msg)
