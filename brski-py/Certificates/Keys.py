@@ -82,7 +82,7 @@ def generate_rsa_keys(
 
     # Write the private key to a file
     private_key_path = path.join(
-        dest_folder, prefix + "_private_" + common_name.lower() + ".key"
+        dest_folder, f"{prefix}_private_{common_name.lower()}.key"
     )
     with open(
         private_key_path,
@@ -92,7 +92,7 @@ def generate_rsa_keys(
 
     # Write the public key to a file
     public_key_path = path.join(
-        dest_folder, prefix + "_public_" + common_name.lower() + ".key"
+        dest_folder, f"{prefix}_public_{common_name.lower()}.key"
     )
     with open(public_key_path, "wb") as key_file:
         key_file.write(public_key_bytes)

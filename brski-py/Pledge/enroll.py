@@ -57,7 +57,7 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str, str, str]:
 
     if response.status != 200:
         print_error(
-            "Request for LDevID certificate failed: " + response.read().decode()
+            f"Request for LDevID certificate failed: {response.read().decode()}"
         )
         return "", "", ""
 
@@ -68,8 +68,7 @@ def request_ldevid_cert(serialnumber: str) -> tuple[str, str, str]:
     )
 
     print_success(
-        "Request for LDevID certificate successful. Certificate saved to "
-        + dest_folder_key_cert
+        f"Request for LDevID certificate successful. Certificate saved to {dest_folder_key_cert}"
     )
 
     return cert_path, private_key_path, passphrase_file_path

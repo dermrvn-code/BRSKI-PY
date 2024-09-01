@@ -3,10 +3,8 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from Certificates.Signature import verify
-from cryptography.hazmat.primitives.asymmetric.types import (
-    PrivateKeyTypes,
-    PublicKeyTypes,
-)
+from cryptography.hazmat.primitives.asymmetric.types import (PrivateKeyTypes,
+                                                             PublicKeyTypes)
 from cryptography.x509 import AuthorityKeyIdentifier, Certificate
 from Voucher.VoucherBase import Assertion, VoucherBase
 

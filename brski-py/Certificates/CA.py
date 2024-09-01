@@ -82,7 +82,7 @@ def generate_certificate_authority(
                     x509.DistributionPoint(
                         full_name=[
                             x509.UniformResourceIdentifier(
-                                f"https://{Config.get("AUTHORITIES", "hostname")}:{Config.get("AUTHORITIES", "port")}{Config.get("AUTHORITIES", "crlpath")}?from=" + common_name.lower()
+                                f"https://{Config.get("AUTHORITIES", "hostname")}:{Config.get("AUTHORITIES", "port")}{Config.get("AUTHORITIES", "crlpath")}?from={common_name.lower()}"
                             )
                         ],
                         relative_name=None,
@@ -100,15 +100,15 @@ def generate_certificate_authority(
         makedirs(dest_folder)
 
     with open(
-        path.join(dest_folder, "ca_" + common_name.lower() + ".crt"), "wb"
+        path.join(dest_folder, f"ca_{common_name.lower()}.crt"), "wb"
     ) as cert_file:
         cert_file.write(cert.public_bytes(Encoding.PEM))
 
     return (
-        path.join(dest_folder, "ca_" + common_name.lower() + ".crt"),
-        path.join(dest_folder, "ca_private_" + common_name.lower() + ".key"),
-        path.join(dest_folder, "ca_public_" + common_name.lower() + ".key"),
-        path.join(dest_folder, "passphrase_" + common_name.lower() + ".txt"),
+        path.join(dest_folder, f"ca_{common_name.lower()}.crt"),
+        path.join(dest_folder, f"ca_private_{common_name.lower()}.key"),
+        path.join(dest_folder, f"ca_public_{common_name.lower()}.key"),
+        path.join(dest_folder, f"passphrase_{common_name.lower()}.txt"),
     )
 
 

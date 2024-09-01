@@ -3,10 +3,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 from Certificates.Signature import sign, verify
-from cryptography.hazmat.primitives.asymmetric.types import (
-    PrivateKeyTypes,
-    PublicKeyTypes,
-)
+from cryptography.hazmat.primitives.asymmetric.types import (PrivateKeyTypes,
+                                                             PublicKeyTypes)
 from Utils.Printer import prettyprint_json
 
 

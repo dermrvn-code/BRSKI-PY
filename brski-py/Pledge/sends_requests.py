@@ -7,11 +7,9 @@ script_dir, parent_dir = set_parent_dir(__file__)
 
 
 from Certificates.Certificate import load_certificate_from_path
-from Certificates.Keys import (
-    load_passphrase_from_path,
-    load_private_key_from_path,
-    load_public_key_from_bytes,
-)
+from Certificates.Keys import (load_passphrase_from_path,
+                               load_private_key_from_path,
+                               load_public_key_from_bytes)
 from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 from Utils.Config import Config
 from Utils.HTTPS import SSLConnection, SSLSocketClient
@@ -65,7 +63,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
     )
 
     if response.status != 200:
-        print_error("Voucher request failed: " + response.read().decode())
+        print_error(f"Voucher request failed: {response.read().decode()}")
         return None
     else:
 
@@ -81,7 +79,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
             voucher = parse_voucher(response_body.decode())
             print_info("Voucher received, validating...")
         except ValueError:
-            print_error("Voucher format was not valid: " + response_body.decode())
+            print_error(f"Voucher format was not valid: {response_body.decode()}")
             return None
 
         masa_public_key = request_masa_public_key()
@@ -89,7 +87,7 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
 
         if not valid:
             send_voucher_status(False, reason=error)
-            print_error("Voucher validation failed: " + error)
+            print_error(f"Voucher validation failed: {error}")
             return None
 
         send_voucher_status(True)
@@ -131,7 +129,7 @@ def open_socket_connection(
             data = input("Enter data to send: ")
             socket.send_message(data)
             response = socket.receive_message()
-            print("Received: " + response)
+            print(f"Received: {response}")
         except KeyboardInterrupt:
             break
 
@@ -200,7 +198,7 @@ def request_masa_public_key() -> PublicKeyTypes | None:
 
     if response.status != 200:
         print_error(
-            "MASA public key could not be extracted: " + response.read().decode()
+            f"MASA public key could not be extracted: {response.read().decode()}"
         )
         return None
     else:

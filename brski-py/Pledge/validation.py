@@ -35,7 +35,7 @@ def validate_voucher(
 
     if not voucher.verify(masa_public_key):
         return False, "Voucher signature invalid"
-    
+
     if voucher.idevid_issuer != request.idevid_issuer:
         return False, "IDEVID issuer mismatch"
 

@@ -1,11 +1,10 @@
 from datetime import UTC, datetime, timedelta
 from os import path
 
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-
 from Certificates.Certificate import load_certificate_from_path
 from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
 
 
 def generate_certificate_revocation_list(
@@ -14,7 +13,7 @@ def generate_certificate_revocation_list(
     ca_passphrase_path: str,
     dest_folder: str,
     *,
-    common_name: str
+    common_name: str,
 ) -> str:
     """
     Generate a Certificate Revocation List (CRL) for a given CA certificate.
@@ -41,7 +40,7 @@ def generate_certificate_revocation_list(
 
     crl = crl_builder.sign(private_key=ca_private_key, algorithm=hashes.SHA256())  # type: ignore
 
-    dest = path.join(dest_folder, "crl_" + common_name.lower() + ".crl")
+    dest = path.join(dest_folder, f"crl_{common_name.lower()}.crl")
     with open(dest, "wb") as f:
         f.write(crl.public_bytes(serialization.Encoding.DER))
 

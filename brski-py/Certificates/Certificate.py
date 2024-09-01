@@ -137,7 +137,7 @@ def save_cert_to_file(
     if not path.exists(dest_folder):
         makedirs(dest_folder)
 
-    file_path = path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".crt")
+    file_path = path.join(dest_folder, f"{file_prefix}_{common_name.lower()}.crt")
     with open(file_path, "wb") as device_cert_file:
         device_cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
@@ -166,7 +166,7 @@ def save_request_to_file(
     if not path.exists(dest_folder):
         makedirs(dest_folder)
 
-    file_path = path.join(dest_folder, file_prefix + "_" + common_name.lower() + ".csr")
+    file_path = path.join(dest_folder, f"{file_prefix}_{common_name.lower()}.csr")
     with open(file_path, "wb") as request_file:
         request_file.write(request.public_bytes(serialization.Encoding.PEM))
 
