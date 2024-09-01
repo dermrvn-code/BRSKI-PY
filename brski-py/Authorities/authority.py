@@ -1,5 +1,6 @@
 import os
 import sys
+from http.server import BaseHTTPRequestHandler
 
 # Add parent directory to path
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,12 +19,12 @@ valid_crls = {
 }
 
 
-def handle_crl(self, query_string):
+def handle_crl(request_handler: BaseHTTPRequestHandler, query_string):
 
     if query_string is None:
-        self.send_response(400)
-        self.end_headers()
-        self.wfile.write(b"Missing query string")
+        request_handler.send_response(400)
+        request_handler.end_headers()
+        request_handler.wfile.write(b"Missing query string")
         return
 
     query_params = {}
@@ -35,9 +36,9 @@ def handle_crl(self, query_string):
     crl_name = query_params.get("from")
 
     if crl_name is None:
-        self.send_response(400)
-        self.end_headers()
-        self.wfile.write(b"Missing 'from' field")
+        request_handler.send_response(400)
+        request_handler.end_headers()
+        request_handler.wfile.write(b"Missing 'from' field")
         return
 
     if crl_name in valid_crls.keys():
@@ -45,14 +46,14 @@ def handle_crl(self, query_string):
         with open(crl_path, "rb") as f:
             crl = f.read()
 
-        self.send_response(200)
-        self.send_header("Content-type", "application/pkix-crl")
-        self.end_headers()
-        self.wfile.write(crl)
+        request_handler.send_response(200)
+        request_handler.send_header("Content-type", "application/pkix-crl")
+        request_handler.end_headers()
+        request_handler.wfile.write(crl)
     else:
-        self.send_response(404)
-        self.end_headers()
-        self.wfile.write(b"CRL not found")
+        request_handler.send_response(404)
+        request_handler.end_headers()
+        request_handler.wfile.write(b"CRL not found")
 
 
 def main() -> None:

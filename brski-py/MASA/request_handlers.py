@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+from http.server import BaseHTTPRequestHandler
 
 from creation import *
 from cryptography import x509
@@ -21,11 +22,13 @@ from Voucher.Voucher import parse_voucher
 from Voucher.VoucherRequest import parse_voucher_request
 
 
-def handle_request_voucher(self, global_logger: Logger):
-    content_length = int(self.headers["Content-Length"])
-    x_ra_cert = self.headers["X-RA-Cert"]
-    x_idevid_cert = self.headers["X-IDevID-Cert"]
-    post_data = self.rfile.read(content_length)
+def handle_request_voucher(
+    request_handler: BaseHTTPRequestHandler, global_logger: Logger
+):
+    content_length = int(request_handler.headers["Content-Length"])
+    x_ra_cert = request_handler.headers["X-RA-Cert"]
+    x_idevid_cert = request_handler.headers["X-IDevID-Cert"]
+    post_data = request_handler.rfile.read(content_length)
     voucher_request_dict = json.loads(post_data)
 
     try:
@@ -57,13 +60,13 @@ def handle_request_voucher(self, global_logger: Logger):
     )
 
     if request_valid == 1:
-        send_406(self, message)
+        send_406(request_handler, message)
         log_error(idev_logger, voucher_request.serial_number, message)
         return
     elif request_valid == 3:
         print_success("Voucher is issued")
     else:
-        send_404(self, message)
+        send_404(request_handler, message)
         log_error(idev_logger, voucher_request.serial_number, message)
         return
 
@@ -81,15 +84,17 @@ def handle_request_voucher(self, global_logger: Logger):
     audit_logger.log(voucher_json)
 
     # Send response
-    self.send_response(200)
-    self.send_header("Content-type", "text/json")
-    self.end_headers()
-    self.wfile.write(str.encode(voucher_json))
+    request_handler.send_response(200)
+    request_handler.send_header("Content-type", "text/json")
+    request_handler.end_headers()
+    request_handler.wfile.write(str.encode(voucher_json))
 
 
-def handle_request_audit_log(self, global_logger: Logger):
-    content_length = int(self.headers["Content-Length"])
-    post_data = self.rfile.read(content_length)
+def handle_request_audit_log(
+    request_handler: BaseHTTPRequestHandler, global_logger: Logger
+):
+    content_length = int(request_handler.headers["Content-Length"])
+    post_data = request_handler.rfile.read(content_length)
     voucher_request_dict = json.loads(post_data)
 
     try:
@@ -147,14 +152,14 @@ def handle_request_audit_log(self, global_logger: Logger):
         f"Audit log requested for serial number {voucher_request.serial_number}"
     )
 
-    self.send_response(200)
-    self.send_header("Content-type", "application/json")
-    self.end_headers()
-    self.wfile.write(response_json.encode())
+    request_handler.send_response(200)
+    request_handler.send_header("Content-type", "application/json")
+    request_handler.end_headers()
+    request_handler.wfile.write(response_json.encode())
 
 
-def handle_public_key(self):
-    client_cert_dict = self.request.getpeercert()
+def handle_public_key(request_handler: BaseHTTPRequestHandler):
+    client_cert_dict = request_handler.request.getpeercert()
     subject = client_cert_dict.get("subject", "")
     subject = array_to_dict(subject)
     print_info(
@@ -171,10 +176,10 @@ def handle_public_key(self):
 
     print_success("Public key sent")
 
-    self.send_response(200)
-    self.send_header("Content-type", "application/x-pem-file")
-    self.end_headers()
-    self.wfile.write(public_key_bytes)
+    request_handler.send_response(200)
+    request_handler.send_header("Content-type", "application/x-pem-file")
+    request_handler.end_headers()
+    request_handler.wfile.write(public_key_bytes)
 
 
 def log_error(logger: Logger | None, serialNumber: str, msg: str):

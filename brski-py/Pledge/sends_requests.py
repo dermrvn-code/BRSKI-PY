@@ -7,9 +7,11 @@ script_dir, parent_dir = set_parent_dir(__file__)
 
 
 from Certificates.Certificate import load_certificate_from_path
-from Certificates.Keys import (load_passphrase_from_path,
-                               load_private_key_from_path,
-                               load_public_key_from_bytes)
+from Certificates.Keys import (
+    load_passphrase_from_path,
+    load_private_key_from_path,
+    load_public_key_from_bytes,
+)
 from cryptography.hazmat.primitives.asymmetric.types import PublicKeyTypes
 from Utils.Config import Config
 from Utils.HTTPS import SSLConnection, SSLSocketClient
@@ -29,9 +31,6 @@ def request_voucher(hostname: str, port: int) -> Voucher | None:
 
     Returns:
         Voucher: The voucher object received from the server.
-
-    Raises:
-        ValueError: If no valid voucher is received.
     """
     conn, idevid_cert_path, pledge_private_key_path, pledge_passphrase = (
         server_connection(hostname, port)

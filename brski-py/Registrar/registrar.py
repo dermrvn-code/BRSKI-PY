@@ -7,8 +7,6 @@ from Utils.Config import Config
 from Utils.HTTPS import HTTPSServer
 from Utils.Printer import *
 
-# TODO: Write a socket communication script with ldevid_cert to display secure connection establishment to pledge
-
 global_logger = Logger(os.path.join(script_dir, global_log_file))
 
 

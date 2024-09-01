@@ -198,7 +198,7 @@ class HTTPSServer:
 
             # Start listening for incoming connections
             server_socket.listen(5)
-            print(f"Socket server listening on {self.address}:{self.socket_port}...")
+            print(f"Socket server listening on https://{self.address}:{self.socket_port}...")
 
             while True:
                 # Accept a new client connection
