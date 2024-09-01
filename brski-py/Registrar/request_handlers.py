@@ -31,10 +31,13 @@ def handle_request_voucher(request_handler : BaseHTTPRequestHandler):
     request_logger = Logger(os.path.join(script_dir,requestslog_folder, f"{voucher_request.serial_number}.log"))
     idev_logger.log(f"Received voucher request: {voucher_request.to_json()}")
 
-    pledge_cert_dict = request_handler.request.getpeercert()
     pledge_cert_bytes = request_handler.request.getpeercert(True)
 
-    request_valid, message = validate_voucher_request(voucher_request, idevid_cert_bytes=pledge_cert_bytes, pledge_cert_dict=pledge_cert_dict, idev_logger=idev_logger)
+    request_valid, message = validate_voucher_request(
+        voucher_request, 
+        idevid_cert_bytes=pledge_cert_bytes, 
+        idev_logger=idev_logger
+    )
 
     if request_valid == 1:
         send_406(request_handler, "Wrong Request Format")
@@ -149,7 +152,6 @@ def handle_request_ldevid_cert(request_handler : BaseHTTPRequestHandler):
         send_404(request_handler, "No serial number found in idevcert, could not issue ldevid cert")
         return
     
-
 
     request = load_request_from_bytes(request_data)
 

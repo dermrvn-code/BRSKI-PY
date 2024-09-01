@@ -7,7 +7,6 @@ from paths import set_parent_dir
 
 script_dir, parent_dir = set_parent_dir(__file__)
 
-from Utils.Dicts import array_to_dict
 from Utils.Logger import Logger
 from Utils.Printer import *
 from Voucher.Voucher import Voucher
@@ -17,8 +16,7 @@ from Voucher.VoucherRequest import VoucherRequest
 def validate_voucher_request(
     voucher_request: VoucherRequest,
     *,
-    idevid_cert_bytes: bytes,
-    pledge_cert_dict: dict,
+    idevid_cert_bytes: bytes | None,
     idev_logger: Logger,
 ) -> tuple[int, str]:
     """
@@ -51,31 +49,12 @@ def validate_voucher_request(
     else:
         print_success("Voucher request signature valid")
 
-    # Check if peer certificate matches idev issuer
-    serial_number = int(
-        pledge_cert_dict.get("serialNumber", ""), 16
-    )  # parse string as hexadecimal integer
-
-    if serial_number != idevid_cert.serial_number:
-        msg = f"Serial numbers of idev certificates do not match: {serial_number} != {idevid_cert.serial_number}"
-        log_error(
-            idev_logger,
-            voucher_request.serial_number,
-            msg,
-        )
-        return 2, msg
-    else:
-        print_success("Peer certificate matches idev issuer")
 
     # Get the subjects serial number from the idevid certificate
     idev_subject = idevid_cert.subject
     idev_subject_serial_number = idev_subject.get_attributes_for_oid(
         NameOID.SERIAL_NUMBER
     )[0].value
-
-    # Get the subjects serial number from the peer certificate
-    peer_subject = array_to_dict(pledge_cert_dict.get("subject"))
-    peer_subject_serial_number = peer_subject.get("serialNumber", "")
 
     # Get voucher request serial number
     voucher_serial_number = voucher_request.serial_number
@@ -85,10 +64,9 @@ def validate_voucher_request(
     # Check if serial numbers across all certs and requests match
     if (
         not idev_subject_serial_number
-        == peer_subject_serial_number
         == voucher_serial_number
     ):
-        msg = f"Serial numbers do not match: {idev_subject_serial_number} != {peer_subject_serial_number} != {voucher_serial_number}"
+        msg = f"Serial numbers do not match: {idev_subject_serial_number} != {voucher_serial_number}"
         log_error(
             idev_logger,
             voucher_request.serial_number,
@@ -97,6 +75,8 @@ def validate_voucher_request(
         return 2, msg
     else:
         print_success("Serial numbers match")
+
+    # TODO: Implement any further validation and check of voucher request
 
     return 3, ""
 
@@ -115,9 +95,10 @@ def validate_voucher(voucher: Voucher | None) -> tuple[bool, str]:
     """
     if voucher is None:
         return False, "MASA did not issue a voucher"
-    return True, ""
 
     # TODO: Implement any further validation and check of voucher
+
+    return True, ""
 
 
 def validate_ldevid_cert_request(
@@ -126,7 +107,10 @@ def validate_ldevid_cert_request(
 
     device_enrollment_status = get_device_enrollment_status(serialnumber)
 
-    if device_enrollment_status.get("allowed", False):
-        return True, ""
+    if not device_enrollment_status.get("allowed", False):
+        return False, "Pledge is not allowed to request LDevID Certificate"
+    
+    # TODO: Implement any further validation and check of LDevID Certificate request
 
-    return False, "Pledge is not allowed to request LDevID Certificate"
+    return True, ""
+

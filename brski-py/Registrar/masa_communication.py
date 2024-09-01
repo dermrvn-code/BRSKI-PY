@@ -48,61 +48,6 @@ def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str 
 
     return parsed_url.hostname, parsed_url.port, parsed_url.path
 
-
-def request_audit_log_from_masa(
-    pledge_serial_number: str, idevid_certificate_bytes: bytes
-) -> dict:
-    """
-    Sends a request to the MASA to retrieve the audit log.
-
-    Args:
-        request (VoucherRequest): The voucher request object containing the necessary information.
-
-    Returns:
-        dict: The audit log received from the MASA.
-    """
-    # Get most previous request of this pledge
-    request_logger = Logger(
-        os.path.join(script_dir, requestslog_folder, f"{pledge_serial_number}.log")
-    )
-    logs = request_logger.get_log_list()
-
-    if len(logs) == 0:
-        print_error("No previous request found")
-        return {}
-
-    most_recent_request = logs[-1]
-    try:
-        request = parse_voucher_request(most_recent_request["message"])
-    except ValueError:
-        print_error("No valid voucher request found")
-        return {}
-
-    if request.idevid_issuer == None:
-        print_error("No idevid issuer in voucher request")
-        return {}
-
-    hostname, port, _ = get_masa_url(idevid_certificate_bytes)
-
-    if hostname == None or port == None:
-        print_error("No MASA URL found")
-        return {}
-
-    conn = server_connection(hostname, port)
-
-    headers = {"Content-Type": "application/json"}
-    data = request.to_json()
-    response = conn.post_request(
-        Config.get("MASA", "auditlogpath"), data=data, headers=headers
-    )
-
-    if response.status != 200:
-        print_error(f"Audit log request failed: {response.read().decode()}")
-        return {}
-    else:
-        return json.loads(response.read().decode())
-
-
 def request_voucher_from_masa(
     voucher_request: VoucherRequest,
     *,
@@ -157,6 +102,59 @@ def request_voucher_from_masa(
         return None, response.read().decode()
     else:
         return parse_voucher(response.read().decode()), ""
+
+def request_audit_log_from_masa(
+    pledge_serial_number: str, idevid_certificate_bytes: bytes
+) -> dict:
+    """
+    Sends a request to the MASA to retrieve the audit log.
+
+    Args:
+        request (VoucherRequest): The voucher request object containing the necessary information.
+
+    Returns:
+        dict: The audit log received from the MASA.
+    """
+    # Get most previous request of this pledge
+    request_logger = Logger(
+        os.path.join(script_dir, requestslog_folder, f"{pledge_serial_number}.log")
+    )
+    logs = request_logger.get_log_list()
+
+    if len(logs) == 0:
+        print_error("No previous request found")
+        return {}
+
+    most_recent_request = logs[-1]
+    try:
+        request = parse_voucher_request(most_recent_request["message"])
+    except ValueError:
+        print_error("No valid voucher request found")
+        return {}
+
+    if request.idevid_issuer == None:
+        print_error("No idevid issuer in voucher request")
+        return {}
+
+    hostname, port, _ = get_masa_url(idevid_certificate_bytes)
+
+    if hostname == None or port == None:
+        print_error("No MASA URL found")
+        return {}
+
+    conn = server_connection(hostname, port)
+
+    headers = {"Content-Type": "application/json"}
+    data = request.to_json()
+    response = conn.post_request(
+        Config.get("MASA", "auditlogpath"), data=data, headers=headers
+    )
+
+    if response.status != 200:
+        print_error(f"Audit log request failed: {response.read().decode()}")
+        return {}
+    else:
+        return json.loads(response.read().decode())
 
 
 def server_connection(hostname: str, port: int) -> SSLConnection:
