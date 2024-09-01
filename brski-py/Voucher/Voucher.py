@@ -84,6 +84,7 @@ class Voucher(VoucherBase):
 
 def create_voucher_from_request(
     request: VoucherRequest,
+    *,
     pinned_domain_cert: bytes,
     masa_private_key: PrivateKeyTypes,
     assertion: Assertion,

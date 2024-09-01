@@ -15,14 +15,7 @@ def validate_voucher_request(
     idevid_cert_bytes: bytes | None,
     registrar_cert_bytes: bytes | None,
 ) -> tuple[int, str]:
-    try:
-        voucher_request_dict = voucher_request.to_dict()
-    except ValueError:
-        msg = "Voucher request format could not be parsed"
-        print_error(msg)
-        return 1, msg
 
-    # Get the idevid issuer certificate from the request
     if registrar_cert_bytes is None:
         msg = "No registrar certificate given"
         print_error(msg)
@@ -80,7 +73,7 @@ def validate_voucher_request(
     Additional validation of the voucher request can be made here
     """
 
-    serial_number = voucher_request_dict.get("serial-number")
+    serial_number = voucher_request.serial_number
     if not yes_or_no(
         f"Can you validate the voucher request with serial number {serial_number}?"
     ):

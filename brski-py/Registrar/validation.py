@@ -36,13 +36,6 @@ def validate_voucher_request(
         - str: The error message if the request is invalid.
     """
 
-    try:
-        voucher_request_dict = voucher_request.to_dict()
-    except ValueError:
-        msg = "Voucher request in wrong format"
-        log_error(idev_logger, voucher_request.serial_number, msg)
-        return 1, msg
-
     # Get the idevid issuer certificate from the request
     if idevid_cert_bytes is None:
         msg = "No idevid issuer in voucher request"
@@ -85,7 +78,7 @@ def validate_voucher_request(
     peer_subject_serial_number = peer_subject.get("serialNumber", "")
 
     # Get voucher request serial number
-    voucher_serial_number = voucher_request_dict.get("serial-number")
+    voucher_serial_number = voucher_request.serial_number
 
     print_info("Checking in with pledge with serial number", voucher_serial_number)
 

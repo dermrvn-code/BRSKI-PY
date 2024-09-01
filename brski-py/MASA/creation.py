@@ -17,6 +17,9 @@ def create_voucher(
     masa_passphrase = load_passphrase_from_path(masa_passphrase_path)
     private_key = load_private_key_from_path(private_key_path, masa_passphrase)
     voucher = create_voucher_from_request(
-        voucher_request, registrar_cert_bytes, private_key, assertion=assertion
+        voucher_request,
+        pinned_domain_cert=registrar_cert_bytes,
+        masa_private_key=private_key,
+        assertion=assertion,
     )
     return voucher
