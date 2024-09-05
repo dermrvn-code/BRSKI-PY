@@ -4,6 +4,7 @@ import os
 import socket
 import ssl
 import threading
+import time
 
 from Certificates.Keys import load_passphrase_from_path
 
@@ -122,18 +123,27 @@ class HTTPSServer:
 
             # Start the HTTP server in a separate thread
             http_thread = threading.Thread(target=self.httpd.serve_forever)
+            http_thread.daemon = True  # terminate the thread when the main thread ends
             http_thread.start()
             print(f"HTTPS server running on https://{self.address}:{self.port}...")
 
             if self.enable_socket:
                 # Start the socket server in a separate thread if enabled
                 socket_thread = threading.Thread(target=self.start_socket_server)
+                socket_thread.daemon = (
+                    True  # terminate the thread when the main thread ends
+                )
                 socket_thread.start()
 
-            http_thread.join()
-        except KeyboardInterrupt:
+            while True:
+                time.sleep(1)
+                if not http_thread.is_alive():
+                    break
+
+        except (KeyboardInterrupt, SystemExit):
             print("\nStopping server...")
             self.stop()
+            os.system("taskkill /F /IM cmd.exe")
             print("Server stopped.")
 
     def stop(self):
@@ -198,7 +208,9 @@ class HTTPSServer:
 
             # Start listening for incoming connections
             server_socket.listen(5)
-            print(f"Socket server listening on https://{self.address}:{self.socket_port}...")
+            print(
+                f"Socket server listening on https://{self.address}:{self.socket_port}..."
+            )
 
             while True:
                 # Accept a new client connection

@@ -8,10 +8,11 @@ script_dir, parent_dir = set_parent_dir(__file__)
 
 import json
 
-from Certificates.Certificate import (load_certificate_from_bytes,
-                                      load_certificate_from_path)
-from Certificates.Keys import (load_passphrase_from_path,
-                               load_private_key_from_path)
+from Certificates.Certificate import (
+    load_certificate_from_bytes,
+    load_certificate_from_path,
+)
+from Certificates.Keys import load_passphrase_from_path, load_private_key_from_path
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding
 from Utils.Config import Config
@@ -19,9 +20,11 @@ from Utils.HTTPS import SSLConnection
 from Utils.Logger import Logger
 from Utils.Printer import *
 from Voucher.Voucher import Voucher, parse_voucher
-from Voucher.VoucherRequest import (VoucherRequest,
-                                    create_registrar_voucher_request,
-                                    parse_voucher_request)
+from Voucher.VoucherRequest import (
+    VoucherRequest,
+    create_registrar_voucher_request,
+    parse_voucher_request,
+)
 
 
 def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str | None]:
@@ -47,6 +50,7 @@ def get_masa_url(idevid_cert_bytes: bytes) -> tuple[str | None, int | None, str 
     parsed_url = urlparse(masa_url)
 
     return parsed_url.hostname, parsed_url.port, parsed_url.path
+
 
 def request_voucher_from_masa(
     voucher_request: VoucherRequest,
@@ -102,6 +106,7 @@ def request_voucher_from_masa(
         return None, response.read().decode()
     else:
         return parse_voucher(response.read().decode()), ""
+
 
 def request_audit_log_from_masa(
     pledge_serial_number: str, idevid_certificate_bytes: bytes

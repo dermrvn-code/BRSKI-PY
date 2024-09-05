@@ -62,17 +62,7 @@ To use the BRSKI Python Implementation, follow these steps:
    start_env.bat
    ```
 
-2. Generate the necessary certificates:
-
-   When starting the demonstrator for the first time, you need to generate all the necessary keys and certificates. To do so, follow these steps:
-
-   1.  Run the script to generate all the necessary keys and certificates:
-
-   ```shell
-   py brski-py/Certificates/generate_certificates.py
-   ```
-
-3. Adjust the configuation
+2. Adjust the configuration
 
    It might be necessary to adjust some configurations in the config.ini file.
 
@@ -85,6 +75,19 @@ To use the BRSKI Python Implementation, follow these steps:
    4. Adjust the ports if necessary
 
    5. Save the file
+
+3. Generate the necessary certificates:
+
+   Be sure to set the correct ports beforehand, as some certificates get embedded URLs, with the ports specified in the config.ini.
+
+   When starting the demonstrator for the first time, you need to generate all the necessary keys and certificates.  
+   To do so, follow these steps:
+
+   1. Run the script to generate all the necessary keys and certificates:
+
+   ```shell
+   py brski-py/Certificates/generate_certificates.py
+   ```
 
 4. Start the demonstrator:
 
