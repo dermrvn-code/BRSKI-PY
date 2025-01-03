@@ -20,6 +20,10 @@
   <img src="https://img.shields.io/badge/Status-Tech_Demo-red?style=for-the-badge">
 </p>
 
+## Information
+
+For a more detailed description of this project, please refer to the corresponding paper <a href="https://doi.org/10.5281/zenodo.14555887">10.5281/zenodo.13934557</a>.
+
 ## Table of Contents
 
 - [Installation](#installation)
